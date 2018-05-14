@@ -1,0 +1,93 @@
+{
+    "metadata": {
+        "name": "write project name here",
+        "description": "write some project description here",
+        "builderVersion": "0.0.4"
+    },
+    "validate": {
+        "runBeforeBuild": true,
+        "projectStructure": {
+            "enabled": true,
+            "forceExtrasFolder": true,
+            "forceReadmeFile": true,
+            "forceTodoFolder": true,
+            "resourcesStructure": true,
+            "checkGitIgnore": true
+        },
+        "phpNamespaces": {
+            "enabled": false,
+            "mandatory": true,
+            "mustContain": [
+                "some-php-namespace-string-here-$1-$2"
+            ],
+            "excludes": [
+                "some-filename-pattern"
+            ]
+        },
+        "copyrightHeaders": [
+            {
+                "enabled": false,
+                "path": "path/to/some/CoyprightHeaderFile.txt",
+                "appliesTo": "src",
+                "includes": [
+                    "js",
+                    "ts",
+                    "some-filename-pattern"
+                ],
+                "excludes": [
+                    "some-filename-pattern"
+                ]
+            },
+            {
+                "enabled": false,
+                "path": "path/to/some/CoyprightHeaderFile.txt",
+                "appliesTo": "src",
+                "includes": [
+                    "js",
+                    "ts",
+                    "some-filename-pattern"
+                ],
+                "excludes": [
+                    "some-filename-pattern"
+                ]
+            }
+        ]
+    },
+    "build": {
+        "lib_php": {
+            "createPhar": false
+        }
+    },
+    "release": {
+        "printTodoFiles": true,
+        "gitChangeLog": true,
+        "gitChangeLogCount": 5,
+        "optimizeCss": true,
+        "optimizeHtml": true,
+        "optimizeJs": true,
+        "optimizePhp": false,
+        "optimizePictures": true,
+        "generateCodeDocumentation": true
+    },
+    "test": {
+        "php": {
+            "enabled": false,
+            "coverageReport": true,
+            "coverageReportOpenAfterTests": true
+        }
+    },
+    "sync": [
+        {
+            "type": "FTP",
+            "excludes": [
+                "some-filename-pattern"
+            ],
+            "localRoot": "build",
+            "localPath": "dist",
+            "remotePath": "/somepath",
+            "host": "www.someserver.com",
+            "user": "serverUser",
+            "psw": "serverpsw"
+        }
+    ]
+}
