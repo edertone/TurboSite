@@ -1,73 +1,31 @@
 {
     "metadata": {
-        "name": "write project name here",
-        "description": "write some project description here",
+        "name": "turbosite-php",
+        "description": "Php based web framework",
         "builderVersion": "0.0.4"
     },
     "validate": {
-        "runBeforeBuild": true,
-        "projectStructure": {
-            "enabled": true,
-            "forceExtrasFolder": true,
-            "forceReadmeFile": true,
-            "forceTodoFolder": true,
-            "resourcesStructure": true,
-            "checkGitIgnore": true
-        },
-        "phpNamespaces": {
-            "enabled": false,
-            "mandatory": true,
-            "mustContain": [
-                "some-php-namespace-string-here-$1-$2"
-            ],
-            "excludes": [
-                "some-filename-pattern"
-            ]
-        },
+        "phpNamespaces" : {
+	        "enabled": true,
+	        "mandatory": true,
+	        "mustContain": ["org\\turbosite\\src\\$path"],
+	        "excludes": ["autoloader.php", "index.php"]
+	    },
         "copyrightHeaders": [
-            {
-                "enabled": false,
-                "path": "path/to/some/CoyprightHeaderFile.txt",
-                "appliesTo": "src",
-                "includes": [
-                    "js",
-                    "ts",
-                    "some-filename-pattern"
-                ],
-                "excludes": [
-                    "some-filename-pattern"
-                ]
-            },
-            {
-                "enabled": false,
-                "path": "path/to/some/CoyprightHeaderFile.txt",
-                "appliesTo": "src",
-                "includes": [
-                    "js",
-                    "ts",
-                    "some-filename-pattern"
-                ],
-                "excludes": [
-                    "some-filename-pattern"
-                ]
-            }
-        ]
+	    	{
+	    		"path": "extras/copyright headers/TurboSite-Php.txt",
+	    		"appliesTo": "src",
+	    		"includes": ["php"],
+	    		"excludes": ["autoloader.php"]
+	    	}
+	    ]
     },
     "build": {
         "lib_php": {
-            "createPhar": false
+            "createPhar": true
         }
     },
     "release": {
-        "printTodoFiles": true,
-        "gitChangeLog": true,
-        "gitChangeLogCount": 5,
-        "optimizeCss": true,
-        "optimizeHtml": true,
-        "optimizeJs": true,
-        "optimizePhp": false,
-        "optimizePictures": true,
-        "generateCodeDocumentation": true
     },
     "test": {
         "php": {
@@ -75,19 +33,5 @@
             "coverageReport": true,
             "coverageReportOpenAfterTests": true
         }
-    },
-    "sync": [
-        {
-            "type": "FTP",
-            "excludes": [
-                "some-filename-pattern"
-            ],
-            "localRoot": "build",
-            "localPath": "dist",
-            "remotePath": "/somepath",
-            "host": "www.someserver.com",
-            "user": "serverUser",
-            "psw": "serverpsw"
-        }
-    ]
+    }
 }
