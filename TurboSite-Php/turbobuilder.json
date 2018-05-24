@@ -22,7 +22,6 @@
     },
     "build": {
         "lib_php": {
-            "createPhar": true
         }
     },
     "release": {
