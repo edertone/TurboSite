@@ -112,11 +112,7 @@ class WebSite extends BaseSingletonClass{
 	    // TODO - initialize localization manager
 	    //$this->_localizationManager->initialize();
 
-	    // 301 Redirect to home view if current URI is empty
-	    if(StringUtils::isEmpty($this->_URI)){
-
-	        $this->_redirect301($this->_languages[0].'/'.$this->_homeView);
-	    }
+	    $this->_sanitizeUrl();
 
 	    $this->_includeContentBasedOnURI();
 	}
@@ -161,6 +157,27 @@ class WebSite extends BaseSingletonClass{
 	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
 	    $this->_URIElements = explode('/', $this->_URI);
 	    $this->_fullURL = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	}
+
+
+	/**
+	 * Check that the url does not contain invalid characters or values and redirect it if necessary
+	 */
+	private function _sanitizeUrl(){
+
+	    // 301 Redirect to home view if current URI is empty
+	    if(StringUtils::isEmpty($this->_URI)){
+
+	        $this->_redirect301($this->_languages[0].'/'.$this->_homeView);
+	    }
+
+	    // 301 Redirect to remove any possible query string.
+	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
+	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
+	    if(strpos($this->_fullURL, '?') !== false){
+
+	        $this->_redirect301($this->_URI);
+	    }
 	}
 
 
