@@ -12,16 +12,25 @@
 
 namespace org\turbosite\src\main\php\model;
 
+use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbocommons\src\main\php\managers\LocalizationManager;
 use org\turbocommons\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
+use org\turbocommons\src\main\php\managers\BrowserManager;
 
 
 /**
  * TODO
  */
 class WebSite extends BaseSingletonClass{
+
+
+    /**
+     * Stores the filesystem location for the index of the site, to be used when
+     * loading other files or resources
+     */
+    private $_rootPath = '';
 
 
     /**
@@ -38,19 +47,6 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-     * The list with project locales sorted by preference
-     */
-	private $_locales = [];
-
-
-	/**
-	 * The list with project languages sorted by preference (same as locales but
-	 * only 2 first characters without the country part)
-	 */
-    private $_languages = [];
-
-
-	/**
 	 * Files manager instance for file system interaction
 	 */
 	private $_filesManager = null;
@@ -60,6 +56,19 @@ class WebSite extends BaseSingletonClass{
 	 * Class that manages the text translations
 	 */
 	private $_localizationManager = null;
+
+
+	/**
+	 * Class that manages the browser operations
+	 */
+	private $_browserManager = null;
+
+
+	/**
+	 * String with the locale that is defined on the current URI.
+	 * If empty, no locale's been detected on the current URI.
+	 */
+	private $_primaryLanguage = '';
 
 
 	/**
@@ -86,7 +95,7 @@ class WebSite extends BaseSingletonClass{
 	 */
 	public function getPrimaryLanguage(){
 
-	    return $this->_languages[0];
+	    return $this->_primaryLanguage;
 	}
 
 
@@ -102,15 +111,14 @@ class WebSite extends BaseSingletonClass{
 	/**
 	 * Initialize the website structure and generate the html code for the current url
 	 */
-	public function construct(){
+	public function initialize($rootPath){
 
+	    $this->_rootPath = StringUtils::formatPath(StringUtils::replace($rootPath, StringUtils::getPathElement($rootPath), ''));
 	    $this->_filesManager = new FilesManager();
 	    $this->_localizationManager = new LocalizationManager();
+	    $this->_browserManager = new BrowserManager();
 
 	    $this->_initializeSetup();
-
-	    // TODO - initialize localization manager
-	    //$this->_localizationManager->initialize();
 
 	    $this->_sanitizeUrl();
 
@@ -119,9 +127,58 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * get the website current full url as it is shown on the user browser
+	 */
+	private function _initializeSetup(){
+
+	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
+	    $this->_URIElements = explode('/', $this->_URI);
+	    $this->_fullURL = (isset($_SERVER['HTTPS']) ? "https" : "http")."://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+
+	    $this->_homeView = $setup->homeView;
+	    $this->_singleParameterView = $setup->singleParameterView;
+
+	    // Load all the configured resourcebundle paths
+	    $bundles = [];
+
+	    foreach ($setup->resourceBundles as $bundle) {
+
+	        $bundles[] = [
+	            'path' => StringUtils::formatPath($this->_rootPath.'/'.$bundle->path),
+	            'bundles' => $bundle->bundles
+	        ];
+	    }
+
+	    $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
+
+	        if(count($errors) > 0){
+
+	            throw new UnexpectedValueException(print_r($errors, true));
+	        }
+	    });
+
+	    // Detect the primary locale from the url, browser or the project list of locales
+	    $this->_primaryLanguage = $this->_URIElements[0];
+
+	    if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+	        $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
+
+	        if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+	            $this->_primaryLanguage = $this->_localizationManager->languages()[0];
+	        }
+	    }
+
+	    $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+	}
+
+	/**
 	 * Initialize a view
 	 */
-	public function constructView($enabledParams = 0, $enableDummy = false, array $paramsDefault = null, $dummyDefault = ''){
+	public function initializeView($enabledParams = 0, $enableDummy = false, array $paramsDefault = null, $dummyDefault = ''){
 
 	    // If URI parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
 	    if((count($this->_URIElements) - 2) > $enabledParams){
@@ -139,24 +196,38 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * get the website current full url as it is shown on the user browser
+	 * TODO
+	 *
+	 * @param unknown $title
+	 * @param unknown $description
 	 */
-	private function _initializeSetup(){
+	public function echoViewHeadHtml($title, $description){
+	    ?>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title><?php echo $title ?></title>
+        <meta name="description" content="<?php echo $description ?>">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+        <link rel="manifest" href="site.webmanifest">
+        <link rel="apple-touch-icon" href="icon.png">
+        <!-- Place favicon.ico in the root directory -->
 
-	    $this->_locales = $setup->locales;
-	    $this->_homeView = $setup->homeView;
-	    $this->_singleParameterView = $setup->singleParameterView;
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+        <?php
+	}
 
-	    foreach ($setup->locales as $locale) {
 
-	        $this->_languages[] = substr($locale, 0, 2);
-	    }
+	/**
+	 * TODO
+	 * @param unknown $key
+	 * @param unknown $bundle
+	 * @return string
+	 */
+	public function l($key, $bundle){
 
-	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
-	    $this->_URIElements = explode('/', $this->_URI);
-	    $this->_fullURL = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	    return $this->_localizationManager->get($key, $bundle);
 	}
 
 
@@ -165,10 +236,13 @@ class WebSite extends BaseSingletonClass{
 	 */
 	private function _sanitizeUrl(){
 
-	    // 301 Redirect to home view if current URI is empty
-	    if(StringUtils::isEmpty($this->_URI)){
+	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale
+	    if(StringUtils::isEmpty($this->_URI) ||
+	       (count($this->_URIElements) === 1 &&
+	        strlen($this->_URIElements[0]) === 2 &&
+	        in_array($this->_URIElements[0], $this->_localizationManager->languages()))){
 
-	        $this->_redirect301($this->_languages[0].'/'.$this->_homeView);
+	        $this->_redirect301($this->_primaryLanguage.'/'.$this->_homeView);
 	    }
 
 	    // 301 Redirect to remove any possible query string.
@@ -197,7 +271,8 @@ class WebSite extends BaseSingletonClass{
     	    }
 
     	    // Check if the URI represents a view
-    	    if(in_array($this->_URIElements[0], $this->_languages)){
+    	    if($this->_primaryLanguage === $this->_URIElements[0] &&
+    	       is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
 
     	        include('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php');
                 die();
