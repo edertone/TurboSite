@@ -27,10 +27,31 @@ class WebSite extends BaseSingletonClass{
 
 
     /**
-     * Stores the filesystem location for the index of the site, to be used when
-     * loading other files or resources
+     * Contains the title to show on the html metadata. This is very important for SEO purposes, so an exception will happen if
+     * this value is empty
      */
-    private $_rootPath = '';
+    public $metaTitle = '';
+
+
+    /**
+     * Contains the description to show on the html metadata. This is very important for SEO purposes, so an exception will happen if
+     * this value is empty. Note that meta description recommended lenght is 150 characters.
+     */
+    public $metaDescription = '';
+
+
+    /**
+     * Stores the generated hash string that is used to prevent browser from caching
+     * static resources
+     */
+    private $_cacheHash = '';
+
+
+    /**
+     * Stores the filesystem location for the index of the site (the point where src/main folder points),
+     * to be used when loading other files or resources
+     */
+    private $_mainPath = '';
 
 
     /**
@@ -97,6 +118,12 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * Stores all the data for the components that are loaded on the current instance
+	 */
+	private $_loadedComponents = [];
+
+
+	/**
 	 * Get the first language of the list of translation priorities
 	 */
 	public function getPrimaryLanguage(){
@@ -119,7 +146,7 @@ class WebSite extends BaseSingletonClass{
 	 */
 	public function initialize($rootPath){
 
-	    $this->_rootPath = StringUtils::formatPath(StringUtils::replace($rootPath, StringUtils::getPathElement($rootPath), ''));
+	    $this->_mainPath = StringUtils::formatPath(StringUtils::replace($rootPath, StringUtils::getPathElement($rootPath), ''));
 	    $this->_filesManager = new FilesManager();
 	    $this->_localizationManager = new LocalizationManager();
 	    $this->_browserManager = new BrowserManager();
@@ -143,6 +170,7 @@ class WebSite extends BaseSingletonClass{
 
 	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
 
+	    $this->_cacheHash = $setup->cacheHash;
 	    $this->_homeView = $setup->homeView;
 	    $this->_singleParameterView = $setup->singleParameterView;
 
@@ -152,7 +180,7 @@ class WebSite extends BaseSingletonClass{
 	    foreach ($setup->resourceBundles as $bundle) {
 
 	        $bundles[] = [
-	            'path' => StringUtils::formatPath($this->_rootPath.'/'.$bundle->path),
+	            'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
 	            'bundles' => $bundle->bundles
 	        ];
 	    }
@@ -227,21 +255,35 @@ class WebSite extends BaseSingletonClass{
 	            die();
 	        }
 
-	        // Check if the URI represents the home view
-	        if($this->_primaryLanguage === $this->_URIElements[0] && count($this->_URIElements) === 1){
+	        $viewToInclude = '';
 
-	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	            include('view/views/'.$this->_homeView.'/'.$this->_homeView.'.php');
-	            die();
+	        // Check if the URI represents the home or single parameter view
+	        if(count($this->_URIElements) === 1){
+
+	            if($this->_primaryLanguage === $this->_URIElements[0]){
+
+	                $viewToInclude = $this->_homeView;
+	            }
+
+	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
+
+	                $viewToInclude = $this->_singleParameterView;
+	            }
 	        }
 
-	        // Check if the URI represents a view
-	        if($this->_primaryLanguage === $this->_URIElements[0] &&
-	            is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
+	        // Check if the URI represents a full view with N parameters
+	        if(count($this->_URIElements) > 1 &&
+	           $this->_primaryLanguage === $this->_URIElements[0] &&
+	           is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
 
-	                $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	                include('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php');
-	                die();
+	           $viewToInclude = $this->_URIElements[1];
+	        }
+
+	        if($viewToInclude !== ''){
+
+	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
+	            include('view/views/'.$viewToInclude.'/'.$viewToInclude.'.php');
+	            die();
 	        }
 	    }
 
@@ -253,7 +295,7 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * Initialize a view
+	 * TODO docs
 	 */
 	public function initializeView($enabledParams = 0, $enableDummy = false, array $paramsDefault = null, $dummyDefault = ''){
 
@@ -273,26 +315,71 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	* TODO docs
+	*/
+	public function initializeSingleParameterView(){
+
+	    $this->_URLEnabledParameters = 1;
+	}
+
+
+	public function loadBundles(array $bundles){
+
+	    $this->_localizationManager->loadBundles('resources/locales/$locale/$bundle.properties', $bundles);
+	}
+
+
+	/**
+	 * TODO
+	 */
+	public function loadComponents(array $componentsPaths){
+
+	    foreach ($componentsPaths as $componentPath) {
+
+	        $loadedComponent = ['id' => StringUtils::replace($componentPath, ['/', '\\'], '-')];
+
+	        $this->_loadedComponents[] = $loadedComponent;
+	    }
+	}
+
+
+	// TODO
+	public function includeComponent(string $componentPath){
+
+	    // TODO verificar component loaded
+
+	    require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
+	}
+
+
+	/**
 	 * TODO
 	 *
 	 * @param unknown $title
 	 * @param unknown $description
 	 */
-	public function echoViewHeadHtml($title, $description){
-	    ?>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title><?php echo $title ?></title>
-        <meta name="description" content="<?php echo $description ?>">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    public function echoHeadHtml(){
 
-        <link rel="manifest" href="site.webmanifest">
-        <link rel="apple-touch-icon" href="icon.png">
-        <!-- Place favicon.ico in the root directory -->
+	    if(StringUtils::isEmpty($this->metaTitle.$this->metaDescription)){
 
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
-        <?php
+	        throw new UnexpectedValueException('metaTitle or metaDescription are empty');
+	    }
+
+	    echo '<meta charset="utf-8">'."\n";
+	    echo '<meta http-equiv="x-ua-compatible" content="ie=edge">'."\n";
+	    echo '<title>'.$this->metaTitle.'</title>'."\n";
+	    echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
+	    echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
+	    echo '<link rel="manifest" href="manifest.json">'."\n";
+	    echo '<link rel="apple-touch-icon" href="icon.png">'."\n";
+	    // <!-- Place favicon.ico in the root directory -->
+	    echo '<link rel="stylesheet" href="glob-'.$this->_cacheHash.'.css">'."\n";
+
+        // Generate the components css
+        foreach ($this->_loadedComponents as $loadedComponent) {
+
+            echo '<link rel="stylesheet" href="comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
+        }
 	}
 
 
@@ -301,11 +388,42 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @param unknown $key TODO
 	 * @param unknown $bundle TODO
+	 *
 	 * @return string TODO
 	 */
-	public function l($key, $bundle){
+	public function getLoc($key, $options = ''){
 
-	    return $this->_localizationManager->get($key, $bundle);
+	    if(is_string($options)){
+
+	        $bundle = $options;
+
+	    }else{
+
+	        $bundle = isset($options['bundle']) ? $options['bundle'] : '';
+	    }
+
+	    $text = $this->_localizationManager->get($key, $bundle);
+
+	    if(!is_string($options) && isset($options['wildcards'])){
+
+	        $text = StringUtils::replace($text, $options['wildcards'], $options['replace']);
+	    }
+
+	    return $text;
+	}
+
+
+	/**
+	 * Get the translated text for the provided key and bundle
+	 *
+	 * @param unknown $key TODO
+	 * @param unknown $bundle TODO
+	 *
+	 * @return string TODO
+	 */
+	public function echoLoc($key, $options = ''){
+
+	   echo $this->getLoc($key, $options);
 	}
 
 
@@ -320,9 +438,9 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @return string The requested parameter value
 	 */
-	public function getParam(int $index, bool $removeHtmlTags = true){
+	public function getParam(int $index = 0, bool $removeHtmlTags = true){
 
-	    if($index < 1){
+	    if($index < 0){
 
 	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
 	    }
@@ -344,6 +462,18 @@ class WebSite extends BaseSingletonClass{
 	    // TODO - should this be moved to turbocommons?
 	    header('location:/'.$url, true, 301);
 	    die();
+	}
+
+
+	/**
+	 * Get the time that's taken for the document to be generated since the initial page request.
+	 *
+	 * @return float the number of seconds (with 3 digit ms precision) since the Website object was instantiated.
+	 *         For example 1.357 which means 1 second an 357 miliseconds
+	 */
+	public function getRunningTime(){
+
+	    return round(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 4);
 	}
 }
 
