@@ -68,6 +68,12 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * If the current document is a view, the name is stored here
+	 */
+	private $_currentView = '';
+
+
+	/**
 	 * Files manager instance for file system interaction
 	 */
 	private $_filesManager = null;
@@ -255,19 +261,17 @@ class WebSite extends BaseSingletonClass{
 	            die();
 	        }
 
-	        $viewToInclude = '';
-
 	        // Check if the URI represents the home or single parameter view
 	        if(count($this->_URIElements) === 1){
 
 	            if($this->_primaryLanguage === $this->_URIElements[0]){
 
-	                $viewToInclude = $this->_homeView;
+	                $this->_currentView = $this->_homeView;
 	            }
 
 	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
 
-	                $viewToInclude = $this->_singleParameterView;
+	                $this->_currentView = $this->_singleParameterView;
 	            }
 	        }
 
@@ -276,13 +280,13 @@ class WebSite extends BaseSingletonClass{
 	           $this->_primaryLanguage === $this->_URIElements[0] &&
 	           is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
 
-	           $viewToInclude = $this->_URIElements[1];
+	           $this->_currentView = $this->_URIElements[1];
 	        }
 
-	        if($viewToInclude !== ''){
+	        if($this->_currentView !== ''){
 
 	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	            include('view/views/'.$viewToInclude.'/'.$viewToInclude.'.php');
+	            include('view/views/'.$this->_currentView.'/'.$this->_currentView.'.php');
 	            die();
 	        }
 	    }
@@ -378,7 +382,16 @@ class WebSite extends BaseSingletonClass{
         // Generate the components css
         foreach ($this->_loadedComponents as $loadedComponent) {
 
-            echo '<link rel="stylesheet" href="comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
+            if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css')){
+
+                echo '<link rel="stylesheet" href="comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
+            }
+        }
+
+        // Generate the view css if we are on a view
+        if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
+
+            echo '<link rel="stylesheet" href="view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css">'."\n";
         }
 	}
 
