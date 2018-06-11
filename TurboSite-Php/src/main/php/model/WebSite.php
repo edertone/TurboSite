@@ -21,7 +21,7 @@ use org\turbocommons\src\main\php\managers\BrowserManager;
 
 
 /**
- * TODO
+ * The global application instance where all the framework methods are found
  */
 class WebSite extends BaseSingletonClass{
 
@@ -144,6 +144,24 @@ class WebSite extends BaseSingletonClass{
 	public function getFullUrl(){
 
 	    return $this->_fullURL;
+	}
+
+
+	/**
+	 * Get the view that is defined as home
+	 */
+	public function getHomeView(){
+
+	    return $this->_homeView;
+	}
+
+
+	/**
+	 * Get the view that is defined to handle single parameter urls
+	 */
+	public function getSingleParameterView(){
+
+	    return $this->_singleParameterView;
 	}
 
 
@@ -301,7 +319,7 @@ class WebSite extends BaseSingletonClass{
 	/**
 	 * TODO docs
 	 */
-	public function initializeView($enabledParams = 0, $enableDummy = false, array $paramsDefault = null, $dummyDefault = ''){
+	public function initializeView($enabledParams = 0, array $paramsDefault = [], array $paramsForce = []){
 
 	    // If URI parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
 	    if((count($this->_URIElements) - 2) > $enabledParams){
@@ -357,10 +375,34 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * TODO
+	 * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
+	 * URL parameters are the custom values that can be passed via url to the framework views.
+	 * They are encoded this way: http://.../locale/viewname/parameter1/parameter2/parameter3/parameter4/...
 	 *
-	 * @param unknown $title
-	 * @param unknown $description
+	 * @param int $index The numeric index for the requested parameter
+	 * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
+	 *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
+	 *
+	 * @return string The requested parameter value
+	 */
+	public function getParam(int $index = 0, bool $removeHtmlTags = true){
+
+	    if($index < 0){
+
+	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
+	    }
+
+	    if($index >= $this->_URLEnabledParameters){
+
+	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
+	    }
+
+	    return $removeHtmlTags ? strip_tags($this->_URIElements[$index]) : $this->_URIElements[$index];
+	}
+
+
+	/**
+	 * TODO
 	 */
     public function echoHeadHtml(){
 
@@ -397,14 +439,31 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * Get the translated text for the provided key and bundle
-	 *
-	 * @param unknown $key TODO
-	 * @param unknown $bundle TODO
-	 *
-	 * @return string TODO
+	 * TODO
 	 */
-	public function getLoc($key, $options = ''){
+	public function echoJavaScriptTags(){
+
+	    // Generate the global js script
+	    echo '<script src="glob-'.$this->_cacheHash.'.js" defer></script>';
+	}
+
+
+	/**
+	 * Get the translated text for the provided key and options
+	 *
+	 * @param string $key The key we want to read from the specified resource bundle and path
+	 * @param array|string $options If a string is provided, the value will be used as the bundle where key
+	 *        must be found. If an associative array is provided, the following keys can be defined:
+	 *        -bundle: To define which bundle to look for the provided key
+	 *        -wildcards: A string or an array of strings that will be replaced on the translated Text
+	 *        -replace: A string or array of strings with the replacements for each of the provided wildcards
+	 *        An example of complex options : ['bundle' => 'footer', 'wildcards' => '$N', 'replace' => $ws->getRunningTime()]
+	 *
+	 * @see LocalizationManager::get
+	 *
+	 * @return string The translated text with all the options applied
+	 */
+	public function getLoc(string $key, $options = ''){
 
 	    if(is_string($options)){
 
@@ -427,54 +486,101 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * Get the translated text for the provided key and bundle
-	 *
-	 * @param unknown $key TODO
-	 * @param unknown $bundle TODO
-	 *
-	 * @return string TODO
+	 * @see WebSite::getLoc
+	 * @see LocalizationManager::get
 	 */
-	public function echoLoc($key, $options = ''){
+	public function echoLoc(string $key, $options = ''){
 
 	   echo $this->getLoc($key, $options);
 	}
 
 
 	/**
-	 * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
-	 * URL parameters are the custom values that can be passed via url to the framework views.
-	 * They are encoded this way: http://.../locale/viewname/parameter1/parameter2/parameter3/parameter4/...
+	 * TODO
 	 *
-	 * @param int $index The numeric index for the requested parameter
-	 * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
-	 *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
-	 *
-	 * @return string The requested parameter value
+	 * @return string The generated url
 	 */
-	public function getParam(int $index = 0, bool $removeHtmlTags = true){
+	public function getUrl($path = '', $absolute = false){
 
-	    if($index < 0){
+	    // Sanitize the received path
+	    $formattedPath = StringUtils::formatPath($path, '/');
 
-	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
+	    // If we receive a full absolute url as the path, we will simply return it
+	    if(substr(strtolower($formattedPath), 0, 4) == 'http'){
+
+	        return $formattedPath;
 	    }
 
-	    if($index >= $this->_URLEnabledParameters){
+	    // Check if absolute url is required
+	    if($absolute){
 
-	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
+	        return $path;
+
+	    }else{
+
+	        return $path;
 	    }
-
-	    return $removeHtmlTags ? strip_tags($this->_URIElements[$index]) : $this->_URIElements[$index];
 	}
 
 
 	/**
-	 * Perform a 301 redirect (permanently moved) to the specified url.
+	 * @see WebSite::echoUrlToView
+	 *
+	 * @return string
 	 */
-	private function _redirect301($url){
+	public function getUrlToView(string $view, $parameters = '', bool $absolute = false){
 
-	    // TODO - should this be moved to turbocommons?
-	    header('location:/'.$url, true, 301);
-	    die();
+	    if(is_string($parameters)){
+
+	        $parameters = StringUtils::isEmpty($parameters) ? [] : [$parameters];
+	    }
+
+	    // The array that will store the URI parts
+	    $result = [];
+	    $view = str_replace('.php', '', $view);
+
+	    // Check if we are getting the single parameter view
+	    if($view === $this->_singleParameterView){
+
+	        if(count($parameters) !== 1){
+
+                throw new UnexpectedValueException('Single parameter view only allows one parameter');
+	        }
+
+        // Check if we are getting the home view url
+	    }elseif ($view === $this->_homeView || StringUtils::isEmpty($view)){
+
+	        if(count($parameters) !== 0){
+
+	            throw new UnexpectedValueException('Home view does not allow parameters');
+	        }
+
+	        $result = [$this->_primaryLanguage];
+
+	    }else{
+
+	        $result = [$this->_primaryLanguage, $view];
+	    }
+
+	    // Add all the parameters to the url
+	    $parameters = array_map(function ($p) {return rawurlencode($p);}, $parameters);
+
+	    return htmlspecialchars($this->getUrl('', $absolute).implode('/', array_merge($result, $parameters)));
+	}
+
+
+	/**
+	 * Gives the url that points to the specified view, using the current site locale and the specified parameters
+	 *
+	 * @param string $view The name of the view. For example: Home
+	 * @param mixed $parameters The list of parameters to pass to the PHP call. If a single parameter is sent, it can be a string. If more than one will be passed, it must be an array.
+	 * @param boolean $absolute True to get the full absolute url (http://...) or false to get it relative to the current domain
+	 *
+	 * @return void
+	 */
+	public function echoUrlToView($view, $parameters = '', $absolute = false){
+
+	    echo $this->getUrlToView($view, $parameters, $absolute);
 	}
 
 
@@ -487,6 +593,17 @@ class WebSite extends BaseSingletonClass{
 	public function getRunningTime(){
 
 	    return round(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 4);
+	}
+
+
+	/**
+	 * Perform a 301 redirect (permanently moved) to the specified url.
+	 */
+	private function _redirect301($url){
+
+	    // TODO - should this be moved to turbocommons?
+	    header('location:/'.$url, true, 301);
+	    die();
 	}
 }
 
