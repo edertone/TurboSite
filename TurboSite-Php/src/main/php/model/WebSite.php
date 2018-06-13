@@ -251,7 +251,7 @@ class WebSite extends BaseSingletonClass{
 	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
 	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
 
-	                $this->_redirect301($this->_primaryLanguage);
+	                $this->_301Redirect($this->_primaryLanguage);
 	    }
 
 	    // 301 Redirect to remove any possible query string.
@@ -259,7 +259,7 @@ class WebSite extends BaseSingletonClass{
 	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
 	    if(strpos($this->_fullURL, '?') !== false){
 
-	        $this->_redirect301($this->_URI);
+	        $this->_301Redirect($this->_URI);
 	    }
 	}
 
@@ -310,9 +310,7 @@ class WebSite extends BaseSingletonClass{
 	    }
 
 	    // Reaching here means no match was found for the current URI, so 404 and die
-	    http_response_code(404);
-	    include('error-404.php');
-	    die();
+	    $this->_404Error();
 	}
 
 
@@ -331,7 +329,7 @@ class WebSite extends BaseSingletonClass{
 	            $redirectUrl += '/'.$this->_URIElements[$i];
 	        }
 
-	        $this->_redirect301($redirectUrl);
+	        $this->_301Redirect($redirectUrl);
 	    }
 	}
 
@@ -339,9 +337,22 @@ class WebSite extends BaseSingletonClass{
 	/**
 	* TODO docs
 	*/
-	public function initializeSingleParameterView(){
+	public function initializeSingleParameterView($language, $acceptedParameters = []){
 
 	    $this->_URLEnabledParameters = 1;
+
+	    if($acceptedParameters !== '*' && !in_array($this->getParam(), $acceptedParameters)){
+
+	        $this->_404Error();
+	    }
+
+	    if(!in_array($language, $this->_localizationManager->languages())){
+
+	        throw new UnexpectedValueException('Invalid language specified <'.$language.'> for single parameter view');
+	    }
+
+	    $this->_primaryLanguage = $language;
+	    $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
 	}
 
 
@@ -496,9 +507,9 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * TODO
+	 * @see WebSite::echoUrl
 	 *
-	 * @return string The generated url
+	 * @return string
 	 */
 	public function getUrl($path = '', $absolute = false){
 
@@ -524,6 +535,17 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * TODO
+	 *
+	 * @return string The generated url
+	 */
+	public function echoUrl($path = '', $absolute = false){
+
+	    echo $this->getUrl($path, $absolute);
+	}
+
+
+	/**
 	 * @see WebSite::echoUrlToView
 	 *
 	 * @return string
@@ -542,9 +564,9 @@ class WebSite extends BaseSingletonClass{
 	    // Check if we are getting the single parameter view
 	    if($view === $this->_singleParameterView){
 
-	        if(count($parameters) !== 1){
+	        if(count($parameters) !== 1 || strlen($parameters[0]) < 3){
 
-                throw new UnexpectedValueException('Single parameter view only allows one parameter');
+                throw new UnexpectedValueException('Single parameter view only allows one parameter with more than 2 digits');
 	        }
 
         // Check if we are getting the home view url
@@ -585,6 +607,40 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * @see WebSite::echoUrlToChangeLocale
+	 *
+	 * @return string
+	 */
+	public function getUrlToChangeLocale($locale, $absolute = false){
+
+	    $newURI = $this->_URI;
+
+	    $language = substr($locale, 0, 2);
+
+	    if(substr($this->_URI, 0, 2) === $this->_primaryLanguage){
+
+	        $newURI = StringUtils::replace($this->_URI, $this->_primaryLanguage, $language, 1);
+	    }
+
+	    return $this->getUrl($newURI, $absolute);
+	}
+
+
+	/**
+	 * Gives the url that will allow us to change the locale for the current document URI
+	 *
+	 * @param string $locale The locale we want to set on the new url
+	 * @param boolean $absolute True to get the full absolute url (https://...) or false to get it relative to the current domain
+	 *
+	 * @return void
+	 */
+	public function echoUrlToChangeLocale($locale, $absolute = false){
+
+	    echo $this->getUrlToChangeLocale($locale, $absolute);
+	}
+
+
+	/**
 	 * Get the time that's taken for the document to be generated since the initial page request.
 	 *
 	 * @return float the number of seconds (with 3 digit ms precision) since the Website object was instantiated.
@@ -599,10 +655,21 @@ class WebSite extends BaseSingletonClass{
 	/**
 	 * Perform a 301 redirect (permanently moved) to the specified url.
 	 */
-	private function _redirect301($url){
+	private function _301Redirect($url){
 
 	    // TODO - should this be moved to turbocommons?
 	    header('location:/'.$url, true, 301);
+	    die();
+	}
+
+
+	/**
+	 * Show a 404 error
+	 */
+	private function _404Error(){
+
+	    http_response_code(404);
+	    include('error-404.php');
 	    die();
 	}
 }
