@@ -525,11 +525,11 @@ class WebSite extends BaseSingletonClass{
 	    // Check if absolute url is required
 	    if($absolute){
 
-	        return $path;
+	        return rawurlencode($path);
 
 	    }else{
 
-	        return $path;
+	        return rawurlencode($path);
 	    }
 	}
 
