@@ -356,9 +356,12 @@ class WebSite extends BaseSingletonClass{
 	}
 
 
+	/**
+	 * Adds extra bundles to the currently loaded translation data
+	 */
 	public function loadBundles(array $bundles){
 
-	    $this->_localizationManager->loadBundles('resources/locales/$locale/$bundle.properties', $bundles);
+	    $this->_localizationManager->loadBundles('resources/locales/$bundle/$bundle_$locale.properties', $bundles);
 	}
 
 
@@ -427,24 +430,24 @@ class WebSite extends BaseSingletonClass{
 	    echo '<title>'.$this->metaTitle.'</title>'."\n";
 	    echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
 	    echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
-	    echo '<link rel="manifest" href="manifest.json">'."\n";
-	    echo '<link rel="apple-touch-icon" href="icon.png">'."\n";
+	    echo '<link rel="manifest" href="/manifest.json">'."\n";
+	    echo '<link rel="apple-touch-icon" href="/icon.png">'."\n";
 	    // <!-- Place favicon.ico in the root directory -->
-	    echo '<link rel="stylesheet" href="glob-'.$this->_cacheHash.'.css">'."\n";
+	    echo '<link rel="stylesheet" href="/glob-'.$this->_cacheHash.'.css">'."\n";
 
         // Generate the components css
         foreach ($this->_loadedComponents as $loadedComponent) {
 
             if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css')){
 
-                echo '<link rel="stylesheet" href="comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
+                echo '<link rel="stylesheet" href="/comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
             }
         }
 
         // Generate the view css if we are on a view
         if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
 
-            echo '<link rel="stylesheet" href="view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css">'."\n";
+            echo '<link rel="stylesheet" href="/view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css">'."\n";
         }
 	}
 
@@ -455,7 +458,7 @@ class WebSite extends BaseSingletonClass{
 	public function echoJavaScriptTags(){
 
 	    // Generate the global js script
-	    echo '<script src="glob-'.$this->_cacheHash.'.js" defer></script>';
+	    echo '<script src="/glob-'.$this->_cacheHash.'.js" defer></script>';
 	}
 
 
@@ -525,11 +528,11 @@ class WebSite extends BaseSingletonClass{
 	    // Check if absolute url is required
 	    if($absolute){
 
-	        return rawurlencode($path);
+	        return $path;
 
 	    }else{
 
-	        return rawurlencode($path);
+	        return '/'.$path;
 	    }
 	}
 
@@ -613,13 +616,13 @@ class WebSite extends BaseSingletonClass{
 	 */
 	public function getUrlToChangeLocale($locale, $absolute = false){
 
-	    $newURI = $this->_URI;
+	    $newURI = ltrim($_SERVER['REQUEST_URI'], '/');
 
 	    $language = substr($locale, 0, 2);
 
-	    if(substr($this->_URI, 0, 2) === $this->_primaryLanguage){
+	    if(substr($newURI, 0, 2) === $this->_primaryLanguage){
 
-	        $newURI = StringUtils::replace($this->_URI, $this->_primaryLanguage, $language, 1);
+	        $newURI = StringUtils::replace($newURI, $this->_primaryLanguage, $language, 1);
 	    }
 
 	    return $this->getUrl($newURI, $absolute);
