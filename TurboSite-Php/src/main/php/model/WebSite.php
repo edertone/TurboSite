@@ -430,9 +430,15 @@ class WebSite extends BaseSingletonClass{
 	    echo '<title>'.$this->metaTitle.'</title>'."\n";
 	    echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
 	    echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
-	    echo '<link rel="manifest" href="/manifest.json">'."\n";
-	    echo '<link rel="apple-touch-icon" href="/icon.png">'."\n";
-	    // <!-- Place favicon.ico in the root directory -->
+
+	    // Favicons
+	    echo '<link rel="icon" type="image/png" sizes="16x16" href="/resources/favicons/16x16.png">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="32x32" href="/resources/favicons/32x32.png">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="96x96" href="/resources/favicons/96x96.png">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="128x128" href="/resources/favicons/128x128.png">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="196x196" href="/resources/favicons/196x196.png">'."\n";
+
+	    // Global css file
 	    echo '<link rel="stylesheet" href="/glob-'.$this->_cacheHash.'.css">'."\n";
 
         // Generate the components css
