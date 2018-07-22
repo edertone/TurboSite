@@ -244,22 +244,49 @@ class WebSite extends BaseSingletonClass{
 	 */
 	private function _sanitizeUrl(){
 
-	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale
+	    $redirectTo = $this->_fullURL;
+
+	    // 301 Redirect to remove any possible query string.
+	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
+	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
+	    if(strpos($redirectTo, '?') !== false){
+
+	        $redirectTo = 'https://'.$_SERVER['HTTP_HOST'].'/'.$this->_URI;
+	    }
+
+	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
 	    if(StringUtils::isEmpty($this->_URI) ||
 	        (count($this->_URIElements) === 2 &&
 	            strlen($this->_URIElements[0]) === 2 &&
 	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
 	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
 
-	                $this->_301Redirect($this->_primaryLanguage);
+	        $redirectTo = 'https://'.$_SERVER['HTTP_HOST'].'/'.$this->_primaryLanguage;
 	    }
 
-	    // 301 Redirect to remove any possible query string.
-	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
-	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
-	    if(strpos($this->_fullURL, '?') !== false){
+	    // Remove any trailing slash from the url
+	    if(substr($redirectTo, -1) === '/'){
 
-	        $this->_301Redirect($this->_URI);
+	        $redirectTo = substr_replace($redirectTo, '', strlen($redirectTo) - 1, 1);
+	    }
+
+	    // Move from http to https if necessary
+	    if(strpos(strtolower($redirectTo), 'http:') === 0){
+
+	        $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
+	    }
+
+ 	    // Redirect the www version to NO www
+	    if(strpos(strtolower($redirectTo), 'https://www.') === 0){
+
+	        $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
+	    }
+
+	    // Check if a redirect must be performed
+	    if($redirectTo !== $this->_fullURL){
+
+	        header('location:'.$redirectTo, true, 301);
+	        die();
 	    }
 	}
 
