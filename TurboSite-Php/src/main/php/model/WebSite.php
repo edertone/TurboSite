@@ -118,6 +118,16 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
+	 * If the website is not located at the root of the host, this property contains
+	 * the url fragment that points to the website root.
+	 *
+	 * Note that this fragment must be formatted so it does not start nor end with /.
+	 * If the site is placed at the root of the domain, we will leave this property as an empty string
+	 */
+	private $_baseURL = '';
+
+
+	/**
 	 * Contains the value for the current url URI fragment
 	 */
 	private $_fullURL = '';
@@ -197,6 +207,7 @@ class WebSite extends BaseSingletonClass{
 	    $this->_cacheHash = $setup->cacheHash;
 	    $this->_homeView = $setup->homeView;
 	    $this->_singleParameterView = $setup->singleParameterView;
+	    $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
 
 	    // Load all the configured resourcebundle paths
 	    $bundles = [];
@@ -453,34 +464,33 @@ class WebSite extends BaseSingletonClass{
 	    }
 
 	    echo '<meta charset="utf-8">'."\n";
-	    echo '<meta http-equiv="x-ua-compatible" content="ie=edge">'."\n";
 	    echo '<title>'.$this->metaTitle.'</title>'."\n";
 	    echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
 	    echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
 
 	    // Favicons
-	    echo '<link rel="icon" type="image/png" sizes="16x16" href="/resources/favicons/16x16.png">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="32x32" href="/resources/favicons/32x32.png">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="96x96" href="/resources/favicons/96x96.png">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="128x128" href="/resources/favicons/128x128.png">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="196x196" href="/resources/favicons/196x196.png">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl('/resources/favicons/16x16.png').'">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl('/resources/favicons/32x32.png').'">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="96x96" href="'.$this->getUrl('/resources/favicons/96x96.png').'">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="128x128" href="'.$this->getUrl('/resources/favicons/128x128.png').'">'."\n";
+	    echo '<link rel="icon" type="image/png" sizes="196x196" href="'.$this->getUrl('/resources/favicons/196x196.png').'">'."\n";
 
 	    // Global css file
-	    echo '<link rel="stylesheet" href="/glob-'.$this->_cacheHash.'.css">'."\n";
+	    echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
 
         // Generate the components css
         foreach ($this->_loadedComponents as $loadedComponent) {
 
             if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css')){
 
-                echo '<link rel="stylesheet" href="/comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css">'."\n";
+                echo '<link rel="stylesheet" href="'.$this->getUrl('comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css').'">'."\n";
             }
         }
 
         // Generate the view css if we are on a view
         if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
 
-            echo '<link rel="stylesheet" href="/view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css">'."\n";
+            echo '<link rel="stylesheet" href="'.$this->getUrl('/view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css').'">'."\n";
         }
 	}
 
@@ -491,7 +501,7 @@ class WebSite extends BaseSingletonClass{
 	public function echoJavaScriptTags(){
 
 	    // Generate the global js script
-	    echo '<script src="/glob-'.$this->_cacheHash.'.js" defer></script>';
+	    echo '<script src="'.$this->getUrl('glob-'.$this->_cacheHash.'.js').'" defer></script>';
 	}
 
 
@@ -558,22 +568,29 @@ class WebSite extends BaseSingletonClass{
 	        return $formattedPath;
 	    }
 
+	    $formattedPath = StringUtils::formatPath('/'.$this->_baseURL.'/'.$formattedPath, '/');
+
+	    $formattedPath = $formattedPath === '' ? '/' : $formattedPath;
+
 	    // Check if absolute url is required
 	    if($absolute){
 
-	        return $path;
+	        return 'https://'.$_SERVER['HTTP_HOST'].$formattedPath;
 
 	    }else{
 
-	        return '/'.$path;
+	        return $formattedPath;
 	    }
 	}
 
 
 	/**
-	 * TODO
+	 * Obtain a valid url based on the current website root.
 	 *
-	 * @return string The generated url
+	 * @param string $path A path relative to the root of the site
+	 * @param boolean $absolute Set it to true to get the full url including https and the current domain.
+	 *
+	 * @return string the generated url
 	 */
 	public function echoUrl($path = '', $absolute = false){
 
@@ -623,7 +640,7 @@ class WebSite extends BaseSingletonClass{
 	    // Add all the parameters to the url
 	    $parameters = array_map(function ($p) {return rawurlencode($p);}, $parameters);
 
-	    return htmlspecialchars($this->getUrl('', $absolute).implode('/', array_merge($result, $parameters)));
+	    return htmlspecialchars($this->getUrl(implode('/', array_merge($result, $parameters)), $absolute));
 	}
 
 
