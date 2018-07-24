@@ -262,7 +262,7 @@ class WebSite extends BaseSingletonClass{
 	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
 	    if(strpos($redirectTo, '?') !== false){
 
-	        $redirectTo = 'https://'.$_SERVER['HTTP_HOST'].'/'.$this->_URI;
+	        $redirectTo = $this->getUrl($this->_URI);
 	    }
 
 	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
@@ -272,7 +272,7 @@ class WebSite extends BaseSingletonClass{
 	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
 	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
 
-	        $redirectTo = 'https://'.$_SERVER['HTTP_HOST'].'/'.$this->_primaryLanguage;
+            $redirectTo = $this->getUrl($this->_primaryLanguage, true);
 	    }
 
 	    // Remove any trailing slash from the url
@@ -296,8 +296,7 @@ class WebSite extends BaseSingletonClass{
 	    // Check if a redirect must be performed
 	    if($redirectTo !== $this->_fullURL){
 
-	        header('location:'.$redirectTo, true, 301);
-	        die();
+	        $this->_301Redirect($redirectTo);
 	    }
 	}
 
@@ -367,7 +366,7 @@ class WebSite extends BaseSingletonClass{
 	            $redirectUrl += '/'.$this->_URIElements[$i];
 	        }
 
-	        $this->_301Redirect($redirectUrl);
+	        $this->_301Redirect($this->getUrl($redirectUrl, true));
 	    }
 	}
 
@@ -557,7 +556,7 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @return string
 	 */
-	public function getUrl($path = '', $absolute = false){
+	public function getUrl($path = '', $fullUrl = false){
 
 	    // Sanitize the received path
 	    $formattedPath = StringUtils::formatPath($path, '/');
@@ -572,15 +571,7 @@ class WebSite extends BaseSingletonClass{
 
 	    $formattedPath = $formattedPath === '' ? '/' : $formattedPath;
 
-	    // Check if absolute url is required
-	    if($absolute){
-
-	        return 'https://'.$_SERVER['HTTP_HOST'].$formattedPath;
-
-	    }else{
-
-	        return $formattedPath;
-	    }
+	    return ($fullUrl ? 'https://'.$_SERVER['HTTP_HOST'] : '').$formattedPath;
 	}
 
 
@@ -588,13 +579,13 @@ class WebSite extends BaseSingletonClass{
 	 * Obtain a valid url based on the current website root.
 	 *
 	 * @param string $path A path relative to the root of the site
-	 * @param boolean $absolute Set it to true to get the full url including https and the current domain.
+	 * @param boolean $fullUrl Set it to true to get the full url including https and the current domain.
 	 *
 	 * @return string the generated url
 	 */
-	public function echoUrl($path = '', $absolute = false){
+	public function echoUrl($path = '', $fullUrl = false){
 
-	    echo $this->getUrl($path, $absolute);
+	    echo $this->getUrl($path, $fullUrl);
 	}
 
 
@@ -603,7 +594,7 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @return string
 	 */
-	public function getUrlToView(string $view, $parameters = '', bool $absolute = false){
+	public function getUrlToView(string $view, $parameters = '', bool $fullUrl = false){
 
 	    if(is_string($parameters)){
 
@@ -640,7 +631,7 @@ class WebSite extends BaseSingletonClass{
 	    // Add all the parameters to the url
 	    $parameters = array_map(function ($p) {return rawurlencode($p);}, $parameters);
 
-	    return htmlspecialchars($this->getUrl(implode('/', array_merge($result, $parameters)), $absolute));
+	    return htmlspecialchars($this->getUrl(implode('/', array_merge($result, $parameters)), $fullUrl));
 	}
 
 
@@ -649,13 +640,13 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @param string $view The name of the view. For example: Home
 	 * @param mixed $parameters The list of parameters to pass to the PHP call. If a single parameter is sent, it can be a string. If more than one will be passed, it must be an array.
-	 * @param boolean $absolute True to get the full absolute url (http://...) or false to get it relative to the current domain
+	 * @param boolean $fullUrl True to get the full absolute url (http://...) or false to get it relative to the current domain
 	 *
 	 * @return void
 	 */
-	public function echoUrlToView($view, $parameters = '', $absolute = false){
+	public function echoUrlToView($view, $parameters = '', $fullUrl = false){
 
-	    echo $this->getUrlToView($view, $parameters, $absolute);
+	    echo $this->getUrlToView($view, $parameters, $fullUrl);
 	}
 
 
@@ -664,7 +655,7 @@ class WebSite extends BaseSingletonClass{
 	 *
 	 * @return string
 	 */
-	public function getUrlToChangeLocale($locale, $absolute = false){
+	public function getUrlToChangeLocale($locale, $fullUrl = false){
 
 	    $newURI = ltrim($_SERVER['REQUEST_URI'], '/');
 
@@ -675,7 +666,7 @@ class WebSite extends BaseSingletonClass{
 	        $newURI = StringUtils::replace($newURI, $this->_primaryLanguage, $language, 1);
 	    }
 
-	    return $this->getUrl($newURI, $absolute);
+	    return $this->getUrl($newURI, $fullUrl);
 	}
 
 
@@ -683,13 +674,13 @@ class WebSite extends BaseSingletonClass{
 	 * Gives the url that will allow us to change the locale for the current document URI
 	 *
 	 * @param string $locale The locale we want to set on the new url
-	 * @param boolean $absolute True to get the full absolute url (https://...) or false to get it relative to the current domain
+	 * @param boolean $fullUrl True to get the full absolute url (https://...) or false to get it relative to the current domain
 	 *
 	 * @return void
 	 */
-	public function echoUrlToChangeLocale($locale, $absolute = false){
+	public function echoUrlToChangeLocale($locale, $fullUrl = false){
 
-	    echo $this->getUrlToChangeLocale($locale, $absolute);
+	    echo $this->getUrlToChangeLocale($locale, $fullUrl);
 	}
 
 
@@ -711,7 +702,7 @@ class WebSite extends BaseSingletonClass{
 	private function _301Redirect($url){
 
 	    // TODO - should this be moved to turbocommons?
-	    header('location:/'.$url, true, 301);
+	    header('location:'.$url, true, 301);
 	    die();
 	}
 
