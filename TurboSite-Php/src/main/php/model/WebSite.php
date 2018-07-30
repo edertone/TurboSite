@@ -266,7 +266,7 @@ class WebSite extends BaseSingletonClass{
 	    }
 
 	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
-	    if(StringUtils::isEmpty($this->_URI) ||
+	    if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
 	        (count($this->_URIElements) === 2 &&
 	            strlen($this->_URIElements[0]) === 2 &&
 	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
@@ -489,7 +489,7 @@ class WebSite extends BaseSingletonClass{
         // Generate the view css if we are on a view
         if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
 
-            echo '<link rel="stylesheet" href="'.$this->getUrl('/view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css').'">'."\n";
+            echo '<link rel="stylesheet" href="'.$this->getUrl('view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css').'">'."\n";
         }
 	}
 
@@ -658,6 +658,12 @@ class WebSite extends BaseSingletonClass{
 	public function getUrlToChangeLocale($locale, $fullUrl = false){
 
 	    $newURI = ltrim($_SERVER['REQUEST_URI'], '/');
+
+	    // Remove the baseurl/ from the beginning if it exists
+	    if (substr($newURI, 0, strlen($this->_baseURL.'/')) == $this->_baseURL.'/') {
+
+	        $newURI = ltrim(substr($newURI, strlen($this->_baseURL.'/')), '/');
+	    }
 
 	    $language = substr($locale, 0, 2);
 
