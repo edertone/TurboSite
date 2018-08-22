@@ -18,6 +18,7 @@ use org\turbocommons\src\main\php\managers\LocalizationManager;
 use org\turbocommons\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
+use org\turbosite\src\main\php\managers\GlobalErrorManager;
 
 
 /**
@@ -176,7 +177,21 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * Initialize the website structure and generate the html code for the current url
+	 * Singleton constructor overriden to allow the global error manager initialization as fast as possible
+	 *
+	 * @return WebSite The Singleton instance.
+	 */
+	public static function getInstance(){
+
+	    GlobalErrorManager::getInstance()->initialize();
+
+	    return parent::getInstance();
+	}
+
+
+	/**
+	 * The main website object starting point.
+	 * Initializes the structure and generates the html code for the current url
 	 */
 	public function initialize($rootPath){
 
@@ -203,6 +218,11 @@ class WebSite extends BaseSingletonClass{
 	    $this->_fullURL = $this->_browserManager->getCurrentUrl();
 
 	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+
+	    GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
+	    GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
+	    GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
+	    GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
 
 	    $this->_cacheHash = $setup->cacheHash;
 	    $this->_homeView = $setup->homeView;
