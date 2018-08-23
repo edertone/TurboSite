@@ -16,7 +16,7 @@ use Exception;
 use Throwable;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
-use org\turbosite\src\main\php\model\ErrorData;
+use org\turbosite\src\main\php\model\ProblemData;
 
 
 /**
@@ -140,8 +140,8 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 // 		if($message != ''){
 
-// 			$problemData = new ErrorData();
-// 			$problemData->type = ErrorData::PHP_WARNING;
+// 			$problemData = new ProblemData();
+// 			$problemData->type = ProblemData::PHP_WARNING;
 // 			$problemData->fileName = __FILE__;
 // 			$problemData->line = '';
 // 			$problemData->message = $message.' Malicious users will get lots of information, please disable all php error browser output.';
@@ -164,11 +164,11 @@ class GlobalErrorManager extends BaseSingletonClass{
 	/**
 	 * Output the given problem to browser with a pretty html format
 	 *
-	 * @param ErrorData $problemData An ErrorData entity instance containing the information of an exception to send.
+	 * @param ProblemData $problemData An ProblemData entity instance containing the information of an exception to send.
 	 *
 	 * @return void
 	 */
-	private function _sendProblemToBrowser(ErrorData $problemData){
+	private function _sendProblemToBrowser(ProblemData $problemData){
 
 	    echo '<p><b>PHP Problem: '.$problemData->type.'<br>'.$problemData->message.'</b><br>';
 
@@ -179,6 +179,8 @@ class GlobalErrorManager extends BaseSingletonClass{
 			echo ' line '.$problemData->line;
 		}
 
+		echo '<br>'.str_replace("\n", '<br>', $problemData->trace);
+
 		echo '</p>';
 	}
 
@@ -188,13 +190,13 @@ class GlobalErrorManager extends BaseSingletonClass{
 	 * <i>- Browser:</i> The browser info.<br>
 	 * <i>- Cookies:</i> The current cookies state when the error occurred.<br><br>
 	 *
-	 * @param ErrorData $problemData see ErrorManager::_sendProblemToBrowser
+	 * @param ProblemData $problemData see ErrorManager::_sendProblemToBrowser
 	 *
 	 * @see GlobalErrorManager::_sendProblemToBrowser
 	 *
 	 * @return void
 	 */
-	private function _sendProblemToMail(ErrorData $problemData){
+	private function _sendProblemToMail(ProblemData $problemData){
 
 		// No error type means nothing to do
 		if($problemData->type == '' || $problemData->fileName == ''){
@@ -365,7 +367,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 				default:
 			}
 
-			$problemData = new ErrorData();
+			$problemData = new ProblemData();
 			$problemData->type = $type;
 			$problemData->fileName = $errorFile;
 			$problemData->line = $errorLine;
@@ -386,7 +388,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 	    set_exception_handler(function (Throwable $error) {
 
-	        $problemData = new ErrorData();
+	        $problemData = new ProblemData();
 	        $problemData->type = 'FATAL EXCEPTION';
 	        $problemData->fileName = $error->getFile();
 	        $problemData->line = $error->getLine();

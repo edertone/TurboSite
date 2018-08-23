@@ -15,9 +15,9 @@ use org\turbosite\src\main\php\managers\GlobalErrorManager;
 
 
 /**
- * This entity is used by the GlobalErrorManger class to encapuslate all the information of a single application exception.
+ * This entity is used by the GlobalErrorManger class to encapuslate all the information of a single application exception or warning.
  */
-class ErrorData{
+class ProblemData{
 
 	/** The error type */
 	public $type = '';
