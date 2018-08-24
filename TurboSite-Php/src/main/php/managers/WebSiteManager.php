@@ -10,7 +10,7 @@
  */
 
 
-namespace org\turbosite\src\main\php\model;
+namespace org\turbosite\src\main\php\managers;
 
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
@@ -18,13 +18,12 @@ use org\turbocommons\src\main\php\managers\LocalizationManager;
 use org\turbocommons\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
-use org\turbosite\src\main\php\managers\GlobalErrorManager;
 
 
 /**
  * The global application instance where all the framework methods are found
  */
-class WebSite extends BaseSingletonClass{
+class WebSiteManager extends BaseSingletonClass{
 
 
     /**
@@ -179,7 +178,7 @@ class WebSite extends BaseSingletonClass{
 	/**
 	 * Singleton constructor overriden to allow the global error manager initialization as fast as possible
 	 *
-	 * @return WebSite The Singleton instance.
+	 * @return WebSiteManager The Singleton instance.
 	 */
 	public static function getInstance(){
 
@@ -562,7 +561,7 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * @see WebSite::getLoc
+	 * @see WebSiteManager::getLoc
 	 * @see LocalizationManager::get
 	 */
 	public function echoLoc(string $key, $options = ''){
@@ -572,7 +571,7 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * @see WebSite::echoUrl
+	 * @see WebSiteManager::echoUrl
 	 *
 	 * @return string
 	 */
@@ -610,7 +609,7 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * @see WebSite::echoUrlToView
+	 * @see WebSiteManager::echoUrlToView
 	 *
 	 * @return string
 	 */
@@ -671,7 +670,7 @@ class WebSite extends BaseSingletonClass{
 
 
 	/**
-	 * @see WebSite::echoUrlToChangeLocale
+	 * @see WebSiteManager::echoUrlToChangeLocale
 	 *
 	 * @return string
 	 */
