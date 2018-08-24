@@ -162,30 +162,6 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 
 	/**
-	 * Output the given problem to browser with a pretty html format
-	 *
-	 * @param ProblemData $problemData An ProblemData entity instance containing the information of an exception to send.
-	 *
-	 * @return void
-	 */
-	private function _sendProblemToBrowser(ProblemData $problemData){
-
-	    echo '<p><b>PHP Problem: '.$problemData->type.'<br>'.$problemData->message.'</b><br>';
-
-	    echo $problemData->fileName;
-
-		if(isset($problemData->line) && $problemData->line !== ''){
-
-			echo ' line '.$problemData->line;
-		}
-
-		echo '<br>'.str_replace("\n", '<br>', $problemData->trace);
-
-		echo '</p>';
-	}
-
-
-	/**
 	 * Send a notification email with the specified error data. It also sends the following data:<br>
 	 * <i>- Browser:</i> The browser info.<br>
 	 * <i>- Cookies:</i> The current cookies state when the error occurred.<br><br>
@@ -410,22 +386,50 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 	    register_shutdown_function(function() {
 
-	        foreach ($this->_problemsFound as $problem) {
+	        // Check if problems need to be sent to browser output
+	        $errorsHtmlCode = '';
 
-	            // Check if problem needs to be sent to browser output
-	            if(($this->exceptionsToBrowser && $problem->type === 'FATAL EXCEPTION') ||
-	               ($this->warningsToBrowser && $problem->type !== 'FATAL EXCEPTION')){
+            foreach ($this->_problemsFound as $problem) {
 
-	                $this->_sendProblemToBrowser($problem);
-	            }
+                if(($this->exceptionsToBrowser && $problem->type === 'FATAL EXCEPTION') ||
+                    ($this->warningsToBrowser && $problem->type !== 'FATAL EXCEPTION')){
 
-	            // Check if problem needs to be sent by email
-	            if(($this->exceptionsToMail && $problem->type === 'FATAL EXCEPTION') ||
-	                ($this->warningsToMail && $problem->type !== 'FATAL EXCEPTION')){
+                        $errorsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
 
-	                    $this->_sendProblemToMail($problem);
-	            }
+                        $errorsHtmlCode .= $problem->type.'<br>'.$problem->message.'</b><br>';
+
+                        $errorsHtmlCode .= $problem->fileName;
+
+                        if(isset($problem->line) && $problem->line !== ''){
+
+                            $errorsHtmlCode .= ' line '.$problem->line;
+                        }
+
+                        $errorsHtmlCode .= '<br>'.str_replace("\n", '<br>', $problem->trace);
+
+                        $errorsHtmlCode .= '</p>';
+                }
+            }
+
+            if($errorsHtmlCode !== ''){
+
+	            echo '<div id="turbosite-global-error-manager-problem" style="width: 100%; background-color: #000; opacity: .8; position: fixed; padding: 15px">';
+	            echo $errorsHtmlCode;
+	            echo '</div>';
 	        }
+
+	        // Check if problems need to be sent to mail
+// 	        foreach ($this->_problemsFound as $problem) {
+
+
+
+// 	            // Check if problem needs to be sent by email
+// 	            if(($this->exceptionsToMail && $problem->type === 'FATAL EXCEPTION') ||
+// 	                ($this->warningsToMail && $problem->type !== 'FATAL EXCEPTION')){
+
+// 	                    $this->_sendProblemToMail($problem);
+// 	            }
+// 	        }
 	    });
 	}
 }

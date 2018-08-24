@@ -25,12 +25,5 @@
         }
     },
     "release": {
-    },
-    "test": {
-        "php": {
-            "enabled": false,
-            "coverageReport": true,
-            "coverageReportOpenAfterTests": true
-        }
     }
 }
