@@ -10,6 +10,13 @@
  */
 
 
+// Check php version
+if (version_compare(PHP_VERSION, '7.1.0', '<')) {
+
+    die('PHP 7.1.0 required but found '.PHP_VERSION);
+}
+
+
 // Register the autoload method that will locate and automatically load the library classes
 spl_autoload_register(function($className){
 
