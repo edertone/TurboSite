@@ -140,6 +140,12 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
+	 * Stores the list of required JS cdns and their respective fallback resources
+	 */
+	private $_globalCDNS = [];
+
+
+	/**
 	 * Get the first language of the list of translation priorities
 	 */
 	public function getPrimaryLanguage(){
@@ -246,6 +252,15 @@ class WebSiteManager extends BaseSingletonClass{
 	            throw new UnexpectedValueException(print_r($errors, true));
 	        }
 	    });
+
+	    // Load all the configured javascript CDNS
+        foreach ($setup->globalCDNS as $cdn) {
+
+            $this->_globalCDNS[] = [
+                'url' => $cdn->url,
+                'fallback' => $cdn->fallback
+            ];
+        }
 
 	    // Detect the primary locale from the url, cookies, browser or the project list of locales
 	    $this->_primaryLanguage = $this->_URIElements[0];
@@ -514,9 +529,21 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * TODO
+	 * Write the html code to load the page js scripts and code
 	 */
 	public function echoJavaScriptTags(){
+
+	    // Generate the code to load CDN libs
+	    foreach ($this->_globalCDNS as $cdn) {
+
+	        echo '<script src="'.$cdn['url'].'" crossorigin="anonymous"></script>'."\n";
+
+	        if(!StringUtils::isEmpty($cdn['fallbackResource'])){
+
+	           echo "<script>".$cdn['fallbackVerify'];
+	           echo " || document.write('<script src=\"".$cdn['fallbackResource']."\"><\/script>')</script>\n";
+	        }
+	    }
 
 	    // Generate the global js script
 	    echo '<script src="'.$this->getUrl('glob-'.$this->_cacheHash.'.js').'" defer></script>';
