@@ -258,7 +258,8 @@ class WebSiteManager extends BaseSingletonClass{
 
             $this->_globalCDNS[] = [
                 'url' => $cdn->url,
-                'fallback' => $cdn->fallback
+                'fallbackVerify' => $cdn->fallbackVerify,
+                'fallbackResource' => $cdn->fallbackResource
             ];
         }
 
@@ -540,8 +541,9 @@ class WebSiteManager extends BaseSingletonClass{
 
 	        if(!StringUtils::isEmpty($cdn['fallbackResource'])){
 
-	           echo "<script>".$cdn['fallbackVerify'];
-	           echo " || document.write('<script src=\"".$cdn['fallbackResource']."\"><\/script>')</script>\n";
+	           $url = $this->getUrl($cdn['fallbackResource']);
+
+	           echo "<script>".$cdn['fallbackVerify']." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
 	        }
 	    }
 
