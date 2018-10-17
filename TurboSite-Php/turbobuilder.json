@@ -1,8 +1,11 @@
 {
+
+    "$schema": "https://raw.githubusercontent.com/edertone/TurboBuilder/master/TurboBuilder-Node/src/main/resources/json-schema/turbobuilder.schema.json",
+
     "metadata": {
         "name": "turbosite-php",
         "description": "Php based web framework",
-        "builderVersion": "0.5.2"
+        "builderVersion": "0.6.0"
     },
     "validate": {
         "phpNamespaces" : {
