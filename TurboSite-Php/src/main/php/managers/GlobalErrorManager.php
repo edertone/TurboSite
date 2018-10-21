@@ -17,6 +17,8 @@ use Throwable;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
 use org\turbosite\src\main\php\model\ProblemData;
+use org\turbocommons\src\main\php\utils\StringUtils;
+use org\turbocommons\src\main\php\managers\MailManager;
 
 
 /**
@@ -162,136 +164,6 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 
 	/**
-	 * Send a notification email with the specified error data. It also sends the following data:<br>
-	 * <i>- Browser:</i> The browser info.<br>
-	 * <i>- Cookies:</i> The current cookies state when the error occurred.<br><br>
-	 *
-	 * @param ProblemData $problemData see ErrorManager::_sendProblemToBrowser
-	 *
-	 * @see GlobalErrorManager::_sendProblemToBrowser
-	 *
-	 * @return void
-	 */
-	private function _sendProblemToMail(ProblemData $problemData){
-
-		// No error type means nothing to do
-		if($problemData->type == '' || $problemData->fileName == ''){
-
-			return;
-		}
-
-		// If php errors are ignored, we will skip the error
-		if(in_array($problemData->type, $this->ignoreErrorTypes)){
-
-			return;
-		}
-
-		// If the current browser is detected as a bot and we want to ignore bots and crawlers, we will skip the error
-		if(in_array($problemData->type, $this->ignoreBrowserBots) && BrowserManager::isABot()){
-
-			return;
-		}
-
-		// If the error type is Javascript, we will skip non useful errors
-		// TODO: aixo caldra tractar-ho al errormanager de javascript, aqui no te sentit
-		if(strtolower($problemData->type) == 'javascript'){
-
-			// Full js file path must contain the current project domain. Otherwise the error is being raised by an external js file and we won't care.
-			if(strpos($problemData->fileName, $_SERVER['HTTP_HOST']) === false){
-
-				return;
-			}
-		}
-
-		// If the current number of sent messages exceeds 5, we will send no more
-		if(count($this->_messagesSent) >= 5){
-
-			return;
-		}
-
-		// We will split the filename from its path to send them sepparated via mail
-		if(isset($problemData->fileName)){
-
-			$name = str_replace('\\', '/', $problemData->fileName);
-
-			if(strpos($name, '/') !== false){
-				$name = substr(strrchr($name, '/'), 1);
-			}
-			$problemData->filePath = $problemData->fileName;
-			$problemData->fileName = $name;
-		}
-
-		// Define the full URL
-		$fullUrl = isset($problemData->fullUrl) ? $problemData->fullUrl : 'Unknown';
-
-		// Define the referer url if exists
-		$refererUrl = isset($problemData->referer) ? $problemData->referer : '';
-
-		// Define the email subject
-		$subject  = $problemData->type.' for '.str_replace('http://www.', '', $fullUrl).' (Script: '.$problemData->fileName.') IP:'.$_SERVER['REMOTE_ADDR'];
-
-		// Define the email message
-		$errorMessage  = 'Error type: '.(isset($problemData->type) ? $problemData->type : 'Unknown')."\n\n";
-		$errorMessage .= 'IP: '.$_SERVER['REMOTE_ADDR']."\n\n";
-		$errorMessage .= 'Line: '.(isset($problemData->line) ? $problemData->line : 'Unknown')."\n";
-		$errorMessage .= 'File name: '.(isset($problemData->fileName) ? $problemData->fileName : 'Unknown')."\n";
-		$errorMessage .= 'File path: '.(isset($problemData->filePath) ? $problemData->filePath : 'Unknown')."\n";
-		$errorMessage .= 'Full URL: '.$fullUrl."\n";
-		$errorMessage .= 'Referer URL: '.$refererUrl."\n\n";
-		$errorMessage .= 'Message: '.(isset($problemData->message) ? $problemData->message : 'Unknown')."\n\n";
-		$errorMessage .= 'Browser: '.$_SERVER['HTTP_USER_AGENT']."\n\n";
-		$errorMessage .= 'Cookies: '.print_r($_COOKIE, true)."\n\n";
-
-		if(isset($problemData->getParams)){
-			$errorMessage .= 'GET params: '.$problemData->getParams."\n\n";
-		}
-
-		if(isset($problemData->postParams)){
-			$errorMessage .= 'POST params: '.$problemData->postParams."\n\n";
-		}
-
-		// Create a string that will be used to compare already sent messages
-		$messageCompare = $this->exceptionsToMail.$subject.$errorMessage;
-
-		// Add more information related to memory and app context
-		if(isset($problemData->usedMemory)){
-			$errorMessage .= 'Used memory: '.$problemData->usedMemory.' of '.ini_get('memory_limit')."\n\n";
-		}
-
-		// Add the error trace if available
-		if(isset($problemData->trace) && $problemData->trace != ''){
-
-			$errorMessage .= 'Trace: '.substr($problemData->trace, 0, 20000).'...'."\n\n";
-		}
-
-		if(isset($problemData->context)){
-			$errorMessage .= 'Context: '.substr($problemData->context, 0, 20000).'...'."\n\n";
-		}
-
-		// If this same error message has already been sent, we wont send it again.
-		foreach ($this->_messagesSent as $m){
-
-			if($m == $messageCompare){
-
-				return;
-			}
-		}
-
-		// If mail can't be queued, or we are in a localhost enviroment without email cappabilities,
-		// we will launch a warning with the error information, so it does not get lost and goes to the php error logs.
-		// @codingStandardsIgnoreStart
-		if(!@mail($this->exceptionsToMail, $subject, $errorMessage) || $_SERVER['HTTP_HOST'] == 'localhost'){
-
-			// @codingStandardsIgnoreEnd
-			trigger_error($problemData->message.(isset($problemData->trace) ? $problemData->trace : ''), E_USER_WARNING);
-		}
-
-		// Store the message to the list of currently sent messages
-		$this->_messagesSent[] = $messageCompare;
-	}
-
-
-	/**
 	 * Set the error handler to manage non fatal php errors
 	 *
 	 * @return void
@@ -396,7 +268,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 
                         $errorsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
 
-                        $errorsHtmlCode .= $problem->type.'<br>'.$problem->message.'</b><br>';
+                        $errorsHtmlCode .= $problem->type.'<br>'.htmlspecialchars($problem->message).'</b><br>';
 
                         $errorsHtmlCode .= $problem->fileName;
 
@@ -413,7 +285,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 
             if($errorsHtmlCode !== ''){
 
-	            echo '<div id="turbosite-global-error-manager-problem" style="width: 100%; background-color: #000; opacity: .8; position: fixed; padding: 15px">';
+	            echo '<div id="turbosite-global-error-manager-problem" style="left:0px; right:0px; top:0px; background-color: #000; opacity: .8; position: fixed; padding: 15px">';
 	            echo $errorsHtmlCode;
 	            echo '</div>';
 	        }
@@ -431,6 +303,78 @@ class GlobalErrorManager extends BaseSingletonClass{
 // 	            }
 // 	        }
 	    });
+	}
+
+
+	/**
+	 * Send a notification email with the specified error data. It also sends the following data:<br>
+	 * <i>- Browser:</i> The browser info.<br>
+	 * <i>- Cookies:</i> The current cookies state when the error occurred.<br><br>
+	 *
+	 * @param ProblemData $problemData see ErrorManager::_sendProblemToBrowser
+	 *
+	 * @see GlobalErrorManager::_sendProblemToBrowser
+	 *
+	 * @return void
+	 */
+	private function _sendProblemsToMail(ProblemData $problemData){
+
+	    // No error type means nothing to do
+	    if($problemData->type == '' || $problemData->fileName == ''){
+
+	        return;
+	    }
+
+	    $fileName = StringUtils::getPathElement($problemData->fileName);
+	    $filePath = StringUtils::getPath($problemData->fileName);
+	    $fullUrl = StringUtils::isEmpty($problemData->fullUrl) ? 'Unknown' : $problemData->fullUrl;
+	    $refererUrl = StringUtils::isEmpty($problemData->referer) ? '' : $problemData->referer;
+        $subject = $problemData->type.' for '.str_replace('http://www.', '', $fullUrl).' (Script: '.$problemData->fileName.') IP:'.$_SERVER['REMOTE_ADDR'];
+
+	    // Define the email message
+	    $errorMessage  = 'Error type: '.(isset($problemData->type) ? $problemData->type : 'Unknown')."\n\n";
+	    $errorMessage .= 'IP: '.$_SERVER['REMOTE_ADDR']."\n\n";
+	    $errorMessage .= 'Line: '.(isset($problemData->line) ? $problemData->line : 'Unknown')."\n";
+	    $errorMessage .= 'File name: '.($fileName !== '' ? $fileName : 'Unknown')."\n";
+	    $errorMessage .= 'File path: '.($filePath !== '' ? $filePath : 'Unknown')."\n";
+	    $errorMessage .= 'Full URL: '.$fullUrl."\n";
+	    $errorMessage .= 'Referer URL: '.$refererUrl."\n\n";
+	    $errorMessage .= 'Message: '.(isset($problemData->message) ? $problemData->message : 'Unknown')."\n\n";
+	    $errorMessage .= 'Browser: '.$_SERVER['HTTP_USER_AGENT']."\n\n";
+	    $errorMessage .= 'Cookies: '.print_r($_COOKIE, true)."\n\n";
+
+	    if(isset($problemData->getParams)){
+	        $errorMessage .= 'GET params: '.$problemData->getParams."\n\n";
+	    }
+
+	    if(isset($problemData->postParams)){
+	        $errorMessage .= 'POST params: '.$problemData->postParams."\n\n";
+	    }
+
+	    // Add more information related to memory and app context
+	    if(isset($problemData->usedMemory)){
+	        $errorMessage .= 'Used memory: '.$problemData->usedMemory.' of '.ini_get('memory_limit')."\n\n";
+	    }
+
+	    // Add the error trace if available
+	    if(isset($problemData->trace) && $problemData->trace != ''){
+
+	        $errorMessage .= 'Trace: '.substr($problemData->trace, 0, 20000).'...'."\n\n";
+	    }
+
+	    if(isset($problemData->context)){
+	        $errorMessage .= 'Context: '.substr($problemData->context, 0, 20000).'...'."\n\n";
+	    }
+
+	    $mailManager = new MailManager();
+
+	    // If mail can't be queued, or we are in a localhost enviroment without email cappabilities,
+	    // we will launch a warning with the error information, so it does not get lost and goes to the php error logs.
+	    // @codingStandardsIgnoreStart
+	    if(!$mailManager->sendMail('TODO', $this->exceptionsToMail, $subject, $errorMessage)){
+
+	        trigger_error($problemData->message.(isset($problemData->trace) ? $problemData->trace : ''), E_USER_WARNING);
+	    }
 	}
 }
 

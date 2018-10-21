@@ -41,8 +41,8 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Stores the generated hash string that is used to prevent browser from caching
-     * static resources
+     * Stores the generated hash string that is used to prevent browser from caching static resources.
+     * This value is dinamically created when project is built, added as a property named "cacheHash" to turbosite setup.
      */
     private $_cacheHash = '';
 
@@ -282,6 +282,19 @@ class WebSiteManager extends BaseSingletonClass{
 	    }
 
 	    $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+	}
+
+
+	/**
+	 * Import the specified Php file via a require command call
+	 *
+	 * @param string $path A path to the file that must be required, relative to src/main
+	 *
+	 * @return void
+	 */
+	public function require(string $path){
+
+	    require StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
 	}
 
 
