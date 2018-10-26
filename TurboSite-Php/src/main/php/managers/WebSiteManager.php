@@ -48,7 +48,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Stores the filesystem location for the index of the site (the point where src/main folder points),
+     * Stores the filesystem location for the index of the project (the point where src/main folder points),
      * to be used when loading other files or resources
      */
     private $_mainPath = '';
@@ -200,7 +200,7 @@ class WebSiteManager extends BaseSingletonClass{
 	 */
 	public function initialize($rootPath){
 
-	    $this->_mainPath = StringUtils::formatPath(StringUtils::replace($rootPath, StringUtils::getPathElement($rootPath), ''));
+	    $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootPath));
 	    $this->_filesManager = new FilesManager();
 	    $this->_localizationManager = new LocalizationManager();
 	    $this->_browserManager = new BrowserManager();
@@ -210,6 +210,107 @@ class WebSiteManager extends BaseSingletonClass{
 	    $this->_sanitizeUrl();
 
 	    $this->_includeContentBasedOnURI();
+	}
+
+
+	/**
+	 * Check that the url does not contain invalid characters or values and redirect it if necessary
+	 */
+	private function _sanitizeUrl(){
+
+	    $redirectTo = $this->_fullURL;
+
+	    // 301 Redirect to remove any possible query string.
+	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
+	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
+	    if(strpos($redirectTo, '?') !== false){
+
+	        $redirectTo = $this->getUrl($this->_URI);
+	    }
+
+	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
+	    if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
+	        (count($this->_URIElements) === 2 &&
+	            strlen($this->_URIElements[0]) === 2 &&
+	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
+	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
+
+	                $redirectTo = $this->getUrl($this->_primaryLanguage, true);
+	    }
+
+	    // Remove any trailing slash from the url
+	    if(substr($redirectTo, -1) === '/'){
+
+	        $redirectTo = substr_replace($redirectTo, '', strlen($redirectTo) - 1, 1);
+	    }
+
+	    // Move from http to https if necessary
+	    if(strpos(strtolower($redirectTo), 'http:') === 0){
+
+	        $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
+	    }
+
+	    // Redirect the www version to NO www
+	    if(strpos(strtolower($redirectTo), 'https://www.') === 0){
+
+	        $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
+	    }
+
+	    // Check if a redirect must be performed
+	    if($redirectTo !== $this->_fullURL){
+
+	        $this->_301Redirect($redirectTo);
+	    }
+	}
+
+
+	/**
+	 * Chech which content must be required based on the current URI
+	 */
+	private function _includeContentBasedOnURI(){
+
+	    // Php files execution is not allowed
+	    if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
+
+	        // Check if the URI represents a service
+	        if($this->_URIElements[0] === 'http'){
+
+	            include('http/'.$this->_URIElements[1].'.php');
+	            die();
+	        }
+
+	        // Check if the URI represents the home or single parameter view
+	        if(count($this->_URIElements) === 1){
+
+	            if($this->_primaryLanguage === $this->_URIElements[0]){
+
+	                $this->_currentView = $this->_homeView;
+	            }
+
+	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
+
+	                $this->_currentView = $this->_singleParameterView;
+	            }
+	        }
+
+	        // Check if the URI represents a full view with N parameters
+	        if(count($this->_URIElements) > 1 &&
+	            $this->_primaryLanguage === $this->_URIElements[0] &&
+	            is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
+
+	                $this->_currentView = $this->_URIElements[1];
+	        }
+
+	        if($this->_currentView !== ''){
+
+	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
+	            include('view/views/'.$this->_currentView.'/'.$this->_currentView.'.php');
+	            die();
+	        }
+	    }
+
+	    // Reaching here means no match was found for the current URI, so 404 and die
+	    $this->_404Error();
 	}
 
 
@@ -299,103 +400,14 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Check that the url does not contain invalid characters or values and redirect it if necessary
+	 * Gives the filesystem location to the index of the project (the point where src/main folder points), to be used
+	 * when loading other files or resources
+	 *
+	 * @return string
 	 */
-	private function _sanitizeUrl(){
+	public function getMainPath(){
 
-	    $redirectTo = $this->_fullURL;
-
-	    // 301 Redirect to remove any possible query string.
-	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
-	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
-	    if(strpos($redirectTo, '?') !== false){
-
-	        $redirectTo = $this->getUrl($this->_URI);
-	    }
-
-	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
-	    if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
-	        (count($this->_URIElements) === 2 &&
-	            strlen($this->_URIElements[0]) === 2 &&
-	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
-	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
-
-            $redirectTo = $this->getUrl($this->_primaryLanguage, true);
-	    }
-
-	    // Remove any trailing slash from the url
-	    if(substr($redirectTo, -1) === '/'){
-
-	        $redirectTo = substr_replace($redirectTo, '', strlen($redirectTo) - 1, 1);
-	    }
-
-	    // Move from http to https if necessary
-	    if(strpos(strtolower($redirectTo), 'http:') === 0){
-
-	        $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
-	    }
-
- 	    // Redirect the www version to NO www
-	    if(strpos(strtolower($redirectTo), 'https://www.') === 0){
-
-	        $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
-	    }
-
-	    // Check if a redirect must be performed
-	    if($redirectTo !== $this->_fullURL){
-
-	        $this->_301Redirect($redirectTo);
-	    }
-	}
-
-
-	/**
-	 * Chech which content must be required based on the current URI
-	 */
-	private function _includeContentBasedOnURI(){
-
-	    // Php files execution is not allowed
-	    if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
-
-	        // Check if the URI represents a service
-	        if($this->_URIElements[0] === 'http'){
-
-	            include('http/'.$this->_URIElements[1].'.php');
-	            die();
-	        }
-
-	        // Check if the URI represents the home or single parameter view
-	        if(count($this->_URIElements) === 1){
-
-	            if($this->_primaryLanguage === $this->_URIElements[0]){
-
-	                $this->_currentView = $this->_homeView;
-	            }
-
-	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
-
-	                $this->_currentView = $this->_singleParameterView;
-	            }
-	        }
-
-	        // Check if the URI represents a full view with N parameters
-	        if(count($this->_URIElements) > 1 &&
-	           $this->_primaryLanguage === $this->_URIElements[0] &&
-	           is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
-
-	           $this->_currentView = $this->_URIElements[1];
-	        }
-
-	        if($this->_currentView !== ''){
-
-	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	            include('view/views/'.$this->_currentView.'/'.$this->_currentView.'.php');
-	            die();
-	        }
-	    }
-
-	    // Reaching here means no match was found for the current URI, so 404 and die
-	    $this->_404Error();
+	    return $this->_mainPath;
 	}
 
 
