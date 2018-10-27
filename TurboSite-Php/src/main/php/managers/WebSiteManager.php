@@ -55,6 +55,12 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * @see WebSiteManager::getDataPath()
+     */
+    private $_dataPath = '';
+
+
+    /**
 	 * Contains the name for the view that is loaded when a single root parameter is
 	 * specified on the urls
 	 */
@@ -408,6 +414,41 @@ class WebSiteManager extends BaseSingletonClass{
 	public function getMainPath(){
 
 	    return $this->_mainPath;
+	}
+
+
+	/**
+	 * Gives the filesystem location to the data folder, which is the one that contains the webiste files and storage when
+	 * deployed and running.
+	 *
+	 * Note that the full data folder structure must be correct or this method may not find it correctly.
+	 *
+	 * @return string
+	 */
+	public function getDataPath(){
+
+	    if($this->_dataPath !== ''){
+
+	        return $this->_dataPath;
+	    }
+
+	    // Try to find the data path location and store it on the global variable so it is faster the next time
+        if(is_dir($this->_mainPath.'/../data/storage/')){
+
+            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../data');
+        }
+
+        if(is_dir($this->_mainPath.'/../../data/storage/')){
+
+            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../../data');
+        }
+
+        if(is_dir($this->_mainPath.'/../../../data/storage/')){
+
+            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../../../data');
+        }
+
+	    throw new UnexpectedValueException('Could not find data folder');
 	}
 
 
