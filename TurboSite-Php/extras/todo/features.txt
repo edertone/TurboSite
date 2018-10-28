@@ -1,0 +1,6 @@
+Sorted by priority:
+
+- Implement the errors to mail feature
+
+- Prevent url access to folders like data, release, trash, etc.. and allow to folders like data/storage and similar.
+  Review that all this is correctly implemented
