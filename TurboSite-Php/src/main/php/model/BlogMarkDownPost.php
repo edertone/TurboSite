@@ -32,6 +32,16 @@ class BlogMarkDownPost{
 
 
 	/**
+	 * The keywords part of the filesystem path that defines the post.
+	 *
+	 * @example This property will contain the string "some-key-words-are-placed-here" for a blog post that is saved on
+	 * file system with the following path: BLOGROOT/2018/10/25/en-some-key-words-are-placed-here
+	 *
+	 */
+	public $keywords = '';
+
+
+	/**
 	 * The post title. It is detected from the first H1 element found on the text string
 	 */
 	public $title = '';
@@ -41,6 +51,12 @@ class BlogMarkDownPost{
 	 * The full post text as a markdown formatted string (including the post title)
 	 */
 	public $text = '';
+
+
+	/**
+	 * The full post text but formatted with HTML tags instead of the original markdown
+	 */
+	public $textAsHtml = '';
 
 }
 
