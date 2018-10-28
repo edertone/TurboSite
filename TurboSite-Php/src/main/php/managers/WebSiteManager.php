@@ -152,7 +152,8 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Get the first language of the list of translation priorities
+	 * Get the first language of the list of translation priorities, which effectively is the
+	 * language that is currently using the website
 	 */
 	public function getPrimaryLanguage(){
 
@@ -449,6 +450,21 @@ class WebSiteManager extends BaseSingletonClass{
         }
 
 	    throw new UnexpectedValueException('Could not find data folder');
+	}
+
+
+	/**
+	 * Gives the filesystem location to the data/storage folder
+	 *
+	 * Note that the full data folder structure must be correct or this method may not find it correctly.
+	 *
+	 * @see WebSiteManager::getDataPath()
+	 *
+	 * @return string
+	 */
+	public function getDataStoragePath(){
+
+	   return $this->getDataPath().'/storage';
 	}
 
 
