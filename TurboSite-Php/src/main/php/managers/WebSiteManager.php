@@ -61,6 +61,14 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * Flag that tells if the current document has been initialized as a single parameter view.
+     * If true, the current url will only accept a single parameter. No language or view name will be included in the url.
+     * @var string
+     */
+    private $_isSingleParameterView = false;
+
+
+    /**
 	 * Contains the name for the view that is loaded when a single root parameter is
 	 * specified on the urls
 	 */
@@ -105,7 +113,8 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * The number of uri parameters that are allowed on the current url
+	 * Parameters are variable values that can be passed to the website directly into the url, seppared by the slash / character.
+	 * This property defines the amount of parameters that are currently accepted by the url.
 	 */
 	private $_URLEnabledParameters = 0;
 
@@ -266,7 +275,7 @@ class WebSiteManager extends BaseSingletonClass{
 	    // Check if a redirect must be performed
 	    if($redirectTo !== $this->_fullURL){
 
-	        $this->_301Redirect($redirectTo);
+	        $this->redirect301($redirectTo);
 	    }
 	}
 
@@ -469,21 +478,49 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * TODO docs
+	 * Declares the current document as a view, initializes its structure and checks all possible restrictions.
+	 *
+	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
+	 * @param array $paramsDefault A list of default values for the view parameters. If we don't want to define a default for a specific parameter we will put
+	 *        an empty string on its list position. If the current url does not have a value or has an empty value for a default parameter, the url will be
+	 *        modified via a 301 redirect to set the defined default.
+	 * @param array $paramsForce TODO - it should be a list with the values that are forced for each view parameter.
+	 *
+	 * @return void
 	 */
 	public function initializeView($enabledParams = 0, array $paramsDefault = [], array $paramsForce = []){
+
+	    $this->_URLEnabledParameters = $enabledParams;
 
 	    // If URI parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
 	    if((count($this->_URIElements) - 2) > $enabledParams){
 
 	        $redirectUrl = $this->_URIElements[0].'/'.$this->_URIElements[1];
 
-	        for ($i = 2; $i < $enabledParams - 1; $i++) {
+	        for ($i = 0; $i < $enabledParams; $i++) {
 
-	            $redirectUrl += '/'.$this->_URIElements[$i];
+	            $redirectUrl .= '/'.$this->_URIElements[$i + 2];
 	        }
 
-	        $this->_301Redirect($this->getUrl($redirectUrl, true));
+	        $this->redirect301($this->getUrl($redirectUrl, true));
+	    }
+
+	    // Params with default values will be redirected if received empty
+	    for ($i = 0, $l = count($paramsDefault); $i < $l; $i++) {
+
+	        $redirectUrl = $this->_URIElements[0].'/'.$this->_URIElements[1];
+
+	        if(!StringUtils::isEmpty($paramsDefault[$i]) && StringUtils::isEmpty($this->getParam($i))){
+
+	            for ($j = 0; $j < $enabledParams; $j++) {
+
+	                $paramValue  = StringUtils::isEmpty($this->getParam($j)) ? $paramsDefault[$i] : $this->getParam($j);
+
+	                $redirectUrl .= '/'.$paramValue;
+	            }
+
+	            $this->redirect301($this->getUrl($redirectUrl, true));
+	        }
 	    }
 	}
 
@@ -493,6 +530,7 @@ class WebSiteManager extends BaseSingletonClass{
 	*/
 	public function initializeSingleParameterView($language, $acceptedParameters = []){
 
+	    $this->_isSingleParameterView = true;
 	    $this->_URLEnabledParameters = 1;
 
 	    if($acceptedParameters !== '*' && !in_array($this->getParam(), $acceptedParameters)){
@@ -545,7 +583,7 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	 * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
 	 * URL parameters are the custom values that can be passed via url to the framework views.
-	 * They are encoded this way: http://.../locale/viewname/parameter1/parameter2/parameter3/parameter4/...
+	 * They are encoded this way: http://.../locale/viewname/parameter0/parameter1/parameter2/parameter3/...
 	 *
 	 * @param int $index The numeric index for the requested parameter
 	 * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
@@ -565,7 +603,19 @@ class WebSiteManager extends BaseSingletonClass{
 	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
 	    }
 
-	    return $removeHtmlTags ? strip_tags($this->_URIElements[$index]) : $this->_URIElements[$index];
+	    if($this->_isSingleParameterView && $index > 0){
+
+	        throw new UnexpectedValueException('Single parameter view accepts only one parameter');
+	    }
+
+	    if($this->_isSingleParameterView){
+
+	        return $this->_URIElements[0];
+	    }
+
+	    $paramValue = $this->_URIElements[$index + 2];
+
+	    return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
 	}
 
 
@@ -835,7 +885,7 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	 * Perform a 301 redirect (permanently moved) to the specified url.
 	 */
-	private function _301Redirect($url){
+	public function redirect301($url){
 
 	    // TODO - should this be moved to turbocommons?
 	    header('location:'.$url, true, 301);
