@@ -61,14 +61,6 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Flag that tells if the current document has been initialized as a single parameter view.
-     * If true, the current url will only accept a single parameter. No language or view name will be included in the url.
-     * @var string
-     */
-    private $_isSingleParameterView = false;
-
-
-    /**
 	 * Contains the name for the view that is loaded when a single root parameter is
 	 * specified on the urls
 	 */
@@ -115,6 +107,10 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	 * Parameters are variable values that can be passed to the website directly into the url, seppared by the slash / character.
 	 * This property defines the amount of parameters that are currently accepted by the url.
+	 * This is the url parameters format: https://somehost.com/param0/param1/param2/param3
+	 *
+	 * Note that url parameters are different from view parameters. Url first parameter is the inmediate after the host, while view first
+	 * parameter is the one after the view name: https://host.com/2-digit-language/view-name/param0/param1/param2/....
 	 */
 	private $_URLEnabledParameters = 0;
 
@@ -143,7 +139,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Contains the value for the current url URI fragment
+	 * Contains the value for the current url including the initial https://
 	 */
 	private $_fullURL = '';
 
@@ -230,6 +226,78 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
+	 * get the website current full url as it is shown on the user browser
+	 */
+	private function _initializeSetup(){
+
+	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
+	    $this->_URIElements = explode('/', $this->_URI);
+	    $this->_fullURL = $this->_browserManager->getCurrentUrl();
+
+	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+
+	    GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
+	    GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
+	    GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
+	    GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
+
+	    $this->_cacheHash = $setup->cacheHash;
+	    $this->_homeView = $setup->homeView;
+	    $this->_singleParameterView = $setup->singleParameterView;
+	    $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
+
+	    // Load all the configured resourcebundle paths
+	    $bundles = [];
+
+	    foreach ($setup->resourceBundles as $bundle) {
+
+	        $bundles[] = [
+	            'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
+	            'bundles' => $bundle->bundles
+	        ];
+	    }
+
+	    $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
+
+	        if(count($errors) > 0){
+
+	            throw new UnexpectedValueException(print_r($errors, true));
+	        }
+	    });
+
+	        // Load all the configured javascript CDNS
+	        foreach ($setup->globalCDNS as $cdn) {
+
+	            $this->_globalCDNS[] = [
+	                'url' => $cdn->url,
+	                'fallbackVerify' => $cdn->fallbackVerify,
+	                'fallbackResource' => $cdn->fallbackResource
+	            ];
+	        }
+
+	        // Detect the primary locale from the url, cookies, browser or the project list of locales
+	        $this->_primaryLanguage = $this->_URIElements[0];
+
+	        if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+	            $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
+
+	            if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+	                $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
+
+	                if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+	                    $this->_primaryLanguage = $this->_localizationManager->languages()[0];
+	                }
+	            }
+	        }
+
+	        $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+	}
+
+
+	/**
 	 * Check that the url does not contain invalid characters or values and redirect it if necessary
 	 */
 	private function _sanitizeUrl(){
@@ -241,17 +309,17 @@ class WebSiteManager extends BaseSingletonClass{
 	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
 	    if(strpos($redirectTo, '?') !== false){
 
-	        $redirectTo = $this->getUrl($this->_URI);
+	        $redirectTo = substr($redirectTo, 0, strpos($redirectTo, '?'));
 	    }
 
 	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
 	    if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
-	        (count($this->_URIElements) === 2 &&
-	            strlen($this->_URIElements[0]) === 2 &&
-	            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
-	            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
+	       (count($this->_URIElements) >= 2 &&
+            strlen($this->_URIElements[0]) === 2 &&
+            in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
+            strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
 
-	                $redirectTo = $this->getUrl($this->_primaryLanguage, true);
+            $redirectTo = $this->getUrl($this->_primaryLanguage, true);
 	    }
 
 	    // Remove any trailing slash from the url
@@ -270,6 +338,12 @@ class WebSiteManager extends BaseSingletonClass{
 	    if(strpos(strtolower($redirectTo), 'https://www.') === 0){
 
 	        $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
+	    }
+
+	    // Redirect to remove duplicate / characters
+	    if(strpos(substr($redirectTo, 8), '//') !== false){
+
+	        $redirectTo = 'https://'.preg_replace('/\/+/', '/', substr($redirectTo, 8));
 	    }
 
 	    // Check if a redirect must be performed
@@ -327,78 +401,6 @@ class WebSiteManager extends BaseSingletonClass{
 
 	    // Reaching here means no match was found for the current URI, so 404 and die
 	    $this->_404Error();
-	}
-
-
-	/**
-	 * get the website current full url as it is shown on the user browser
-	 */
-	private function _initializeSetup(){
-
-	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
-	    $this->_URIElements = explode('/', $this->_URI);
-	    $this->_fullURL = $this->_browserManager->getCurrentUrl();
-
-	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
-
-	    GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
-	    GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
-	    GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
-	    GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
-
-	    $this->_cacheHash = $setup->cacheHash;
-	    $this->_homeView = $setup->homeView;
-	    $this->_singleParameterView = $setup->singleParameterView;
-	    $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
-
-	    // Load all the configured resourcebundle paths
-	    $bundles = [];
-
-	    foreach ($setup->resourceBundles as $bundle) {
-
-	        $bundles[] = [
-	            'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
-	            'bundles' => $bundle->bundles
-	        ];
-	    }
-
-	    $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
-
-	        if(count($errors) > 0){
-
-	            throw new UnexpectedValueException(print_r($errors, true));
-	        }
-	    });
-
-	    // Load all the configured javascript CDNS
-        foreach ($setup->globalCDNS as $cdn) {
-
-            $this->_globalCDNS[] = [
-                'url' => $cdn->url,
-                'fallbackVerify' => $cdn->fallbackVerify,
-                'fallbackResource' => $cdn->fallbackResource
-            ];
-        }
-
-	    // Detect the primary locale from the url, cookies, browser or the project list of locales
-	    $this->_primaryLanguage = $this->_URIElements[0];
-
-	    if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
-
-	        $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
-
-	        if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
-
-	            $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
-
-	            if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
-
-	                $this->_primaryLanguage = $this->_localizationManager->languages()[0];
-	            }
-	        }
-	    }
-
-	    $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
 	}
 
 
@@ -479,48 +481,73 @@ class WebSiteManager extends BaseSingletonClass{
 
 	/**
 	 * Declares the current document as a view, initializes its structure and checks all possible restrictions.
+	 * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
+	 * The only exception is the home view which follows the format: https://host.com/2-digit-language
 	 *
 	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
-	 * @param array $paramsDefault A list of default values for the view parameters. If we don't want to define a default for a specific parameter we will put
-	 *        an empty string on its list position. If the current url does not have a value or has an empty value for a default parameter, the url will be
-	 *        modified via a 301 redirect to set the defined default.
-	 * @param array $paramsForce TODO - it should be a list with the values that are forced for each view parameter.
+	 * @param array $defaultParameters A list of default values for the view parameters. If the current url does not have a value or has an empty value for
+	 *        a default parameter, the url will be modified via a 301 redirect to set the defined default.
+	 * @param array $forcedParameters TODO - it should be a list with the values that are forced for each view parameter.
 	 *
 	 * @return void
 	 */
-	public function initializeView($enabledParams = 0, array $paramsDefault = [], array $paramsForce = []){
+	public function initializeView($enabledParams = 0, array $defaultParameters = [], array $forcedParameters = []){
 
-	    $this->_URLEnabledParameters = $enabledParams;
+	    // Defines the index where the current url parameters start to be view parameters
+	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
 
-	    // If URI parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-	    if((count($this->_URIElements) - 2) > $enabledParams){
+	    $defaultParametersCount = count($defaultParameters);
 
-	        $redirectUrl = $this->_URIElements[0].'/'.$this->_URIElements[1];
+	    $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
 
-	        for ($i = 0; $i < $enabledParams; $i++) {
+	    $this->_URLEnabledParameters = $enabledParams + $firstViewParamOffset;
 
-	            $redirectUrl .= '/'.$this->_URIElements[$i + 2];
+	    $redirectRequired = false;
+
+	    if($defaultParametersCount > 0){
+
+	        // Default parameters count must not exceed the enabled params
+	        if($defaultParametersCount > $enabledParams){
+
+	            throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
 	        }
 
-	        $this->redirect301($this->getUrl($redirectUrl, true));
+	        // All default parameters must have a value
+	        for ($i = 0; $i < $defaultParametersCount; $i++) {
+
+	            if(StringUtils::isEmpty($defaultParameters[$i])){
+
+	                throw new UnexpectedValueException('Default view parameters cannot be empty (default value for param '.$i.' is empty)');
+	            }
+	        }
+
+	        // Received empty params will be filled with their defaults
+	        $maxParams = max($receivedParamsCount, $defaultParametersCount);
+
+	        for ($j = 0; $j < $maxParams; $j++) {
+
+	            if(isset($defaultParameters[$j]) &&
+	               (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
+	               (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getParam($j))))){
+
+                    $redirectRequired = true;
+
+                    $this->_URIElements[$firstViewParamOffset + $j] = $defaultParameters[$j];
+	            }
+	        }
 	    }
 
-	    // Params with default values will be redirected if received empty
-	    for ($i = 0, $l = count($paramsDefault); $i < $l; $i++) {
+	    // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
+	    if($receivedParamsCount > $enabledParams){
 
-	        $redirectUrl = $this->_URIElements[0].'/'.$this->_URIElements[1];
+	        $redirectRequired = true;
 
-	        if(!StringUtils::isEmpty($paramsDefault[$i]) && StringUtils::isEmpty($this->getParam($i))){
+	        array_splice($this->_URIElements, - ($receivedParamsCount - $enabledParams));
+	    }
 
-	            for ($j = 0; $j < $enabledParams; $j++) {
+	    if($redirectRequired){
 
-	                $paramValue  = StringUtils::isEmpty($this->getParam($j)) ? $paramsDefault[$i] : $this->getParam($j);
-
-	                $redirectUrl .= '/'.$paramValue;
-	            }
-
-	            $this->redirect301($this->getUrl($redirectUrl, true));
-	        }
+	        $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
 	    }
 	}
 
@@ -530,7 +557,6 @@ class WebSiteManager extends BaseSingletonClass{
 	*/
 	public function initializeSingleParameterView($language, $acceptedParameters = []){
 
-	    $this->_isSingleParameterView = true;
 	    $this->_URLEnabledParameters = 1;
 
 	    if($acceptedParameters !== '*' && !in_array($this->getParam(), $acceptedParameters)){
@@ -598,22 +624,25 @@ class WebSiteManager extends BaseSingletonClass{
 	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
 	    }
 
-	    if($index >= $this->_URLEnabledParameters){
+	    if($this->_currentView === $this->_singleParameterView){
 
-	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
-	    }
+	        if($index > 0){
 
-	    if($this->_isSingleParameterView && $index > 0){
-
-	        throw new UnexpectedValueException('Single parameter view accepts only one parameter');
-	    }
-
-	    if($this->_isSingleParameterView){
+	            throw new UnexpectedValueException('Single parameter view accepts only one parameter');
+	        }
 
 	        return $this->_URIElements[0];
 	    }
 
-	    $paramValue = $this->_URIElements[$index + 2];
+	    // Defines the index where the current url parameters start to be view parameters
+	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
+
+	    if($index > $this->_URLEnabledParameters - $firstViewParamOffset){
+
+	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
+	    }
+
+	    $paramValue = $this->_URIElements[$index + $firstViewParamOffset];
 
 	    return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
 	}
