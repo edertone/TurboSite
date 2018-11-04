@@ -151,15 +151,15 @@ class BlogMarkDownManager extends BaseStrictClass{
 	 * @param int $monthIndex The initial index for the months array to start looking for
 	 * @param int $dayIndex The initial index for the days array to start looking for
 	 * @param array $years Array with the list of years from blog root
-	 * @param array $months Array with the list of months for the current year index
-	 * @param array $days Array with the list of days for the current month index
+	 * @param array|null $months Array with the list of months for the current year index
+	 * @param array|null $days Array with the list of days for the current month index
 	 * @param int $count The max number of posts to obtain
 	 * @param array $result An array that will be populated with the result
 	 *
 	 * @return array A list with the $count number of latest blog posts instances, sorted by newest first
 	 */
 	private function _getLatestPostsRecursive(string $language, int $yearIndex, int $monthIndex, int $dayIndex,
-	    array $years, array $months, array $days, int $count, array $result){
+	    array $years, $months, $days, int $count, array $result){
 
 	    $sep = DIRECTORY_SEPARATOR;
 
