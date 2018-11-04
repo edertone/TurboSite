@@ -42,6 +42,15 @@ class BlogMarkDownPost{
 
 
 	/**
+	 * The keywords part of the filesystem path that defines the post, but formatted as an array where each keyword is an
+	 * array element
+	 *
+	 * @see BlogMarkDownPost::keywords
+	 */
+	public $keywordsAsArray = '';
+
+
+	/**
 	 * The post title. It is detected from the first H1 element found on the text string
 	 */
 	public $title = '';

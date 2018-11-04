@@ -12,6 +12,7 @@
 
 namespace org\turbosite\src\main\php\managers;
 
+use Exception;
 use org\turbocommons\src\main\php\model\BaseStrictClass;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbocommons\src\main\php\managers\FilesManager;
@@ -68,6 +69,65 @@ class BlogMarkDownManager extends BaseStrictClass{
 
 
 	/**
+	 * Obtain the data for the specified blog post
+	 *
+	 * @param string $date The date for the blog post we are looking for, in a 'yyyy-mm-dd' format
+	 * @param string $language A two digits string representing the language for the blog post we are requesting
+	 * @param string $keywords THe blog post keywords as they are defined on it's filesystem folder name.
+	 * @param number $minimumSimilarity Specifies the minimum percentage of keywords similarity that we accept for an existing
+	 *        same date blog post to be returned by this method. a value of 100 means we will only accept the exact same keywords
+	 *        for an existing post, while a value of 0 means no restrictions. In any case, the blog post that is
+	 *        closer to the requested keywords will be obtained. If no post meets the minimum similarity, none will be retrieved.
+	 *
+	 * @return BlogMarkDownPost A post instance with the requested post data or null if post was not found
+	 */
+	public function getPost(string $date, string $language, string $keywords, int $minimumSimilarity = 20){
+
+	    $dateParts = explode('-', $date);
+	    $postFolder = $language.'-'.$keywords;
+	    $postRoot = $dateParts[0].DIRECTORY_SEPARATOR.$dateParts[1].DIRECTORY_SEPARATOR.$dateParts[2];
+
+	    $post = $this->createPostFromFilePath($postRoot.DIRECTORY_SEPARATOR.$postFolder);
+
+	    // If no strict match is found, we will try to find the post that is closer to the provided keywords
+	    if($post === null){
+
+	        try {
+
+	            $dirs = $this->_fm->getDirectoryList($this->_rootPath.DIRECTORY_SEPARATOR.$postRoot, 'mDateDesc');
+
+	            $minSimilarity = $minimumSimilarity;
+	            $similarDirName = '';
+
+	            foreach ($dirs as $dir) {
+
+	                $similarity = StringUtils::compareSimilarityPercent($dir, $postFolder);
+
+	                // If the folder name similarity to the requested one is higher than the current minimum, it is accepted
+	                if($similarity > $minSimilarity){
+
+	                    $similarDirName = $dir;
+	                    $minSimilarity = $similarity;
+	                }
+	            }
+
+	            // The most acceptable dir name will be specified here if anyone was found
+	            if($similarDirName !== ''){
+
+	                $post = $this->createPostFromFilePath($postRoot.DIRECTORY_SEPARATOR.$similarDirName);
+	            }
+
+	        } catch (Exception $e) {
+
+	            $post = null;
+	        }
+	    }
+
+	    return $post;
+	}
+
+
+	/**
 	 * Get a list of BlogMarkDownPost instances containing the $count newest available blog posts.
 	 *
 	 * @param string $language A two digit string containing the locale we want for the obtained posts
@@ -100,6 +160,9 @@ class BlogMarkDownManager extends BaseStrictClass{
             }
         }
 
+        // TODO - this is incomplete: Only the posts from the lastest folder are retrieved. If not enought are found there,
+        // the previous folders must be read
+
         return $result;
 	}
 
@@ -107,12 +170,12 @@ class BlogMarkDownManager extends BaseStrictClass{
 	/**
 	 * Obtain a BlogMarkDownPost instace from a given blog post filesystem path.
 	 *
-	 * @param string $postPath Full path to the root of the folder that contains the blog post, based on the blog root folder.
+	 * @param string $postPath Full path to the folder that contains the blog post, starting on the blog root folder.
 	 *
 	 * @example Given a post path like the following: "2018/05/10/en-some-keywords-text-here" based on the main blog root folder, this
 	 *          method will return a blog post instance with all the blog data loaded and ready to use
 	 *
-	 * @return BlogMarkDownPost An instance containing all the blog post data
+	 * @return BlogMarkDownPost An instance containing all the blog post data or null if post could not be found
 	 */
 	private function createPostFromFilePath($postPath){
 
@@ -126,7 +189,16 @@ class BlogMarkDownManager extends BaseStrictClass{
 
 	    $post->keywords = substr($pathParts[3], 3);
 
-	    $post->text = $this->_fm->readFile($this->_rootPath.DIRECTORY_SEPARATOR.$postPath.DIRECTORY_SEPARATOR.'text.md');
+	    $post->keywordsAsArray = explode('-', $post->keywords);
+
+	    try {
+
+	        $post->text = $this->_fm->readFile($this->_rootPath.DIRECTORY_SEPARATOR.$postPath.DIRECTORY_SEPARATOR.'text.md');
+
+	    } catch (Exception $e) {
+
+	        return null;
+	    }
 
 	    $post->textAsHtml = $this->_parseDown->text($post->text);
 

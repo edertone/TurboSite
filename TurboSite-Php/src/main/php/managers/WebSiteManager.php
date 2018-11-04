@@ -400,7 +400,7 @@ class WebSiteManager extends BaseSingletonClass{
 	    }
 
 	    // Reaching here means no match was found for the current URI, so 404 and die
-	    $this->_404Error();
+	    $this->show404Error();
 	}
 
 
@@ -487,11 +487,11 @@ class WebSiteManager extends BaseSingletonClass{
 	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
 	 * @param array $defaultParameters A list of default values for the view parameters. If the current url does not have a value or has an empty value for
 	 *        a default parameter, the url will be modified via a 301 redirect to set the defined default.
-	 * @param array $forcedParameters TODO - it should be a list with the values that are forced for each view parameter.
+	 * @param array $forcedParametersCallback TODO
 	 *
 	 * @return void
 	 */
-	public function initializeView($enabledParams = 0, array $defaultParameters = [], array $forcedParameters = []){
+	public function initializeView($enabledParams = 0, array $defaultParameters = [], callable $forcedParametersCallback = null){
 
 	    // Defines the index where the current url parameters start to be view parameters
 	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
@@ -549,6 +549,33 @@ class WebSiteManager extends BaseSingletonClass{
 
 	        $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
 	    }
+
+	    // Check if a method to obtain the forced parameters needs to be executed and redirect if necessary
+	    if($forcedParametersCallback !== null){
+
+	        $forcedParameters = $forcedParametersCallback();
+	        $forcedParametersCount = count($forcedParameters);
+
+	        if($forcedParametersCount < $enabledParams){
+
+	            throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$enabledParams.')');
+	        }
+
+	        for ($i = 0; $i < $forcedParametersCount; $i++) {
+
+	            if(!StringUtils::isEmpty($forcedParameters[$i]) &&
+	                $this->_URIElements[$firstViewParamOffset + $i] !== $forcedParameters[$i]){
+
+	                $redirectRequired = true;
+	                $this->_URIElements[$firstViewParamOffset + $i] = $forcedParameters[$i];
+	            }
+	        }
+
+	        if($redirectRequired){
+
+	            $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
+	        }
+	    }
 	}
 
 
@@ -561,7 +588,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 	    if($acceptedParameters !== '*' && !in_array($this->getParam(), $acceptedParameters)){
 
-	        $this->_404Error();
+	        $this->show404Error();
 	    }
 
 	    if(!in_array($language, $this->_localizationManager->languages())){
@@ -923,9 +950,10 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Show a 404 error
+	 * Show a 404 error.
+	 * Note that this method uses headers so no output must have been generated when calling it or it won't work.
 	 */
-	private function _404Error(){
+	public function show404Error(){
 
 	    http_response_code(404);
 	    include('error-404.php');
