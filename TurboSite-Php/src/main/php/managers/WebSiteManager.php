@@ -487,7 +487,10 @@ class WebSiteManager extends BaseSingletonClass{
 	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
 	 * @param array $defaultParameters A list of default values for the view parameters. If the current url does not have a value or has an empty value for
 	 *        a default parameter, the url will be modified via a 301 redirect to set the defined default.
-	 * @param array $forcedParametersCallback TODO
+	 * @param array $forcedParametersCallback Forces several view parameters to a fixed value. A callback function will be passed here, which will be executed
+	 *        after the view and default params have been initialized. This method must return an array with the same length as the enabled parameters. Each
+	 *        array element will be a value that will be forced on the same index view parameter and the current url redirected if any of the forced parameters
+	 *        values differ from the actual ones.
 	 *
 	 * @return void
 	 */
@@ -556,7 +559,7 @@ class WebSiteManager extends BaseSingletonClass{
 	        $forcedParameters = $forcedParametersCallback();
 	        $forcedParametersCount = count($forcedParameters);
 
-	        if($forcedParametersCount < $enabledParams){
+	        if($forcedParametersCount !== $enabledParams){
 
 	            throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$enabledParams.')');
 	        }

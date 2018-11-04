@@ -131,39 +131,87 @@ class BlogMarkDownManager extends BaseStrictClass{
 	 * Get a list of BlogMarkDownPost instances containing the $count newest available blog posts.
 	 *
 	 * @param string $language A two digit string containing the locale we want for the obtained posts
-	 * @param string $count The number of latest posts we want to obtain
+	 * @param string $count The max number of latest posts we want to obtain
 	 *
 	 * @return array A list with the $count number of latest blog posts instances, sorted by newest first
 	 */
 	public function getLatestPosts(string $language, int $count){
 
-	    $result = [];
+	    $years = $this->_fm->getDirectoryList($this->_rootPath, 'nameDesc');
 
-	    $path  = DIRECTORY_SEPARATOR.$this->_fm->getDirectoryList($this->_rootPath, 'nameDesc')[0];
+	    return $this->_getLatestPostsRecursive($language, 0, 0, 0, $years, null, null, $count, []);
+	}
 
-	    $path .= DIRECTORY_SEPARATOR.$this->_fm->getDirectoryList($this->_rootPath.$path, 'nameDesc')[0];
 
-	    $path .= DIRECTORY_SEPARATOR.$this->_fm->getDirectoryList($this->_rootPath.$path, 'nameDesc')[0];
+	/**
+	 * Auxiliary method for getLatestPosts to obtain the list of latest blog posts recursively
+	 *
+	 * @param string $language The requested 2 digit language
+	 * @param int $yearIndex The initial index for the years array to start looking for
+	 * @param int $monthIndex The initial index for the months array to start looking for
+	 * @param int $dayIndex The initial index for the days array to start looking for
+	 * @param array $years Array with the list of years from blog root
+	 * @param array $months Array with the list of months for the current year index
+	 * @param array $days Array with the list of days for the current month index
+	 * @param int $count The max number of posts to obtain
+	 * @param array $result An array that will be populated with the result
+	 *
+	 * @return array A list with the $count number of latest blog posts instances, sorted by newest first
+	 */
+	private function _getLatestPostsRecursive(string $language, int $yearIndex, int $monthIndex, int $dayIndex,
+	    array $years, array $months, array $days, int $count, array $result){
 
-	    $files = $this->_fm->getDirectoryList($this->_rootPath.$path, 'mDateDesc');
+	    $sep = DIRECTORY_SEPARATOR;
 
-        foreach ($files as $file) {
+	    if($months === null && strlen($years[$yearIndex]) === 4){
 
-            if(substr($file, 0, 2) === $language){
+	        $months = $this->_fm->getDirectoryList($this->_rootPath.$sep.$years[$yearIndex], 'nameDesc');
+	    }
 
-                $result[] = $this->createPostFromFilePath($path.DIRECTORY_SEPARATOR.$file);
+	    if($days === null && isset($months[$monthIndex]) && strlen($months[$monthIndex]) === 2){
 
-                if(count($result) >= $count){
+	        $days = $this->_fm->getDirectoryList($this->_rootPath.$sep.$years[$yearIndex].$sep.$months[$monthIndex], 'nameDesc');
+	    }
 
-                    break;
-                }
-            }
-        }
+	    if(isset($years[$yearIndex]) && isset($months[$monthIndex]) && isset($days[$dayIndex])){
 
-        // TODO - this is incomplete: Only the posts from the lastest folder are retrieved. If not enought are found there,
-        // the previous folders must be read
+	        $path = $years[$yearIndex].$sep.$months[$monthIndex].$sep.$days[$dayIndex];
 
-        return $result;
+	        if($this->_fm->isDirectory($this->_rootPath.$sep.$path)){
+
+	            $posts = $this->_fm->getDirectoryList($this->_rootPath.$sep.$path, 'mDateDesc');
+
+	            foreach ($posts as $post) {
+
+	                if(substr($post, 0, 2) === $language){
+
+	                    $result[] = $this->createPostFromFilePath($path.$sep.$post);
+
+	                    if(count($result) >= $count){
+
+	                        return $result;
+	                    }
+	                }
+	            }
+	        }
+	    }
+
+	    if($dayIndex < count($days) - 1){
+
+	        return $this->_getLatestPostsRecursive($language, $yearIndex, $monthIndex, $dayIndex + 1, $years, $months, $days, $count, $result);
+	    }
+
+	    if($monthIndex < count($months) - 1){
+
+	        return $this->_getLatestPostsRecursive($language, $yearIndex, $monthIndex + 1, 0, $years, $months, null, $count, $result);
+	    }
+
+	    if($yearIndex < count($years) - 1){
+
+	        return $this->_getLatestPostsRecursive($language, $yearIndex + 1, 0, 0, $years, null, null, $count, $result);
+	    }
+
+	    return $result;
 	}
 
 
