@@ -145,12 +145,6 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Stores all the data for the components that are loaded on the current instance
-	 */
-	private $_loadedComponents = [];
-
-
-	/**
 	 * Stores the list of required JS cdns and their respective fallback resources
 	 */
 	private $_globalCDNS = [];
@@ -613,24 +607,8 @@ class WebSiteManager extends BaseSingletonClass{
 	}
 
 
-	/**
-	 * TODO
-	 */
-	public function loadComponents(array $componentsPaths){
-
-	    foreach ($componentsPaths as $componentPath) {
-
-	        $loadedComponent = ['id' => StringUtils::replace($componentPath, ['/', '\\'], '-')];
-
-	        $this->_loadedComponents[] = $loadedComponent;
-	    }
-	}
-
-
-	// TODO
+	// TODO - this should include all component parts inline: css, php and js
 	public function includeComponent(string $componentPath){
-
-	    // TODO verificar component loaded
 
 	    require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
 	}
@@ -703,15 +681,6 @@ class WebSiteManager extends BaseSingletonClass{
 
 	    // Global css file
 	    echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
-
-        // Generate the components css
-        foreach ($this->_loadedComponents as $loadedComponent) {
-
-            if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css')){
-
-                echo '<link rel="stylesheet" href="'.$this->getUrl('comp-'.$loadedComponent['id'].'-'.$this->_cacheHash.'.css').'">'."\n";
-            }
-        }
 
         // Generate the view css if we are on a view
         if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
