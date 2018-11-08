@@ -405,27 +405,15 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * Import the specified Php file via a require command call
+	 * Resolve the provided relative project path into a full file system path that can be correctly reached via file system.
 	 *
-	 * @param string $path A path to the file that must be required, relative to src/main
+	 * @param string $path A path relative to the project src/main folder
 	 *
-	 * @return void
+	 * @return string A full file system path that is generated from the provided relative one
 	 */
-	public function require(string $path){
+	public function getPath(string $path){
 
-	    require StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
-	}
-
-
-	/**
-	 * Gives the filesystem location to the index of the project (the point where src/main folder points), to be used
-	 * when loading other files or resources
-	 *
-	 * @return string
-	 */
-	public function getMainPath(){
-
-	    return $this->_mainPath;
+	    return StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
 	}
 
 
@@ -482,9 +470,11 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	 * Declares the current document as a view, initializes its structure and checks all possible restrictions.
 	 * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
-	 * The only exception is the home view which follows the format: https://host.com/2-digit-language
+	 * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
+	 * view that must be initialized via the initializeSingleParameterView method.
 	 *
 	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
+	 *        If a view has a missing value for any of the enabled parameters and there's no default value defined, a 404 error will happen.
 	 * @param array $defaultParameters A list of default values for the view parameters. If the current url does not have a value or has an empty value for
 	 *        a default parameter, the url will be modified via a 301 redirect to set the defined default.
 	 * @param array $forcedParametersCallback Forces several view parameters to a fixed value. A callback function will be passed here, which will be executed
@@ -506,6 +496,16 @@ class WebSiteManager extends BaseSingletonClass{
 	    $this->_URLEnabledParameters = $enabledParams + $firstViewParamOffset;
 
 	    $redirectRequired = false;
+
+	    // Check no parameter without default value is empty
+	    for ($i = 0; $i < $enabledParams; $i++) {
+
+	        if($this->getParam($i) === '' &&
+	            (!isset($defaultParameters[$i]) || StringUtils::isEmpty($defaultParameters[$i]))){
+
+	           $this->show404Error();
+	        }
+	    }
 
 	    if($defaultParametersCount > 0){
 
@@ -667,12 +667,13 @@ class WebSiteManager extends BaseSingletonClass{
 	    // Defines the index where the current url parameters start to be view parameters
 	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
 
-	    if($index > $this->_URLEnabledParameters - $firstViewParamOffset){
+	    if($index >= $this->_URLEnabledParameters - $firstViewParamOffset){
 
 	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
 	    }
 
-	    $paramValue = $this->_URIElements[$index + $firstViewParamOffset];
+	    $paramValue = isset($this->_URIElements[$index + $firstViewParamOffset]) ?
+	       $this->_URIElements[$index + $firstViewParamOffset] : '';
 
 	    return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
 	}
