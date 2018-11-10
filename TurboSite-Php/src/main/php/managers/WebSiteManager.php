@@ -76,7 +76,7 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	 * If the current document is a view, the name is stored here
 	 */
-	private $_currentView = '';
+	private $_currentViewName = '';
 
 
 	/**
@@ -175,6 +175,15 @@ class WebSiteManager extends BaseSingletonClass{
 	public function getHomeView(){
 
 	    return $this->_homeView;
+	}
+
+
+	/**
+	 * If the current document is a view, this method will give it's view name
+	 */
+	public function getcurrentViewName(){
+
+	    return $this->_currentViewName;
 	}
 
 
@@ -368,12 +377,12 @@ class WebSiteManager extends BaseSingletonClass{
 
 	            if($this->_primaryLanguage === $this->_URIElements[0]){
 
-	                $this->_currentView = $this->_homeView;
+	                $this->_currentViewName = $this->_homeView;
 	            }
 
 	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
 
-	                $this->_currentView = $this->_singleParameterView;
+	                $this->_currentViewName = $this->_singleParameterView;
 	            }
 	        }
 
@@ -382,13 +391,13 @@ class WebSiteManager extends BaseSingletonClass{
 	            $this->_primaryLanguage === $this->_URIElements[0] &&
 	            is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
 
-	                $this->_currentView = $this->_URIElements[1];
+	                $this->_currentViewName = $this->_URIElements[1];
 	        }
 
-	        if($this->_currentView !== ''){
+	        if($this->_currentViewName !== ''){
 
 	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	            include('view/views/'.$this->_currentView.'/'.$this->_currentView.'.php');
+	            include('view/views/'.$this->_currentViewName.'/'.$this->_currentViewName.'.php');
 	            die();
 	        }
 	    }
@@ -481,7 +490,7 @@ class WebSiteManager extends BaseSingletonClass{
 	public function initializeView($enabledParams = 0, array $defaultParameters = [], callable $forcedParametersCallback = null){
 
 	    // Defines the index where the current url parameters start to be view parameters
-	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
+	    $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
 
 	    $defaultParametersCount = count($defaultParameters);
 
@@ -632,7 +641,7 @@ class WebSiteManager extends BaseSingletonClass{
 	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
 	    }
 
-	    if($this->_currentView === $this->_singleParameterView){
+	    if($this->_currentViewName === $this->_singleParameterView){
 
 	        if($index > 0){
 
@@ -643,7 +652,7 @@ class WebSiteManager extends BaseSingletonClass{
 	    }
 
 	    // Defines the index where the current url parameters start to be view parameters
-	    $firstViewParamOffset = $this->_currentView === $this->_homeView ? 1 : 2;
+	    $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
 
 	    if($index >= $this->_URLEnabledParameters - $firstViewParamOffset){
 
@@ -682,10 +691,10 @@ class WebSiteManager extends BaseSingletonClass{
 	    // Global css file
 	    echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
 
-        // Generate the view css if we are on a view
-        if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css')){
+        // Generate the view css if exists
+        if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.css')){
 
-            echo '<link rel="stylesheet" href="'.$this->getUrl('view-view-views-'.$this->_currentView.'-'.$this->_cacheHash.'.css').'">'."\n";
+            echo '<link rel="stylesheet" href="'.$this->getUrl('view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.css').'">'."\n";
         }
 	}
 
@@ -698,18 +707,24 @@ class WebSiteManager extends BaseSingletonClass{
 	    // Generate the code to load CDN libs
 	    foreach ($this->_globalCDNS as $cdn) {
 
-	        echo '<script src="'.$cdn['url'].'" crossorigin="anonymous"></script>'."\n";
+            echo '<script src="'.$cdn['url'].'" crossorigin="anonymous"></script>'."\n";
 
 	        if(!StringUtils::isEmpty($cdn['fallbackResource'])){
 
 	           $url = $this->getUrl($cdn['fallbackResource']);
 
-	           echo "<script>".$cdn['fallbackVerify']." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
+               echo "<script>".$cdn['fallbackVerify']." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
 	        }
 	    }
 
 	    // Generate the global js script
 	    echo '<script src="'.$this->getUrl('glob-'.$this->_cacheHash.'.js').'" defer></script>';
+
+	    // Generate the view js if exists
+	    if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js')){
+
+	        echo "\n<script src=\"".$this->getUrl('view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js').'" defer></script>';
+	    }
 	}
 
 
