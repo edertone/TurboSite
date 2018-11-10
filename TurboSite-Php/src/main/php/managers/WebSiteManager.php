@@ -18,6 +18,7 @@ use org\turbocommons\src\main\php\managers\LocalizationManager;
 use org\turbocommons\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
+use org\turbosite\src\main\php\model\WebViewSetup;
 
 
 /**
@@ -476,35 +477,33 @@ class WebSiteManager extends BaseSingletonClass{
 	 * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
 	 * view that must be initialized via the initializeSingleParameterView method.
 	 *
-	 * @param number $enabledParams Defines how many parameters are accepted by this view. Any ones beyond this limit will be removed from the current url.
-	 *        If a view has a missing value for any of the enabled parameters and there's no default value defined, a 404 error will happen.
-	 * @param array $defaultParameters A list of default values for the view parameters. If the current url does not have a value or has an empty value for
-	 *        a default parameter, the url will be modified via a 301 redirect to set the defined default.
-	 * @param array $forcedParametersCallback Forces several view parameters to a fixed value. A callback function will be passed here, which will be executed
-	 *        after the view and default params have been initialized. This method must return an array with the same length as the enabled parameters. Each
-	 *        array element will be a value that will be forced on the same index view parameter and the current url redirected if any of the forced parameters
-	 *        values differ from the actual ones.
+	 * @param WebViewSetup $setup The setup parameters that must be aplied to the view
 	 *
 	 * @return void
 	 */
-	public function initializeView($enabledParams = 0, array $defaultParameters = [], callable $forcedParametersCallback = null){
+	public function initializeView(WebViewSetup $setup = null){
+
+	    if($setup === null){
+
+	        $setup = new WebViewSetup();
+	    }
 
 	    // Defines the index where the current url parameters start to be view parameters
 	    $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
 
-	    $defaultParametersCount = count($defaultParameters);
-
+	    $defaultParametersCount = count($setup->defaultParameters);
+	    $allowedParameterValuesCount = count($setup->allowedParameterValues);
 	    $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
 
-	    $this->_URLEnabledParameters = $enabledParams + $firstViewParamOffset;
+	    $this->_URLEnabledParameters = $setup->enabledParams + $firstViewParamOffset;
 
 	    $redirectRequired = false;
 
 	    // Check no parameter without default value is empty
-	    for ($i = 0; $i < $enabledParams; $i++) {
+	    for ($i = 0; $i < $setup->enabledParams; $i++) {
 
 	        if($this->getParam($i) === '' &&
-	            (!isset($defaultParameters[$i]) || StringUtils::isEmpty($defaultParameters[$i]))){
+	            (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
 
 	           $this->show404Error();
 	        }
@@ -513,7 +512,7 @@ class WebSiteManager extends BaseSingletonClass{
 	    if($defaultParametersCount > 0){
 
 	        // Default parameters count must not exceed the enabled params
-	        if($defaultParametersCount > $enabledParams){
+	        if($defaultParametersCount > $setup->enabledParams){
 
 	            throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
 	        }
@@ -521,7 +520,7 @@ class WebSiteManager extends BaseSingletonClass{
 	        // All default parameters must have a value
 	        for ($i = 0; $i < $defaultParametersCount; $i++) {
 
-	            if(StringUtils::isEmpty($defaultParameters[$i])){
+	            if(StringUtils::isEmpty($setup->defaultParameters[$i])){
 
 	                throw new UnexpectedValueException('Default view parameters cannot be empty (default value for param '.$i.' is empty)');
 	            }
@@ -532,23 +531,51 @@ class WebSiteManager extends BaseSingletonClass{
 
 	        for ($j = 0; $j < $maxParams; $j++) {
 
-	            if(isset($defaultParameters[$j]) &&
+	            if(isset($setup->defaultParameters[$j]) &&
 	               (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
 	               (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getParam($j))))){
 
                     $redirectRequired = true;
 
-                    $this->_URIElements[$firstViewParamOffset + $j] = $defaultParameters[$j];
+                    $this->_URIElements[$firstViewParamOffset + $j] = $setup->defaultParameters[$j];
 	            }
 	        }
 	    }
 
 	    // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-	    if($receivedParamsCount > $enabledParams){
+	    if($receivedParamsCount > $setup->enabledParams){
 
 	        $redirectRequired = true;
 
-	        array_splice($this->_URIElements, - ($receivedParamsCount - $enabledParams));
+	        array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledParams));
+	    }
+
+	    // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
+	    for ($i = 0; $i < $allowedParameterValuesCount; $i++) {
+
+	        $allowedValuesCount = count($setup->allowedParameterValues[$i]);
+
+	        if(is_array($setup->allowedParameterValues[$i]) && $allowedValuesCount > 0){
+
+	            $parameterIsValid = false;
+
+	            for ($j = 0; $j < $allowedValuesCount; $j++) {
+
+	                if($setup->allowedParameterValues[$i][$j] === $this->_URIElements[$firstViewParamOffset + $i]){
+
+	                    $parameterIsValid = true;
+	                    break;
+	                }
+	            }
+
+	            if(!$parameterIsValid){
+
+	                $redirectRequired = true;
+
+	                // TODO - we must find here the most similar allowed parameter value to the uri element and set it
+	                $this->_URIElements[$firstViewParamOffset + $i] = $setup->allowedParameterValues[$i][0];
+	            }
+	        }
 	    }
 
 	    if($redirectRequired){
@@ -557,14 +584,14 @@ class WebSiteManager extends BaseSingletonClass{
 	    }
 
 	    // Check if a method to obtain the forced parameters needs to be executed and redirect if necessary
-	    if($forcedParametersCallback !== null){
+	    if($setup->forcedParametersCallback !== null){
 
-	        $forcedParameters = $forcedParametersCallback();
+	        $forcedParameters = ($setup->forcedParametersCallback)();
 	        $forcedParametersCount = count($forcedParameters);
 
-	        if($forcedParametersCount !== $enabledParams){
+	        if($forcedParametersCount !== $setup->enabledParams){
 
-	            throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$enabledParams.')');
+	            throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledParams.')');
 	        }
 
 	        for ($i = 0; $i < $forcedParametersCount; $i++) {
@@ -588,11 +615,11 @@ class WebSiteManager extends BaseSingletonClass{
 	/**
 	* TODO docs
 	*/
-	public function initializeSingleParameterView($language, $acceptedParameters = []){
+	public function initializeSingleParameterView($language, $allowedParameters = []){
 
 	    $this->_URLEnabledParameters = 1;
 
-	    if($acceptedParameters !== '*' && !in_array($this->getParam(), $acceptedParameters)){
+	    if($allowedParameters !== '*' && !in_array($this->getParam(), $allowedParameters)){
 
 	        $this->show404Error();
 	    }
