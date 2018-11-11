@@ -99,8 +99,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
 	/**
-	 * String with the locale that is defined on the current URI.
-	 * If empty, no locale's been detected on the current URI.
+	 * @see WebSiteManager::getPrimaryLanguage
 	 */
 	private $_primaryLanguage = '';
 
