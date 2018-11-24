@@ -47,6 +47,16 @@ class WebViewSetup{
      * value does not match any of them, the url will be redirected to the most similar of the possible ones.
      */
     public $allowedParameterValues = [];
+
+
+    /**
+     * Defines the amount of seconds that the view will remain on cache.
+     * If set to -1 the view will remain on cache for an infinite amount of time
+     *
+     * @example 1 minute = 60 seconds
+     * @example 1 hour = 3600 seconds
+     */
+    public $cacheLifeTime = -1;
 }
 
 ?>
