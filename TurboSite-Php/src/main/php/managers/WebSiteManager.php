@@ -62,380 +62,380 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-	 * Contains the name for the view that is loaded when a single root parameter is
-	 * specified on the urls
-	 */
+     * Contains the name for the view that is loaded when a single root parameter is
+     * specified on the urls
+     */
     private $_singleParameterView = '';
 
 
-	/**
-	 * Contains the name for the view that is used as home page
-	 */
-	private $_homeView = '';
+    /**
+     * Contains the name for the view that is used as home page
+     */
+    private $_homeView = '';
 
 
-	/**
-	 * If the current document is a view, the name is stored here
-	 */
-	private $_currentViewName = '';
+    /**
+     * If the current document is a view, the name is stored here
+     */
+    private $_currentViewName = '';
 
 
-	/**
-	 * Files manager instance for file system interaction
-	 */
-	private $_filesManager = null;
+    /**
+     * Files manager instance for file system interaction
+     */
+    private $_filesManager = null;
 
 
-	/**
-	 * Class that manages the text translations
-	 */
-	private $_localizationManager = null;
+    /**
+     * Class that manages the text translations
+     */
+    private $_localizationManager = null;
 
 
-	/**
-	 * Class that manages the browser operations
-	 */
-	private $_browserManager = null;
+    /**
+     * Class that manages the browser operations
+     */
+    private $_browserManager = null;
 
 
-	/**
-	 * @see WebSiteManager::getPrimaryLanguage
-	 */
-	private $_primaryLanguage = '';
+    /**
+     * @see WebSiteManager::getPrimaryLanguage
+     */
+    private $_primaryLanguage = '';
 
 
-	/**
-	 * Parameters are variable values that can be passed to the website directly into the url, seppared by the slash / character.
-	 * This property defines the amount of parameters that are currently accepted by the url.
-	 * This is the url parameters format: https://somehost.com/param0/param1/param2/param3
-	 *
-	 * Note that url parameters are different from view parameters. Url first parameter is the inmediate after the host, while view first
-	 * parameter is the one after the view name: https://host.com/2-digit-language/view-name/param0/param1/param2/....
-	 */
-	private $_URLEnabledParameters = 0;
+    /**
+     * Parameters are variable values that can be passed to the website directly into the url, seppared by the slash / character.
+     * This property defines the amount of parameters that are currently accepted by the url.
+     * This is the url parameters format: https://somehost.com/param0/param1/param2/param3
+     *
+     * Note that url parameters are different from view parameters. Url first parameter is the inmediate after the host, while view first
+     * parameter is the one after the view name: https://host.com/2-digit-language/view-name/param0/param1/param2/....
+     */
+    private $_URLEnabledParameters = 0;
 
 
-	/**
-	 * Contains the value for the current url URI fragment
-	 */
-	private $_URI = '';
+    /**
+     * Contains the value for the current url URI fragment
+     */
+    private $_URI = '';
 
 
-	/**
-	 * Contains the value for the current url URI fragment but splitted as an array
-	 * where each element is a URI fragment (fragments are divided by /)
-	 */
-	private $_URIElements = [];
+    /**
+     * Contains the value for the current url URI fragment but splitted as an array
+     * where each element is a URI fragment (fragments are divided by /)
+     */
+    private $_URIElements = [];
 
 
-	/**
-	 * If the website is not located at the root of the host, this property contains
-	 * the url fragment that points to the website root.
-	 *
-	 * Note that this fragment must be formatted so it does not start nor end with /.
-	 * If the site is placed at the root of the domain, we will leave this property as an empty string
-	 */
-	private $_baseURL = '';
+    /**
+     * If the website is not located at the root of the host, this property contains
+     * the url fragment that points to the website root.
+     *
+     * Note that this fragment must be formatted so it does not start nor end with /.
+     * If the site is placed at the root of the domain, we will leave this property as an empty string
+     */
+    private $_baseURL = '';
 
 
-	/**
-	 * Contains the value for the current url including the initial https://
-	 */
-	private $_fullURL = '';
+    /**
+     * Contains the value for the current url including the initial https://
+     */
+    private $_fullURL = '';
 
 
-	/**
-	 * Stores the list of required JS cdns and their respective fallback resources
-	 */
-	private $_globalCDNS = [];
+    /**
+     * Stores the list of required JS cdns and their respective fallback resources
+     */
+    private $_globalCDNS = [];
 
 
-	/**
-	 * Get the first language of the list of translation priorities, which effectively is the
-	 * language that is currently using the website
-	 */
-	public function getPrimaryLanguage(){
+    /**
+     * Get the first language of the list of translation priorities, which effectively is the
+     * language that is currently using the website
+     */
+    public function getPrimaryLanguage(){
 
-	    return $this->_primaryLanguage;
-	}
+        return $this->_primaryLanguage;
+    }
 
 
-	/**
-	 * Get the website current full url as it is shown on the user browser
-	 */
-	public function getFullUrl(){
+    /**
+     * Get the website current full url as it is shown on the user browser
+     */
+    public function getFullUrl(){
 
-	    return $this->_fullURL;
-	}
+        return $this->_fullURL;
+    }
 
 
-	/**
-	 * Get the view that is defined as home
-	 */
-	public function getHomeView(){
+    /**
+     * Get the view that is defined as home
+     */
+    public function getHomeView(){
 
-	    return $this->_homeView;
-	}
+        return $this->_homeView;
+    }
 
 
-	/**
-	 * If the current document is a view, this method will give it's view name
-	 */
-	public function getcurrentViewName(){
+    /**
+     * If the current document is a view, this method will give it's view name
+     */
+    public function getcurrentViewName(){
 
-	    return $this->_currentViewName;
-	}
+        return $this->_currentViewName;
+    }
 
 
-	/**
-	 * Get the view that is defined to handle single parameter urls
-	 */
-	public function getSingleParameterView(){
+    /**
+     * Get the view that is defined to handle single parameter urls
+     */
+    public function getSingleParameterView(){
 
-	    return $this->_singleParameterView;
-	}
+        return $this->_singleParameterView;
+    }
 
 
-	/**
-	 * Singleton constructor overriden to allow the global error manager initialization as fast as possible
-	 *
-	 * @return WebSiteManager The Singleton instance.
-	 */
-	public static function getInstance(){
+    /**
+     * Singleton constructor overriden to allow the global error manager initialization as fast as possible
+     *
+     * @return WebSiteManager The Singleton instance.
+     */
+    public static function getInstance(){
 
-	    GlobalErrorManager::getInstance()->initialize();
+        GlobalErrorManager::getInstance()->initialize();
 
-	    return parent::getInstance();
-	}
+        return parent::getInstance();
+    }
 
 
-	/**
-	 * The main website object starting point.
-	 * Initializes the structure and generates the html code for the current url
-	 */
-	public function initialize($rootPath){
+    /**
+     * The main website object starting point.
+     * Initializes the structure and generates the html code for the current url
+     */
+    public function initialize($rootPath){
 
-	    $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootPath));
-	    $this->_filesManager = new FilesManager();
-	    $this->_localizationManager = new LocalizationManager();
-	    $this->_browserManager = new BrowserManager();
+        $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootPath));
+        $this->_filesManager = new FilesManager();
+        $this->_localizationManager = new LocalizationManager();
+        $this->_browserManager = new BrowserManager();
 
-	    $this->_initializeSetup();
+        $this->_initializeSetup();
 
-	    $this->_sanitizeUrl();
+        $this->_sanitizeUrl();
 
-	    $this->_includeContentBasedOnURI();
-	}
+        $this->_includeContentBasedOnURI();
+    }
 
 
-	/**
-	 * get the website current full url as it is shown on the user browser
-	 */
-	private function _initializeSetup(){
+    /**
+     * get the website current full url as it is shown on the user browser
+     */
+    private function _initializeSetup(){
 
-	    $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
-	    $this->_URIElements = explode('/', $this->_URI);
-	    $this->_fullURL = $this->_browserManager->getCurrentUrl();
+        $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
+        $this->_URIElements = explode('/', $this->_URI);
+        $this->_fullURL = $this->_browserManager->getCurrentUrl();
 
-	    $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+        $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
 
-	    GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
-	    GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
-	    GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
-	    GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
+        GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
+        GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
+        GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
+        GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
 
-	    $this->_cacheHash = $setup->cacheHash;
-	    $this->_homeView = $setup->homeView;
-	    $this->_singleParameterView = $setup->singleParameterView;
-	    $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
+        $this->_cacheHash = $setup->cacheHash;
+        $this->_homeView = $setup->homeView;
+        $this->_singleParameterView = $setup->singleParameterView;
+        $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
 
-	    // Load all the configured resourcebundle paths
-	    $bundles = [];
+        // Load all the configured resourcebundle paths
+        $bundles = [];
 
-	    foreach ($setup->resourceBundles as $bundle) {
+        foreach ($setup->resourceBundles as $bundle) {
 
-	        $bundles[] = [
-	            'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
-	            'bundles' => $bundle->bundles
-	        ];
-	    }
+            $bundles[] = [
+                'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
+                'bundles' => $bundle->bundles
+            ];
+        }
 
-	    $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
+        $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
 
-	        if(count($errors) > 0){
+            if(count($errors) > 0){
 
-	            throw new UnexpectedValueException(print_r($errors, true));
-	        }
-	    });
+                throw new UnexpectedValueException(print_r($errors, true));
+            }
+        });
 
-	        // Load all the configured javascript CDNS
-	        foreach ($setup->globalCDNS as $cdn) {
+            // Load all the configured javascript CDNS
+            foreach ($setup->globalCDNS as $cdn) {
 
-	            $this->_globalCDNS[] = [
-	                'url' => $cdn->url,
-	                'fallbackVerify' => $cdn->fallbackVerify,
-	                'fallbackResource' => $cdn->fallbackResource
-	            ];
-	        }
+                $this->_globalCDNS[] = [
+                    'url' => $cdn->url,
+                    'fallbackVerify' => $cdn->fallbackVerify,
+                    'fallbackResource' => $cdn->fallbackResource
+                ];
+            }
 
-	        // Detect the primary locale from the url, cookies, browser or the project list of locales
-	        $this->_primaryLanguage = $this->_URIElements[0];
+            // Detect the primary locale from the url, cookies, browser or the project list of locales
+            $this->_primaryLanguage = $this->_URIElements[0];
 
-	        if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+            if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
 
-	            $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
+                $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
 
-	            if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+                if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
 
-	                $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
+                    $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
 
-	                if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+                    if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
 
-	                    $this->_primaryLanguage = $this->_localizationManager->languages()[0];
-	                }
-	            }
-	        }
+                        $this->_primaryLanguage = $this->_localizationManager->languages()[0];
+                    }
+                }
+            }
 
-	        $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
-	}
+            $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+    }
 
 
-	/**
-	 * Check that the url does not contain invalid characters or values and redirect it if necessary
-	 */
-	private function _sanitizeUrl(){
+    /**
+     * Check that the url does not contain invalid characters or values and redirect it if necessary
+     */
+    private function _sanitizeUrl(){
 
-	    $redirectTo = $this->_fullURL;
+        $redirectTo = $this->_fullURL;
 
-	    // 301 Redirect to remove any possible query string.
-	    // Standard says that the first question mark in an url is the query string sepparator, and all the rest
-	    // are treated as literal question mark characters. So we cut the url by the first ? index found.
-	    if(strpos($redirectTo, '?') !== false){
+        // 301 Redirect to remove any possible query string.
+        // Standard says that the first question mark in an url is the query string sepparator, and all the rest
+        // are treated as literal question mark characters. So we cut the url by the first ? index found.
+        if(strpos($redirectTo, '?') !== false){
 
-	        $redirectTo = substr($redirectTo, 0, strpos($redirectTo, '?'));
-	    }
+            $redirectTo = substr($redirectTo, 0, strpos($redirectTo, '?'));
+        }
 
-	    // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
-	    if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
-	       (count($this->_URIElements) >= 2 &&
+        // 301 Redirect to home view if current URI is empty or a 2 digits existing locale plus the home view name
+        if(StringUtils::isEmpty($this->_URI) || $this->_URI === $this->_baseURL ||
+           (count($this->_URIElements) >= 2 &&
             strlen($this->_URIElements[0]) === 2 &&
             in_array($this->_URIElements[0], $this->_localizationManager->languages()) &&
             strtolower($this->_URIElements[1]) === strtolower($this->_homeView))){
 
             $redirectTo = $this->getUrl($this->_primaryLanguage, true);
-	    }
+        }
 
-	    // Remove any trailing slash from the url
-	    if(substr($redirectTo, -1) === '/'){
+        // Remove any trailing slash from the url
+        if(substr($redirectTo, -1) === '/'){
 
-	        $redirectTo = substr_replace($redirectTo, '', strlen($redirectTo) - 1, 1);
-	    }
+            $redirectTo = substr_replace($redirectTo, '', strlen($redirectTo) - 1, 1);
+        }
 
-	    // Move from http to https if necessary
-	    if(strpos(strtolower($redirectTo), 'http:') === 0){
+        // Move from http to https if necessary
+        if(strpos(strtolower($redirectTo), 'http:') === 0){
 
-	        $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
-	    }
+            $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
+        }
 
-	    // Redirect the www version to NO www
-	    if(strpos(strtolower($redirectTo), 'https://www.') === 0){
+        // Redirect the www version to NO www
+        if(strpos(strtolower($redirectTo), 'https://www.') === 0){
 
-	        $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
-	    }
+            $redirectTo = substr_replace($redirectTo, 'https://', 0, 12);
+        }
 
-	    // Redirect to remove duplicate / characters
-	    if(strpos(substr($redirectTo, 8), '//') !== false){
+        // Redirect to remove duplicate / characters
+        if(strpos(substr($redirectTo, 8), '//') !== false){
 
-	        $redirectTo = 'https://'.preg_replace('/\/+/', '/', substr($redirectTo, 8));
-	    }
+            $redirectTo = 'https://'.preg_replace('/\/+/', '/', substr($redirectTo, 8));
+        }
 
-	    // Check if a redirect must be performed
-	    if($redirectTo !== $this->_fullURL){
+        // Check if a redirect must be performed
+        if($redirectTo !== $this->_fullURL){
 
-	        $this->redirect301($redirectTo);
-	    }
-	}
-
-
-	/**
-	 * Chech which content must be required based on the current URI
-	 */
-	private function _includeContentBasedOnURI(){
-
-	    // Php files execution is not allowed
-	    if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
-
-	        // Check if the URI represents a service
-	        if($this->_URIElements[0] === 'http'){
-
-	            include('http/'.$this->_URIElements[1].'.php');
-	            die();
-	        }
-
-	        // Check if the URI represents the home or single parameter view
-	        if(count($this->_URIElements) === 1){
-
-	            if($this->_primaryLanguage === $this->_URIElements[0]){
-
-	                $this->_currentViewName = $this->_homeView;
-	            }
-
-	            if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
-
-	                $this->_currentViewName = $this->_singleParameterView;
-	            }
-	        }
-
-	        // Check if the URI represents a full view with N parameters
-	        if(count($this->_URIElements) > 1 &&
-	            $this->_primaryLanguage === $this->_URIElements[0] &&
-	            is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
-
-	                $this->_currentViewName = $this->_URIElements[1];
-	        }
-
-	        if($this->_currentViewName !== ''){
-
-	            $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
-	            include('view/views/'.$this->_currentViewName.'/'.$this->_currentViewName.'.php');
-	            die();
-	        }
-	    }
-
-	    // Reaching here means no match was found for the current URI, so 404 and die
-	    $this->show404Error();
-	}
+            $this->redirect301($redirectTo);
+        }
+    }
 
 
-	/**
-	 * Resolve the provided relative project path into a full file system path that can be correctly reached via file system.
-	 *
-	 * @param string $path A path relative to the project src/main folder
-	 *
-	 * @return string A full file system path that is generated from the provided relative one
-	 */
-	public function getPath(string $path){
+    /**
+     * Chech which content must be required based on the current URI
+     */
+    private function _includeContentBasedOnURI(){
 
-	    return StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
-	}
+        // Php files execution is not allowed
+        if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
+
+            // Check if the URI represents a service
+            if($this->_URIElements[0] === 'http'){
+
+                include('http/'.$this->_URIElements[1].'.php');
+                die();
+            }
+
+            // Check if the URI represents the home or single parameter view
+            if(count($this->_URIElements) === 1){
+
+                if($this->_primaryLanguage === $this->_URIElements[0]){
+
+                    $this->_currentViewName = $this->_homeView;
+                }
+
+                if($this->_singleParameterView !== '' && strlen($this->_URIElements[0]) > 2){
+
+                    $this->_currentViewName = $this->_singleParameterView;
+                }
+            }
+
+            // Check if the URI represents a full view with N parameters
+            if(count($this->_URIElements) > 1 &&
+                $this->_primaryLanguage === $this->_URIElements[0] &&
+                is_file('view/views/'.$this->_URIElements[1].'/'.$this->_URIElements[1].'.php')){
+
+                    $this->_currentViewName = $this->_URIElements[1];
+            }
+
+            if($this->_currentViewName !== ''){
+
+                $this->_browserManager->setCookie('turbosite_locale', $this->_localizationManager->primaryLocale(), 365);
+                include('view/views/'.$this->_currentViewName.'/'.$this->_currentViewName.'.php');
+                die();
+            }
+        }
+
+        // Reaching here means no match was found for the current URI, so 404 and die
+        $this->show404Error();
+    }
 
 
-	/**
-	 * Gives the filesystem location to the data folder, which is the one that contains the webiste files and storage when
-	 * deployed and running.
-	 *
-	 * Note that the full data folder structure must be correct or this method may not find it correctly.
-	 *
-	 * @return string
-	 */
-	public function getDataPath(){
+    /**
+     * Resolve the provided relative project path into a full file system path that can be correctly reached via file system.
+     *
+     * @param string $path A path relative to the project src/main folder
+     *
+     * @return string A full file system path that is generated from the provided relative one
+     */
+    public function getPath(string $path){
 
-	    if($this->_dataPath !== ''){
+        return StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
+    }
 
-	        return $this->_dataPath;
-	    }
 
-	    // Try to find the data path location and store it on the global variable so it is faster the next time
+    /**
+     * Gives the filesystem location to the data folder, which is the one that contains the webiste files and storage when
+     * deployed and running.
+     *
+     * Note that the full data folder structure must be correct or this method may not find it correctly.
+     *
+     * @return string
+     */
+    public function getDataPath(){
+
+        if($this->_dataPath !== ''){
+
+            return $this->_dataPath;
+        }
+
+        // Try to find the data path location and store it on the global variable so it is faster the next time
         if(is_dir($this->_mainPath.'/../data/storage/')){
 
             return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../data');
@@ -451,528 +451,528 @@ class WebSiteManager extends BaseSingletonClass{
             return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../../../data');
         }
 
-	    throw new UnexpectedValueException('Could not find data folder');
-	}
+        throw new UnexpectedValueException('Could not find data folder');
+    }
 
 
-	/**
-	 * Gives the filesystem location to the data/storage folder
-	 *
-	 * Note that the full data folder structure must be correct or this method may not find it correctly.
-	 *
-	 * @see WebSiteManager::getDataPath()
-	 *
-	 * @return string
-	 */
-	public function getDataStoragePath(){
+    /**
+     * Gives the filesystem location to the data/storage folder
+     *
+     * Note that the full data folder structure must be correct or this method may not find it correctly.
+     *
+     * @see WebSiteManager::getDataPath()
+     *
+     * @return string
+     */
+    public function getDataStoragePath(){
 
-	   return $this->getDataPath().'/storage';
-	}
+       return $this->getDataPath().'/storage';
+    }
 
 
-	/**
-	 * Declares the current document as a view, initializes its structure and checks all possible restrictions.
-	 * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
-	 * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
-	 * view that must be initialized via the initializeSingleParameterView method.
-	 *
-	 * @param WebViewSetup $setup The setup parameters that must be aplied to the view
-	 *
-	 * @return void
-	 */
-	public function initializeView(WebViewSetup $setup = null){
+    /**
+     * Declares the current document as a view, initializes its structure and checks all possible restrictions.
+     * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
+     * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
+     * view that must be initialized via the initializeSingleParameterView method.
+     *
+     * @param WebViewSetup $setup The setup parameters that must be aplied to the view
+     *
+     * @return void
+     */
+    public function initializeView(WebViewSetup $setup = null){
 
-	    if($setup === null){
+        if($setup === null){
 
-	        $setup = new WebViewSetup();
-	    }
+            $setup = new WebViewSetup();
+        }
 
-	    // Defines the index where the current url parameters start to be view parameters
-	    $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
+        // Defines the index where the current url parameters start to be view parameters
+        $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
 
-	    $defaultParametersCount = count($setup->defaultParameters);
-	    $allowedParameterValuesCount = count($setup->allowedParameterValues);
-	    $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
+        $defaultParametersCount = count($setup->defaultParameters);
+        $allowedParameterValuesCount = count($setup->allowedParameterValues);
+        $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
 
-	    $this->_URLEnabledParameters = $setup->enabledParams + $firstViewParamOffset;
+        $this->_URLEnabledParameters = $setup->enabledParams + $firstViewParamOffset;
 
-	    $redirectRequired = false;
+        $redirectRequired = false;
 
-	    // Check no parameter without default value is empty
-	    for ($i = 0; $i < $setup->enabledParams; $i++) {
+        // Check no parameter without default value is empty
+        for ($i = 0; $i < $setup->enabledParams; $i++) {
 
-	        if($this->getParam($i) === '' &&
-	            (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
+            if($this->getParam($i) === '' &&
+                (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
 
-	           $this->show404Error();
-	        }
-	    }
+               $this->show404Error();
+            }
+        }
 
-	    if($defaultParametersCount > 0){
+        if($defaultParametersCount > 0){
 
-	        // Default parameters count must not exceed the enabled params
-	        if($defaultParametersCount > $setup->enabledParams){
+            // Default parameters count must not exceed the enabled params
+            if($defaultParametersCount > $setup->enabledParams){
 
-	            throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
-	        }
+                throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
+            }
 
-	        // All default parameters must have a value
-	        for ($i = 0; $i < $defaultParametersCount; $i++) {
+            // All default parameters must have a value
+            for ($i = 0; $i < $defaultParametersCount; $i++) {
 
-	            if(StringUtils::isEmpty($setup->defaultParameters[$i])){
+                if(StringUtils::isEmpty($setup->defaultParameters[$i])){
 
-	                throw new UnexpectedValueException('Default view parameters cannot be empty (default value for param '.$i.' is empty)');
-	            }
-	        }
+                    throw new UnexpectedValueException('Default view parameters cannot be empty (default value for param '.$i.' is empty)');
+                }
+            }
 
-	        // Received empty params will be filled with their defaults
-	        $maxParams = max($receivedParamsCount, $defaultParametersCount);
+            // Received empty params will be filled with their defaults
+            $maxParams = max($receivedParamsCount, $defaultParametersCount);
 
-	        for ($j = 0; $j < $maxParams; $j++) {
+            for ($j = 0; $j < $maxParams; $j++) {
 
-	            if(isset($setup->defaultParameters[$j]) &&
-	               (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
-	               (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getParam($j))))){
+                if(isset($setup->defaultParameters[$j]) &&
+                   (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
+                   (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getParam($j))))){
 
                     $redirectRequired = true;
 
                     $this->_URIElements[$firstViewParamOffset + $j] = $setup->defaultParameters[$j];
-	            }
-	        }
-	    }
+                }
+            }
+        }
 
-	    // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-	    if($receivedParamsCount > $setup->enabledParams){
+        // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
+        if($receivedParamsCount > $setup->enabledParams){
 
-	        $redirectRequired = true;
+            $redirectRequired = true;
 
-	        array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledParams));
-	    }
+            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledParams));
+        }
 
-	    // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
-	    for ($i = 0; $i < $allowedParameterValuesCount; $i++) {
+        // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
+        for ($i = 0; $i < $allowedParameterValuesCount; $i++) {
 
-	        $allowedValuesCount = count($setup->allowedParameterValues[$i]);
+            $allowedValuesCount = count($setup->allowedParameterValues[$i]);
 
-	        if(is_array($setup->allowedParameterValues[$i]) && $allowedValuesCount > 0){
+            if(is_array($setup->allowedParameterValues[$i]) && $allowedValuesCount > 0){
 
-	            $parameterIsValid = false;
+                $parameterIsValid = false;
 
-	            for ($j = 0; $j < $allowedValuesCount; $j++) {
+                for ($j = 0; $j < $allowedValuesCount; $j++) {
 
-	                if($setup->allowedParameterValues[$i][$j] === $this->_URIElements[$firstViewParamOffset + $i]){
+                    if($setup->allowedParameterValues[$i][$j] === $this->_URIElements[$firstViewParamOffset + $i]){
 
-	                    $parameterIsValid = true;
-	                    break;
-	                }
-	            }
+                        $parameterIsValid = true;
+                        break;
+                    }
+                }
 
-	            if(!$parameterIsValid){
+                if(!$parameterIsValid){
 
-	                $redirectRequired = true;
+                    $redirectRequired = true;
 
-	                // TODO - we must find here the most similar allowed parameter value to the uri element and set it
-	                $this->_URIElements[$firstViewParamOffset + $i] = $setup->allowedParameterValues[$i][0];
-	            }
-	        }
-	    }
+                    // TODO - we must find here the most similar allowed parameter value to the uri element and set it
+                    $this->_URIElements[$firstViewParamOffset + $i] = $setup->allowedParameterValues[$i][0];
+                }
+            }
+        }
 
-	    if($redirectRequired){
+        if($redirectRequired){
 
-	        $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
-	    }
+            $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
+        }
 
-	    // Check if a method to obtain the forced parameters needs to be executed and redirect if necessary
-	    if($setup->forcedParametersCallback !== null){
+        // Check if a method to obtain the forced parameters needs to be executed and redirect if necessary
+        if($setup->forcedParametersCallback !== null){
 
-	        $forcedParameters = ($setup->forcedParametersCallback)();
-	        $forcedParametersCount = count($forcedParameters);
+            $forcedParameters = ($setup->forcedParametersCallback)();
+            $forcedParametersCount = count($forcedParameters);
 
-	        if($forcedParametersCount !== $setup->enabledParams){
+            if($forcedParametersCount !== $setup->enabledParams){
 
-	            throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledParams.')');
-	        }
+                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledParams.')');
+            }
 
-	        for ($i = 0; $i < $forcedParametersCount; $i++) {
+            for ($i = 0; $i < $forcedParametersCount; $i++) {
 
-	            if(!StringUtils::isEmpty($forcedParameters[$i]) &&
-	                $this->_URIElements[$firstViewParamOffset + $i] !== $forcedParameters[$i]){
+                if(!StringUtils::isEmpty($forcedParameters[$i]) &&
+                    $this->_URIElements[$firstViewParamOffset + $i] !== $forcedParameters[$i]){
 
-	                $redirectRequired = true;
-	                $this->_URIElements[$firstViewParamOffset + $i] = $forcedParameters[$i];
-	            }
-	        }
+                    $redirectRequired = true;
+                    $this->_URIElements[$firstViewParamOffset + $i] = $forcedParameters[$i];
+                }
+            }
 
-	        if($redirectRequired){
+            if($redirectRequired){
 
-	            $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
-	        }
-	    }
-	}
-
-
-	/**
-	* TODO docs
-	*/
-	public function initializeSingleParameterView($language, $allowedParameters = []){
-
-	    $this->_URLEnabledParameters = 1;
-
-	    if($allowedParameters !== '*' && !in_array($this->getParam(), $allowedParameters)){
-
-	        $this->show404Error();
-	    }
-
-	    if(!in_array($language, $this->_localizationManager->languages())){
-
-	        throw new UnexpectedValueException('Invalid language specified <'.$language.'> for single parameter view');
-	    }
-
-	    $this->_primaryLanguage = $language;
-	    $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
-	}
+                $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
+            }
+        }
+    }
 
 
-	/**
-	 * Adds extra bundles to the currently loaded translation data
-	 */
-	public function loadBundles(array $bundles){
+    /**
+    * TODO docs
+    */
+    public function initializeSingleParameterView($language, $allowedParameters = []){
 
-	    $this->_localizationManager->loadBundles('resources/locales/$bundle/$bundle_$locale.properties', $bundles);
-	}
+        $this->_URLEnabledParameters = 1;
 
+        if($allowedParameters !== '*' && !in_array($this->getParam(), $allowedParameters)){
 
-	// TODO - this should include all component parts inline: css, php and js
-	public function includeComponent(string $componentPath){
+            $this->show404Error();
+        }
 
-	    require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
-	}
+        if(!in_array($language, $this->_localizationManager->languages())){
 
+            throw new UnexpectedValueException('Invalid language specified <'.$language.'> for single parameter view');
+        }
 
-	/**
-	 * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
-	 * URL parameters are the custom values that can be passed via url to the framework views.
-	 * They are encoded this way: http://.../locale/viewname/parameter0/parameter1/parameter2/parameter3/...
-	 *
-	 * @param int $index The numeric index for the requested parameter
-	 * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
-	 *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
-	 *
-	 * @return string The requested parameter value
-	 */
-	public function getParam(int $index = 0, bool $removeHtmlTags = true){
-
-	    if($index < 0){
-
-	        throw new UnexpectedValueException('Invalid parameter index: '.$index);
-	    }
-
-	    if($this->_currentViewName === $this->_singleParameterView){
-
-	        if($index > 0){
-
-	            throw new UnexpectedValueException('Single parameter view accepts only one parameter');
-	        }
-
-	        return $this->_URIElements[0];
-	    }
-
-	    // Defines the index where the current url parameters start to be view parameters
-	    $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
-
-	    if($index >= $this->_URLEnabledParameters - $firstViewParamOffset){
-
-	        throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
-	    }
-
-	    $paramValue = isset($this->_URIElements[$index + $firstViewParamOffset]) ?
-	       $this->_URIElements[$index + $firstViewParamOffset] : '';
-
-	    return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
-	}
+        $this->_primaryLanguage = $language;
+        $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+    }
 
 
-	/**
-	 * TODO
-	 */
+    /**
+     * Adds extra bundles to the currently loaded translation data
+     */
+    public function loadBundles(array $bundles){
+
+        $this->_localizationManager->loadBundles('resources/locales/$bundle/$bundle_$locale.properties', $bundles);
+    }
+
+
+    // TODO - this should include all component parts inline: css, php and js
+    public function includeComponent(string $componentPath){
+
+        require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
+    }
+
+
+    /**
+     * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
+     * URL parameters are the custom values that can be passed via url to the framework views.
+     * They are encoded this way: http://.../locale/viewname/parameter0/parameter1/parameter2/parameter3/...
+     *
+     * @param int $index The numeric index for the requested parameter
+     * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
+     *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
+     *
+     * @return string The requested parameter value
+     */
+    public function getParam(int $index = 0, bool $removeHtmlTags = true){
+
+        if($index < 0){
+
+            throw new UnexpectedValueException('Invalid parameter index: '.$index);
+        }
+
+        if($this->_currentViewName === $this->_singleParameterView){
+
+            if($index > 0){
+
+                throw new UnexpectedValueException('Single parameter view accepts only one parameter');
+            }
+
+            return $this->_URIElements[0];
+        }
+
+        // Defines the index where the current url parameters start to be view parameters
+        $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
+
+        if($index >= $this->_URLEnabledParameters - $firstViewParamOffset){
+
+            throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
+        }
+
+        $paramValue = isset($this->_URIElements[$index + $firstViewParamOffset]) ?
+           $this->_URIElements[$index + $firstViewParamOffset] : '';
+
+        return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
+    }
+
+
+    /**
+     * TODO
+     */
     public function echoHeadHtml(){
 
-	    if(StringUtils::isEmpty($this->metaTitle.$this->metaDescription)){
+        if(StringUtils::isEmpty($this->metaTitle.$this->metaDescription)){
 
-	        throw new UnexpectedValueException('metaTitle or metaDescription are empty');
-	    }
+            throw new UnexpectedValueException('metaTitle or metaDescription are empty');
+        }
 
-	    echo '<meta charset="utf-8">'."\n";
-	    echo '<title>'.$this->metaTitle.'</title>'."\n";
-	    echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
-	    echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
+        echo '<meta charset="utf-8">'."\n";
+        echo '<title>'.$this->metaTitle.'</title>'."\n";
+        echo '<meta name="description" content="'.$this->metaDescription.'">'."\n";
+        echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
 
-	    // Favicons
-	    echo '<link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl('/resources/favicons/16x16-'.$this->_cacheHash.'.png').'">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl('/resources/favicons/32x32-'.$this->_cacheHash.'.png').'">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="96x96" href="'.$this->getUrl('/resources/favicons/96x96-'.$this->_cacheHash.'.png').'">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="128x128" href="'.$this->getUrl('/resources/favicons/128x128-'.$this->_cacheHash.'.png').'">'."\n";
-	    echo '<link rel="icon" type="image/png" sizes="196x196" href="'.$this->getUrl('/resources/favicons/196x196-'.$this->_cacheHash.'.png').'">'."\n";
+        // Favicons
+        echo '<link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl('/resources/favicons/16x16-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl('/resources/favicons/32x32-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="96x96" href="'.$this->getUrl('/resources/favicons/96x96-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="128x128" href="'.$this->getUrl('/resources/favicons/128x128-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="196x196" href="'.$this->getUrl('/resources/favicons/196x196-'.$this->_cacheHash.'.png').'">'."\n";
 
-	    // Global css file
-	    echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
+        // Global css file
+        echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
 
         // Generate the view css if exists
         if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.css')){
 
             echo '<link rel="stylesheet" href="'.$this->getUrl('view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.css').'">'."\n";
         }
-	}
+    }
 
 
-	/**
-	 * Write the html code to load the page js scripts and code
-	 */
-	public function echoJavaScriptTags(){
+    /**
+     * Write the html code to load the page js scripts and code
+     */
+    public function echoJavaScriptTags(){
 
-	    // Generate the code to load CDN libs
-	    foreach ($this->_globalCDNS as $cdn) {
+        // Generate the code to load CDN libs
+        foreach ($this->_globalCDNS as $cdn) {
 
             echo '<script src="'.$cdn['url'].'" crossorigin="anonymous"></script>'."\n";
 
-	        if(!StringUtils::isEmpty($cdn['fallbackResource'])){
+            if(!StringUtils::isEmpty($cdn['fallbackResource'])){
 
-	           $url = $this->getUrl($cdn['fallbackResource']);
+               $url = $this->getUrl($cdn['fallbackResource']);
 
                echo "<script>".$cdn['fallbackVerify']." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
-	        }
-	    }
+            }
+        }
 
-	    // Generate the global js script
-	    echo '<script src="'.$this->getUrl('glob-'.$this->_cacheHash.'.js').'" defer></script>';
+        // Generate the global js script
+        echo '<script src="'.$this->getUrl('glob-'.$this->_cacheHash.'.js').'" defer></script>';
 
-	    // Generate the view js if exists
-	    if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js')){
+        // Generate the view js if exists
+        if(is_file($this->_mainPath.DIRECTORY_SEPARATOR.'view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js')){
 
-	        echo "\n<script src=\"".$this->getUrl('view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js').'" defer></script>';
-	    }
-	}
-
-
-	/**
-	 * Get the translated text for the provided key and options
-	 *
-	 * @param string $key The key we want to read from the specified resource bundle and path
-	 * @param array|string $options If a string is provided, the value will be used as the bundle where key
-	 *        must be found. If an associative array is provided, the following keys can be defined:
-	 *        -bundle: To define which bundle to look for the provided key
-	 *        -wildcards: A string or an array of strings that will be replaced on the translated Text
-	 *        -replace: A string or array of strings with the replacements for each of the provided wildcards
-	 *        An example of complex options : ['bundle' => 'footer', 'wildcards' => '$N', 'replace' => $ws->getRunningTime()]
-	 *
-	 * @see LocalizationManager::get
-	 *
-	 * @return string The translated text with all the options applied
-	 */
-	public function getLoc(string $key, $options = ''){
-
-	    if(is_string($options)){
-
-	        $bundle = $options;
-
-	    }else{
-
-	        $bundle = isset($options['bundle']) ? $options['bundle'] : '';
-	    }
-
-	    $text = $this->_localizationManager->get($key, $bundle);
-
-	    if(!is_string($options) && isset($options['wildcards'])){
-
-	        $text = StringUtils::replace($text, $options['wildcards'], $options['replace']);
-	    }
-
-	    return $text;
-	}
+            echo "\n<script src=\"".$this->getUrl('view-view-views-'.$this->_currentViewName.'-'.$this->_cacheHash.'.js').'" defer></script>';
+        }
+    }
 
 
-	/**
-	 * @see WebSiteManager::getLoc
-	 * @see LocalizationManager::get
-	 */
-	public function echoLoc(string $key, $options = ''){
+    /**
+     * Get the translated text for the provided key and options
+     *
+     * @param string $key The key we want to read from the specified resource bundle and path
+     * @param array|string $options If a string is provided, the value will be used as the bundle where key
+     *        must be found. If an associative array is provided, the following keys can be defined:
+     *        -bundle: To define which bundle to look for the provided key
+     *        -wildcards: A string or an array of strings that will be replaced on the translated Text
+     *        -replace: A string or array of strings with the replacements for each of the provided wildcards
+     *        An example of complex options : ['bundle' => 'footer', 'wildcards' => '$N', 'replace' => $ws->getRunningTime()]
+     *
+     * @see LocalizationManager::get
+     *
+     * @return string The translated text with all the options applied
+     */
+    public function getLoc(string $key, $options = ''){
 
-	   echo $this->getLoc($key, $options);
-	}
+        if(is_string($options)){
 
+            $bundle = $options;
 
-	/**
-	 * @see WebSiteManager::echoUrl
-	 *
-	 * @return string
-	 */
-	public function getUrl($path = '', $fullUrl = false){
+        }else{
 
-	    // Sanitize the received path
-	    $formattedPath = StringUtils::formatPath($path, '/');
+            $bundle = isset($options['bundle']) ? $options['bundle'] : '';
+        }
 
-	    // If we receive a full absolute url as the path, we will simply return it
-	    if(substr(strtolower($formattedPath), 0, 4) == 'http'){
+        $text = $this->_localizationManager->get($key, $bundle);
 
-	        return $formattedPath;
-	    }
+        if(!is_string($options) && isset($options['wildcards'])){
 
-	    $formattedPath = StringUtils::formatPath('/'.$this->_baseURL.'/'.$formattedPath, '/');
+            $text = StringUtils::replace($text, $options['wildcards'], $options['replace']);
+        }
 
-	    $formattedPath = $formattedPath === '' ? '/' : $formattedPath;
-
-	    return ($fullUrl ? 'https://'.$_SERVER['HTTP_HOST'] : '').$formattedPath;
-	}
-
-
-	/**
-	 * Obtain a valid url based on the current website root.
-	 *
-	 * @param string $path A path relative to the root of the site
-	 * @param boolean $fullUrl Set it to true to get the full url including https and the current domain.
-	 *
-	 * @return string the generated url
-	 */
-	public function echoUrl($path = '', $fullUrl = false){
-
-	    echo $this->getUrl($path, $fullUrl);
-	}
+        return $text;
+    }
 
 
-	/**
-	 * @see WebSiteManager::echoUrlToView
-	 *
-	 * @return string
-	 */
-	public function getUrlToView(string $view, $parameters = '', bool $fullUrl = false){
+    /**
+     * @see WebSiteManager::getLoc
+     * @see LocalizationManager::get
+     */
+    public function echoLoc(string $key, $options = ''){
 
-	    if(is_string($parameters)){
+       echo $this->getLoc($key, $options);
+    }
 
-	        $parameters = StringUtils::isEmpty($parameters) ? [] : [$parameters];
-	    }
 
-	    // The array that will store the URI parts
-	    $result = [];
-	    $view = str_replace('.php', '', $view);
+    /**
+     * @see WebSiteManager::echoUrl
+     *
+     * @return string
+     */
+    public function getUrl($path = '', $fullUrl = false){
 
-	    // Check if we are getting the single parameter view
-	    if($view === $this->_singleParameterView){
+        // Sanitize the received path
+        $formattedPath = StringUtils::formatPath($path, '/');
 
-	        if(count($parameters) !== 1 || strlen($parameters[0]) < 3){
+        // If we receive a full absolute url as the path, we will simply return it
+        if(substr(strtolower($formattedPath), 0, 4) == 'http'){
+
+            return $formattedPath;
+        }
+
+        $formattedPath = StringUtils::formatPath('/'.$this->_baseURL.'/'.$formattedPath, '/');
+
+        $formattedPath = $formattedPath === '' ? '/' : $formattedPath;
+
+        return ($fullUrl ? 'https://'.$_SERVER['HTTP_HOST'] : '').$formattedPath;
+    }
+
+
+    /**
+     * Obtain a valid url based on the current website root.
+     *
+     * @param string $path A path relative to the root of the site
+     * @param boolean $fullUrl Set it to true to get the full url including https and the current domain.
+     *
+     * @return string the generated url
+     */
+    public function echoUrl($path = '', $fullUrl = false){
+
+        echo $this->getUrl($path, $fullUrl);
+    }
+
+
+    /**
+     * @see WebSiteManager::echoUrlToView
+     *
+     * @return string
+     */
+    public function getUrlToView(string $view, $parameters = '', bool $fullUrl = false){
+
+        if(is_string($parameters)){
+
+            $parameters = StringUtils::isEmpty($parameters) ? [] : [$parameters];
+        }
+
+        // The array that will store the URI parts
+        $result = [];
+        $view = str_replace('.php', '', $view);
+
+        // Check if we are getting the single parameter view
+        if($view === $this->_singleParameterView){
+
+            if(count($parameters) !== 1 || strlen($parameters[0]) < 3){
 
                 throw new UnexpectedValueException('Single parameter view only allows one parameter with more than 2 digits');
-	        }
+            }
 
         // Check if we are getting the home view url
-	    }elseif ($view === $this->_homeView || StringUtils::isEmpty($view)){
+        }elseif ($view === $this->_homeView || StringUtils::isEmpty($view)){
 
-	        if(count($parameters) !== 0){
+            if(count($parameters) !== 0){
 
-	            throw new UnexpectedValueException('Home view does not allow parameters');
-	        }
+                throw new UnexpectedValueException('Home view does not allow parameters');
+            }
 
-	        $result = [$this->_primaryLanguage];
+            $result = [$this->_primaryLanguage];
 
-	    }else{
+        }else{
 
-	        $result = [$this->_primaryLanguage, $view];
-	    }
+            $result = [$this->_primaryLanguage, $view];
+        }
 
-	    // Add all the parameters to the url
-	    $parameters = array_map(function ($p) {return rawurlencode($p);}, $parameters);
+        // Add all the parameters to the url
+        $parameters = array_map(function ($p) {return rawurlencode($p);}, $parameters);
 
-	    return htmlspecialchars($this->getUrl(implode('/', array_merge($result, $parameters)), $fullUrl));
-	}
-
-
-	/**
-	 * Gives the url that points to the specified view, using the current site locale and the specified parameters
-	 *
-	 * @param string $view The name of the view. For example: Home
-	 * @param mixed $parameters The list of parameters to pass to the PHP call. If a single parameter is sent, it can be a string. If more than one will be passed, it must be an array.
-	 * @param boolean $fullUrl True to get the full absolute url (http://...) or false to get it relative to the current domain
-	 *
-	 * @return void
-	 */
-	public function echoUrlToView($view, $parameters = '', $fullUrl = false){
-
-	    echo $this->getUrlToView($view, $parameters, $fullUrl);
-	}
+        return htmlspecialchars($this->getUrl(implode('/', array_merge($result, $parameters)), $fullUrl));
+    }
 
 
-	/**
-	 * @see WebSiteManager::echoUrlToChangeLocale
-	 *
-	 * @return string
-	 */
-	public function getUrlToChangeLocale($locale, $fullUrl = false){
+    /**
+     * Gives the url that points to the specified view, using the current site locale and the specified parameters
+     *
+     * @param string $view The name of the view. For example: Home
+     * @param mixed $parameters The list of parameters to pass to the PHP call. If a single parameter is sent, it can be a string. If more than one will be passed, it must be an array.
+     * @param boolean $fullUrl True to get the full absolute url (http://...) or false to get it relative to the current domain
+     *
+     * @return void
+     */
+    public function echoUrlToView($view, $parameters = '', $fullUrl = false){
 
-	    $newURI = ltrim($_SERVER['REQUEST_URI'], '/');
-
-	    // Remove the baseurl/ from the beginning if it exists
-	    if (substr($newURI, 0, strlen($this->_baseURL.'/')) == $this->_baseURL.'/') {
-
-	        $newURI = ltrim(substr($newURI, strlen($this->_baseURL.'/')), '/');
-	    }
-
-	    $language = substr($locale, 0, 2);
-
-	    if(substr($newURI, 0, 2) === $this->_primaryLanguage){
-
-	        $newURI = StringUtils::replace($newURI, $this->_primaryLanguage, $language, 1);
-	    }
-
-	    return $this->getUrl($newURI, $fullUrl);
-	}
+        echo $this->getUrlToView($view, $parameters, $fullUrl);
+    }
 
 
-	/**
-	 * Gives the url that will allow us to change the locale for the current document URI
-	 *
-	 * @param string $locale The locale we want to set on the new url
-	 * @param boolean $fullUrl True to get the full absolute url (https://...) or false to get it relative to the current domain
-	 *
-	 * @return void
-	 */
-	public function echoUrlToChangeLocale($locale, $fullUrl = false){
+    /**
+     * @see WebSiteManager::echoUrlToChangeLocale
+     *
+     * @return string
+     */
+    public function getUrlToChangeLocale($locale, $fullUrl = false){
 
-	    echo $this->getUrlToChangeLocale($locale, $fullUrl);
-	}
+        $newURI = ltrim($_SERVER['REQUEST_URI'], '/');
 
+        // Remove the baseurl/ from the beginning if it exists
+        if (substr($newURI, 0, strlen($this->_baseURL.'/')) == $this->_baseURL.'/') {
 
-	/**
-	 * Get the time that's taken for the document to be generated since the initial page request.
-	 *
-	 * @return float the number of seconds (with 3 digit ms precision) since the Website object was instantiated.
-	 *         For example 1.357 which means 1 second an 357 miliseconds
-	 */
-	public function getRunningTime(){
+            $newURI = ltrim(substr($newURI, strlen($this->_baseURL.'/')), '/');
+        }
 
-	    return round(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 4);
-	}
+        $language = substr($locale, 0, 2);
 
+        if(substr($newURI, 0, 2) === $this->_primaryLanguage){
 
-	/**
-	 * Perform a 301 redirect (permanently moved) to the specified url.
-	 */
-	public function redirect301($url){
+            $newURI = StringUtils::replace($newURI, $this->_primaryLanguage, $language, 1);
+        }
 
-	    // TODO - should this be moved to turbocommons?
-	    header('location:'.$url, true, 301);
-	    die();
-	}
+        return $this->getUrl($newURI, $fullUrl);
+    }
 
 
-	/**
-	 * Show a 404 error.
-	 * Note that this method uses headers so no output must have been generated when calling it or it won't work.
-	 */
-	public function show404Error(){
+    /**
+     * Gives the url that will allow us to change the locale for the current document URI
+     *
+     * @param string $locale The locale we want to set on the new url
+     * @param boolean $fullUrl True to get the full absolute url (https://...) or false to get it relative to the current domain
+     *
+     * @return void
+     */
+    public function echoUrlToChangeLocale($locale, $fullUrl = false){
 
-	    http_response_code(404);
-	    include('error-404.php');
-	    die();
-	}
+        echo $this->getUrlToChangeLocale($locale, $fullUrl);
+    }
+
+
+    /**
+     * Get the time that's taken for the document to be generated since the initial page request.
+     *
+     * @return float the number of seconds (with 3 digit ms precision) since the Website object was instantiated.
+     *         For example 1.357 which means 1 second an 357 miliseconds
+     */
+    public function getRunningTime(){
+
+        return round(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 4);
+    }
+
+
+    /**
+     * Perform a 301 redirect (permanently moved) to the specified url.
+     */
+    public function redirect301($url){
+
+        // TODO - should this be moved to turbocommons?
+        header('location:'.$url, true, 301);
+        die();
+    }
+
+
+    /**
+     * Show a 404 error.
+     * Note that this method uses headers so no output must have been generated when calling it or it won't work.
+     */
+    public function show404Error(){
+
+        http_response_code(404);
+        include('error-404.php');
+        die();
+    }
 }
 
 ?>

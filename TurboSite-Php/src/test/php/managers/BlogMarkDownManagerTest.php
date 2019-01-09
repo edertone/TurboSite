@@ -71,13 +71,13 @@ class BlogMarkDownManagerTest extends TestCase {
 
 
     /**
-	 * testConstruct
-	 *
-	 * @return void
-	 */
-	public function testConstruct(){
+     * testConstruct
+     *
+     * @return void
+     */
+    public function testConstruct(){
 
-	    $this->assertTrue($this->sut instanceof BlogMarkDownManager);
+        $this->assertTrue($this->sut instanceof BlogMarkDownManager);
     }
 
 
