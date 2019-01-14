@@ -212,10 +212,12 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * The main website object starting point.
      * Initializes the structure and generates the html code for the current url
+     *
+     * @param string $rootProjectPath The filesystem path to the root of the website project src/main folder
      */
-    public function initialize($rootPath){
+    public function initialize($rootProjectPath){
 
-        $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootPath));
+        $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootProjectPath));
         $this->_filesManager = new FilesManager();
         $this->_localizationManager = new LocalizationManager();
         $this->_browserManager = new BrowserManager();
