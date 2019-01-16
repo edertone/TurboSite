@@ -117,13 +117,17 @@ class WebSiteManager extends BaseSingletonClass{
 
     /**
      * Contains the value for the current url URI fragment
+     *
+     * Note that this string does not contain the baseURL part of the current browser URI
      */
     private $_URI = '';
 
 
     /**
      * Contains the value for the current url URI fragment but splitted as an array
-     * where each element is a URI fragment (fragments are divided by /)
+     * where each element is a URI fragment (fragments are divided by /).
+     *
+     * Note that this array does not contain the baseURL part of the current browser URI
      */
     private $_URIElements = [];
 
@@ -148,6 +152,19 @@ class WebSiteManager extends BaseSingletonClass{
      * Stores the list of required JS cdns and their respective fallback resources
      */
     private $_globalCDNS = [];
+
+
+    /**
+     * Singleton constructor overriden to allow the global error manager initialization as fast as possible
+     *
+     * @return WebSiteManager The Singleton instance.
+     */
+    public static function getInstance(){
+
+        GlobalErrorManager::getInstance()->initialize();
+
+        return parent::getInstance();
+    }
 
 
     /**
@@ -197,43 +214,30 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Singleton constructor overriden to allow the global error manager initialization as fast as possible
+     * Generates all the output that is expected for the current URL
      *
-     * @return WebSiteManager The Singleton instance.
+     * @param string $indexFilePath The filesystem path to the project index.php file (src/main/index.php)
      */
-    public static function getInstance(){
+    public function generateContent($indexFilePath){
 
-        GlobalErrorManager::getInstance()->initialize();
+        $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($indexFilePath));
 
-        return parent::getInstance();
-    }
-
-
-    /**
-     * The main website object starting point.
-     * Initializes the structure and generates the html code for the current url
-     *
-     * @param string $rootProjectPath The filesystem path to the root of the website project src/main folder
-     */
-    public function initialize($rootProjectPath){
-
-        $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($rootProjectPath));
-        $this->_filesManager = new FilesManager();
-        $this->_localizationManager = new LocalizationManager();
-        $this->_browserManager = new BrowserManager();
-
-        $this->_initializeSetup();
+        $this->_initialize();
 
         $this->_sanitizeUrl();
 
-        $this->_includeContentBasedOnURI();
+        $this->_generateURIOutput();
     }
 
 
     /**
-     * get the website current full url as it is shown on the user browser
+     * Initialize all the project global objects and load setup data
      */
-    private function _initializeSetup(){
+    private function _initialize(){
+
+        $this->_filesManager = new FilesManager();
+        $this->_localizationManager = new LocalizationManager();
+        $this->_browserManager = new BrowserManager();
 
         $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
         $this->_URIElements = explode('/', $this->_URI);
@@ -270,35 +274,35 @@ class WebSiteManager extends BaseSingletonClass{
             }
         });
 
-            // Load all the configured javascript CDNS
-            foreach ($setup->globalCDNS as $cdn) {
+        // Load all the configured javascript CDNS
+        foreach ($setup->globalCDNS as $cdn) {
 
-                $this->_globalCDNS[] = [
-                    'url' => $cdn->url,
-                    'fallbackVerify' => $cdn->fallbackVerify,
-                    'fallbackResource' => $cdn->fallbackResource
-                ];
-            }
+            $this->_globalCDNS[] = [
+                'url' => $cdn->url,
+                'fallbackVerify' => $cdn->fallbackVerify,
+                'fallbackResource' => $cdn->fallbackResource
+            ];
+        }
 
-            // Detect the primary locale from the url, cookies, browser or the project list of locales
-            $this->_primaryLanguage = $this->_URIElements[0];
+        // Detect the primary locale from the url, cookies, browser or the project list of locales
+        $this->_primaryLanguage = $this->_URIElements[0];
+
+        if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
+
+            $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
 
             if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
 
-                $this->_primaryLanguage = substr($this->_browserManager->getCookie('turbosite_locale'), 0, 2);
+                $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
 
                 if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
 
-                    $this->_primaryLanguage = $this->_browserManager->getPreferredLanguage();
-
-                    if(!in_array($this->_primaryLanguage, $this->_localizationManager->languages())){
-
-                        $this->_primaryLanguage = $this->_localizationManager->languages()[0];
-                    }
+                    $this->_primaryLanguage = $this->_localizationManager->languages()[0];
                 }
             }
+        }
 
-            $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+        $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
     }
 
 
@@ -360,17 +364,18 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Chech which content must be required based on the current URI
+     * Chech which content must be output based on the current URI
      */
-    private function _includeContentBasedOnURI(){
+    private function _generateURIOutput(){
 
         // Php files execution is not allowed
         if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
 
             // Check if the URI represents a service
-            if($this->_URIElements[0] === 'http'){
+            if($this->_URIElements[0] === 'api'){
 
-                include('http/'.$this->_URIElements[1].'.php');
+                include(WebServiceManager::getInstance()->getCurrentServiceFilePath());
+
                 die();
             }
 
@@ -413,6 +418,8 @@ class WebSiteManager extends BaseSingletonClass{
      * Resolve the provided relative project path into a full file system path that can be correctly reached via file system.
      *
      * @param string $path A path relative to the project src/main folder
+     *
+     * @see StringUtils::formatPath
      *
      * @return string A full file system path that is generated from the provided relative one
      */
