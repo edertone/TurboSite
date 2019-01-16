@@ -659,11 +659,12 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Get the value for an url parameter, given its parameter index number. If the parameter does not exist, it will return an empty string
+     * Get the value for an url parameter, given its parameter index number.
+     * If the parameter index is valid, but no value has been passed into the url, it will return an empty string.
      * URL parameters are the custom values that can be passed via url to the framework views.
      * They are encoded this way: http://.../locale/viewname/parameter0/parameter1/parameter2/parameter3/...
      *
-     * @param int $index The numeric index for the requested parameter
+     * @param int $index The numeric index for the requested parameter. Invalid index value will throw an exception
      * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
      *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
      *
