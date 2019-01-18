@@ -374,7 +374,7 @@ class WebSiteManager extends BaseSingletonClass{
             // Check if the URI represents a service
             if($this->_URIElements[0] === 'api'){
 
-                echo $this->runCurrentURLService();
+                echo $this->runCurrentURLWebService();
 
                 die();
             }
@@ -988,29 +988,35 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * This method executes the API web service that is defined by the current URL
      */
-    private function runCurrentURLService(){
+    private function runCurrentURLWebService(){
 
         // Obtain an array with the folders of the current url after the .../api/ part
         $apiURI = explode('/', explode('/api/', $this->getFullUrl(), 2)[1]);
 
-        // Try to find the path for a service located on api/.../.../service.php
-        if(is_dir($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1]))){
+        // Try to find the path for a service located on api/.../.../ServiceClass.php
+        if(isset($apiURI[2])){
 
             $serviceClass = StringUtils::formatCase($apiURI[2], StringUtils::FORMAT_UPPER_CAMEL_CASE);
 
-            $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$serviceClass;
+            if(is_file($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1].'\\'.$serviceClass.'.php'))){
 
-            return (new $classPath)->run();
+                $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$serviceClass;
+
+                return (new $classPath)->run();
+            }
         }
 
-        // Try to find the path for a service located on api/.../.../.../service.php
-        if(is_dir($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1].'/'.$apiURI[2]))){
+        // Try to find the path for a service located on api/.../.../.../ServiceClass.php
+        if(isset($apiURI[3])){
 
             $serviceClass = StringUtils::formatCase($apiURI[3], StringUtils::FORMAT_UPPER_CAMEL_CASE);
 
-            $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$apiURI[2].'\\'.$serviceClass;
+            if(is_file($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1].'/'.$apiURI[2].'\\'.$serviceClass.'.php'))){
 
-            return (new $classPath)->run();
+                $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$apiURI[2].'\\'.$serviceClass;
+
+                return (new $classPath)->run();
+            }
         }
 
         // The specified service url is not correct

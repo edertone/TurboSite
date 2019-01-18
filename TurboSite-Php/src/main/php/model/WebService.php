@@ -46,6 +46,12 @@ class WebService{
 
 
     /**
+     * Stores the actual values of the get parameters that have been passed to this service via the URL
+     */
+    private $_receivedURLGetParametersCount = 0;
+
+
+    /**
      * Contains the current url fragment that starts just after https://.../api/
      */
     private $_URI = '';
@@ -86,6 +92,15 @@ class WebService{
                 $serviceNameFound = true;
             }
         }
+
+        $this->_receivedURLGetParametersCount = count($this->_receivedURLGetParameters);
+
+        // Check get parameters are valid
+        if($this->_receivedURLGetParametersCount !== $this->enabledGetParams){
+
+            throw new UnexpectedValueException('Invalid number of get parameters passed to service. Received '.
+                $this->_receivedURLGetParametersCount.' but expected '.$this->enabledGetParams);
+        }
     }
 
 
@@ -108,7 +123,7 @@ class WebService{
             throw new UnexpectedValueException('Invalid service parameter index: '.$index);
         }
 
-        if($index >= count($this->_receivedURLGetParameters)){
+        if($index >= $this->_receivedURLGetParametersCount){
 
             throw new UnexpectedValueException('Disabled service parameter index '.$index.' requested');
         }
