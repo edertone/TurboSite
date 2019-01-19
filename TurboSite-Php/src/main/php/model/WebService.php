@@ -40,13 +40,13 @@ class WebService{
 
 
     /**
-     * Stores the actual values of the get parameters that have been passed to this service via the URL
+     * Stores the actual values of the GET parameters that have been passed to this service via the URL
      */
     private $_receivedURLGetParameters = [];
 
 
     /**
-     * Stores the actual values of the get parameters that have been passed to this service via the URL
+     * Stores the actual values of the GET parameters that have been passed to this service via the URL
      */
     private $_receivedURLGetParametersCount = 0;
 
@@ -101,6 +101,19 @@ class WebService{
             throw new UnexpectedValueException('Invalid number of get parameters passed to service. Received '.
                 $this->_receivedURLGetParametersCount.' but expected '.$this->enabledGetParams);
         }
+
+        // Check post parameters are valid
+        if(count(array_keys($_POST)) > 0 && !$this->enablePostParams){
+
+            throw new UnexpectedValueException('Received POST variables but POST not enabled on service');
+        }
+
+        $expectedPostVars = isset($_POST['params']) ? 1 : 0;
+
+        if(count(array_keys($_POST)) !== $expectedPostVars){
+
+            throw new UnexpectedValueException('Unexpected POST variables received. Only "params" variable is accepted');
+        }
     }
 
 
@@ -131,6 +144,23 @@ class WebService{
         return $removeHtmlTags ?
             strip_tags($this->_receivedURLGetParameters[$index]) :
             $this->_receivedURLGetParameters[$index];
+    }
+
+
+    /**
+     * Get the POST parameters that have been passed to this service.
+     *
+     * @return string|null The value of the received POST "params" variable as a string (which should be passed through
+     *                     json_decode if necessary) or null if no "params" variable has been passed to the service.
+     */
+    public function getPostParams(){
+
+        if(isset($_POST['params'])){
+
+            return $_POST['params'];
+        }
+
+        return null;
     }
 
 
