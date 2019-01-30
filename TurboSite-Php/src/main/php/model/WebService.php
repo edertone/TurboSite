@@ -14,6 +14,7 @@ namespace org\turbosite\src\main\php\model;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\managers\WebSiteManager;
+use org\turbocommons\src\main\php\utils\ArrayUtils;
 
 
 /**
@@ -25,19 +26,17 @@ class WebService{
 
 
     /**
-     * Defines if the web service accepts POST parameters. Note that when using POST, all the service parameters must be passed through
-     * a POST variable called "data". We can pass there a single string or a JSON object containing all the service parameter values we
-     * want.
+     * Defines if the web service accepts POST parameters. A list of strings must be provided where each one of the elements
+     * is the name of a POST parameter that will be accepted by the service.
      *
-     * The variable "data" is the only POST value that will be accepted by the service. All the data to the service must be passed
-     * via this variable. Any other POST variable that is sent to the service will make it fail.
+     * Any POST parameter that is passed to the service which is not enabled on this list will make the service fail.
      */
-    public $isPostDataEnabled = false;
+    public $enabledPostParams = [];
 
 
     /**
      * This flag defines if POST data must be passed to the service when POST data is enabled on the service.
-     * If set to true, the "data" POST variable must be passed to the service and be non empty.
+     * If set to true, all the POST parameters must be passed to the service (they can be empty but must be passed via POST).
      */
     public $isPostDataMandatory = true;
 
@@ -135,7 +134,7 @@ class WebService{
         if(($this->isGetDataMandatory && $this->_receivedURLGetParametersCount !== $this->enabledGetParams) ||
             $this->_receivedURLGetParametersCount > $this->enabledGetParams){
 
-            throw new UnexpectedValueException('Invalid number of get parameters passed to service. Received '.
+            throw new UnexpectedValueException('Invalid number of GET parameters passed to service. Received '.
                 $this->_receivedURLGetParametersCount.' but expected '.$this->enabledGetParams);
         }
 
@@ -146,21 +145,23 @@ class WebService{
         }
 
         // Check post parameters are valid
-        if($this->isPostDataEnabled && $this->isPostDataMandatory && count(array_keys($_POST)) === 0){
+        $receivedPostParamsCount = count(array_keys($_POST));
+        $enabledPostParamsCount = count($this->enabledPostParams);
+
+        if($enabledPostParamsCount > 0 && $this->isPostDataMandatory && $receivedPostParamsCount === 0){
 
             throw new UnexpectedValueException('This service expects POST data');
         }
 
-        if(!$this->isPostDataEnabled && count(array_keys($_POST)) > 0){
+        if($enabledPostParamsCount === 0 && $receivedPostParamsCount > 0){
 
             throw new UnexpectedValueException('Received POST variables but POST not enabled on service');
         }
 
-        $expectedPostVars = isset($_POST['data']) ? 1 : 0;
+        if(($receivedPostParamsCount > 0 && $receivedPostParamsCount !== $enabledPostParamsCount) ||
+           ($this->isPostDataMandatory && array_diff(array_keys($_POST), $this->enabledPostParams) !== [])){
 
-        if(count(array_keys($_POST)) !== $expectedPostVars){
-
-            throw new UnexpectedValueException('Unexpected POST variables received. Only "data" variable is accepted');
+            throw new UnexpectedValueException('Unexpected POST variables received.');
         }
     }
 
@@ -181,12 +182,12 @@ class WebService{
 
         if($index < 0){
 
-            throw new UnexpectedValueException('Invalid service parameter index: '.$index);
+            throw new UnexpectedValueException('Invalid GET parameter index: '.$index);
         }
 
         if($index >= $this->enabledGetParams){
 
-            if($this->isPostDataEnabled){
+            if(count($this->enabledPostParams) > 0){
 
                 return '';
             }
@@ -206,16 +207,23 @@ class WebService{
 
 
     /**
-     * Get the POST information that has been passed to this service as raw string.
+     * Get the value for the specified POST parameter that has been passed to this service as raw string.
      *
-     * @return string The value of the received POST "data" variable as a raw string or an empty string if no "data"
-     *         variable has been passed to the service.
+     * @param string $paramName The name for the POST parameter we want to retrieve
+     *
+     * @return string string The value of the received POST variable as a raw string or an empty string if the
+     *         variable has not been passed to the service.
      */
-    public function getPostData(){
+    public function getPost(string $paramName){
 
-        if(isset($_POST['data'])){
+        if(array_search($paramName, $this->enabledPostParams) === false){
 
-            return $_POST['data'];
+            throw new UnexpectedValueException('Invalid POST parameter name: '.$paramName);
+        }
+
+        if(isset($_POST[$paramName])){
+
+            return (string) $_POST[$paramName];
         }
 
         return '';
@@ -223,42 +231,48 @@ class WebService{
 
 
     /**
-     * Get the POST data that has been passed to this service casted as an integer.
+     * Get the value casted as an integer for the specified POST parameter as received by this service.
      *
-     * @return number The value of the received POST "data" variable converted to its integer value or 0 if no "data"
+     * @param string $paramName The name for the POST parameter we want to retrieve
+     *
+     * @return number The value of the received POST variable converted to its integer value or 0 if no
      *         variable has been passed to the service.
      */
-    public function getPostDataAsInt(){
+    public function getPostAsInt(string $paramName){
 
-        $result = $this->getPostData();
+        $result = $this->getPost($paramName);
 
         return $result === '' ? 0 : (int) $result;
     }
 
 
     /**
-     * Get the POST data that has been passed to this service casted as a float.
+     * Get the value casted as a float for the specified POST parameter as received by this service.
      *
-     * @return number The value of the received POST "data" variable converted to its float value or 0 if no "data"
+     * @param string $paramName The name for the POST parameter we want to retrieve
+     *
+     * @return number The value of the received POST variable converted to its float value or 0 if no
      *         variable has been passed to the service.
      */
-    public function getPostDataAsFloat(){
+    public function getPostAsFloat(string $paramName){
 
-        $result = $this->getPostData();
+        $result = $this->getPost($paramName);
 
         return $result === '' ? 0 : (float) $result;
     }
 
 
     /**
-     * Get the POST data that has been passed to this service converted to an associative array.
+     * Get the value converted as an associative array for the specified POST parameter as received by this service.
      *
-     * @return array The value of the received POST "data" variable converted to an associative array or [] if no "data"
+     * @param string $paramName The name for the POST parameter we want to retrieve
+     *
+     * @return array The value of the received POST variable converted to an associative array or [] if no "data"
      *         variable has been passed to the service.
      */
-    public function getPostDataAsArray(){
+    public function getPostAsArray(string $paramName){
 
-        $postData = $this->getPostData();
+        $postData = $this->getPost($paramName);
 
         if($postData === ''){
 
