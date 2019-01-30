@@ -1002,7 +1002,7 @@ class WebSiteManager extends BaseSingletonClass{
 
                 $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$serviceClass;
 
-                return (new $classPath)->run();
+                return $this->webServiceResultToString((new $classPath)->run());
             }
         }
 
@@ -1015,12 +1015,40 @@ class WebSiteManager extends BaseSingletonClass{
 
                 $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$apiURI[2].'\\'.$serviceClass;
 
-                return (new $classPath)->run();
+                return $this->webServiceResultToString((new $classPath)->run());
             }
         }
 
         // The specified service url is not correct
         $this->show404Error();
+    }
+
+
+    /**
+     * Convert the result of a web service into a string that can be output to the browser
+     *
+     * @param mixed $result The result of a web service
+     *
+     * return string The textual value for the passed result
+     */
+    private function webServiceResultToString($result){
+
+        if(is_string($result)){
+
+            return $result;
+        }
+
+        if(is_bool($result) || is_array($result)){
+
+            return json_encode($result);
+        }
+
+        if(is_numeric($result)){
+
+            return strval($result);
+        }
+
+        throw new UnexpectedValueException('The overriden WebService run() method must return a valid PHP basic type');
     }
 }
 

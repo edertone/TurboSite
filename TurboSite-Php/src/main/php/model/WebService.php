@@ -17,7 +17,9 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 
 
 /**
- * Contains the configuration parameters for the project services
+ * Defines the base class for all the project web services.
+ * Any web service that is accessible via API calls must extend this class
+ * and override the setup() and run() methods.
  */
 class WebService{
 
@@ -30,17 +32,30 @@ class WebService{
      * The variable "data" is the only POST value that will be accepted by the service. All the data to the service must be passed
      * via this variable. Any other POST variable that is sent to the service will make it fail.
      */
-    public $enablePostData = false;
+    public $isPostDataEnabled = false;
 
 
     /**
+     * This flag defines if POST data must be passed to the service when POST data is enabled on the service.
+     * If set to true, the "data" POST variable must be passed to the service and be non empty.
+     */
+    public $isPostDataMandatory = true;
+
+
+   /**
      * Defines how many GET parameters are accepted by this service. Anyones beyond this limit will make the service fail.
-     * If a service has a missing value for any of the enabled parameters and there's no default value defined, the service will fail.
      *
      * Get parameters on http services can only be passed in the form .../api/../../service-name/param1/param2/param3/... The standard way
      * to encode GET parameter in urls (?param1=v1&param2=v2...) is not accepted and will be ignored.
      */
     public $enabledGetParams = 0;
+
+
+     /**
+     * This flag defines if all GET parameters must be passed to the service when GET parameters are enabled on the service.
+     * If set to true, all the GET parameter values must be passed to the service.
+     */
+    public $isGetDataMandatory = true;
 
 
     /**
@@ -72,10 +87,15 @@ class WebService{
     /**
      * Class constructor
      *
-     * @param string $data If we create this service via code we can pass the POST $data here and it will be loaded
-     *        by the service as if it was passed via HTTP POST
+     * @param array $getParameters If we create this service via code we can pass the GET data here and it will be loaded
+ *            by the service as if it was passed via HTTP GET. It must be an array containing each one of the parameters that
+ *            would be passed via the url, sorted in the same way as they would in the url.First array elemtn will be the param 1,
+ *            second will be param 2, and so. Same rules as when calling the service via url apply.
+     * @param string $postData If we create this service via code we can pass the POST data here and it will be loaded
+     *        by the service as if it was passed via HTTP POST. It must be a string that contains the info we want to pass
+     *        to the service, as a plain string or encoded any way we want.  Same rules as when calling the service via url apply.
      */
-    public function __construct($data = null){
+    public function __construct(array $getParameters = null, string $postData = null){
 
         $this->setup();
 
@@ -85,33 +105,53 @@ class WebService{
         $this->_URI = explode('/api/', $ws->getFullUrl())[1];
         $this->_URIElements = explode('/', $this->_URI);
 
-        // Parse the service parameters if any exist and store them to _receivedURLGetParameters
-        $serviceNameFound = false;
-        $serviceName = StringUtils::getPathElement(get_class($this));
+        // Process the service GET parameters
+        if($getParameters !== null){
 
-        foreach ($this->_URIElements as $uriElement) {
+            $this->_receivedURLGetParameters = $getParameters;
 
-            if($serviceNameFound){
+        }else{
 
-                $this->_receivedURLGetParameters[] = $uriElement;
+            // Parse the service GET parameters if any exist and store them to _receivedURLGetParameters
+            $serviceNameFound = false;
+            $serviceName = StringUtils::getPathElement(get_class($this));
 
-            }else if(StringUtils::formatCase($uriElement, StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceName){
+            foreach ($this->_URIElements as $uriElement) {
 
-                $serviceNameFound = true;
+                if($serviceNameFound){
+
+                    $this->_receivedURLGetParameters[] = $uriElement;
+
+                }else if(StringUtils::formatCase($uriElement, StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceName){
+
+                    $serviceNameFound = true;
+                }
             }
         }
 
         $this->_receivedURLGetParametersCount = count($this->_receivedURLGetParameters);
 
         // Check get parameters are valid
-        if($this->_receivedURLGetParametersCount !== $this->enabledGetParams){
+        if(($this->isGetDataMandatory && $this->_receivedURLGetParametersCount !== $this->enabledGetParams) ||
+            $this->_receivedURLGetParametersCount > $this->enabledGetParams){
 
             throw new UnexpectedValueException('Invalid number of get parameters passed to service. Received '.
                 $this->_receivedURLGetParametersCount.' but expected '.$this->enabledGetParams);
         }
 
+        // Process the service POST parameters
+        if($postData !== null){
+
+            $_POST['data'] = $postData;
+        }
+
         // Check post parameters are valid
-        if(count(array_keys($_POST)) > 0 && !$this->enablePostData){
+        if($this->isPostDataEnabled && $this->isPostDataMandatory && count(array_keys($_POST)) === 0){
+
+            throw new UnexpectedValueException('This service expects POST data');
+        }
+
+        if(!$this->isPostDataEnabled && count(array_keys($_POST)) > 0){
 
             throw new UnexpectedValueException('Received POST variables but POST not enabled on service');
         }
@@ -144,9 +184,19 @@ class WebService{
             throw new UnexpectedValueException('Invalid service parameter index: '.$index);
         }
 
-        if($index >= $this->_receivedURLGetParametersCount){
+        if($index >= $this->enabledGetParams){
+
+            if($this->isPostDataEnabled){
+
+                return '';
+            }
 
             throw new UnexpectedValueException('Disabled service parameter index '.$index.' requested');
+        }
+
+        if(!$this->isGetDataMandatory && !isset($this->_receivedURLGetParameters[$index])){
+
+            return '';
         }
 
         return $removeHtmlTags ?
@@ -156,11 +206,10 @@ class WebService{
 
 
     /**
-     * Get the POST parameters that have been passed to this service.
-     * All the information that is required by the service must be passed or encoded here.
+     * Get the POST information that has been passed to this service as raw string.
      *
-     * @return string|null The value of the received POST "data" variable as a string (which should be passed through
-     *                     json_decode if necessary) or null if no "data" variable has been passed to the service.
+     * @return string The value of the received POST "data" variable as a raw string or an empty string if no "data"
+     *         variable has been passed to the service.
      */
     public function getPostData(){
 
@@ -169,20 +218,71 @@ class WebService{
             return $_POST['data'];
         }
 
-        return null;
-    }
-
-
-    public function getPostDataJSONEncoded(){
-
-        // TODO
-        
-        return null;
+        return '';
     }
 
 
     /**
-     * Override this method to setup the service
+     * Get the POST data that has been passed to this service casted as an integer.
+     *
+     * @return number The value of the received POST "data" variable converted to its integer value or 0 if no "data"
+     *         variable has been passed to the service.
+     */
+    public function getPostDataAsInt(){
+
+        $result = $this->getPostData();
+
+        return $result === '' ? 0 : (int) $result;
+    }
+
+
+    /**
+     * Get the POST data that has been passed to this service casted as a float.
+     *
+     * @return number The value of the received POST "data" variable converted to its float value or 0 if no "data"
+     *         variable has been passed to the service.
+     */
+    public function getPostDataAsFloat(){
+
+        $result = $this->getPostData();
+
+        return $result === '' ? 0 : (float) $result;
+    }
+
+
+    /**
+     * Get the POST data that has been passed to this service converted to an associative array.
+     *
+     * @return array The value of the received POST "data" variable converted to an associative array or [] if no "data"
+     *         variable has been passed to the service.
+     */
+    public function getPostDataAsArray(){
+
+        $postData = $this->getPostData();
+
+        if($postData === ''){
+
+            return [];
+        }
+
+        $result = json_decode($postData);
+
+        if(!is_array($result)){
+
+            throw new UnexpectedValueException('Could not convert '.$postData.' to an associative array');
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * This method is always called before any other thing at the web service constructor.
+
+     * Override it to define the service setup values like enabling GET or POST parameters and
+     * any other required customization.
+     *
+     * @return void
      */
     protected function setup(){
 
@@ -191,7 +291,11 @@ class WebService{
 
 
     /**
+     * This method is executed to perform the service operations and return a result.
+     *
      * Override this method with the actual service logic
+     *
+     * @return mixed The result of the service as any of the PHP basic types.
      */
     public function run(){
 
