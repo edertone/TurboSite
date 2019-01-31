@@ -76,19 +76,6 @@ class WebService{
 
 
     /**
-     * Contains the current url fragment that starts just after https://.../api/
-     */
-    private $_URI = '';
-
-
-    /**
-     * Contains the value for the current service url URI fragment just after https://.../api/ but splitted as an array
-     * where each element is a URI fragment (fragments are divided by /).
-     */
-    private $_URIElements = [];
-
-
-    /**
      * Class constructor
      *
      * @param array $getParameters If we create this service via code we can pass the GET data here and it will be loaded
@@ -105,10 +92,6 @@ class WebService{
 
         $ws = WebSiteManager::getInstance();
 
-        // Initialize service useful values
-        $this->_URI = explode('/api/', $ws->getFullUrl())[1];
-        $this->_URIElements = explode('/', $this->_URI);
-
         // Process the service GET parameters
         if($getParameters !== null){
 
@@ -117,10 +100,13 @@ class WebService{
         }else{
 
             // Parse the service GET parameters if any exist and store them to _receivedGetParameters
+            $URI = explode('/api/', $ws->getFullUrl())[1];
+            $URIElements = explode('/', $URI);
+
             $serviceNameFound = false;
             $serviceName = StringUtils::getPathElement(get_class($this));
 
-            foreach ($this->_URIElements as $uriElement) {
+            foreach ($URIElements as $uriElement) {
 
                 if($serviceNameFound){
 
@@ -141,6 +127,15 @@ class WebService{
 
             throw new UnexpectedValueException('Invalid number of GET parameters passed to service. Received '.
                 $this->_receivedGetParametersCount.' but expected '.$this->enabledGetParams);
+        }
+
+        // All GET parameters must be strings
+        foreach ($this->_receivedGetParameters as $value) {
+
+            if(!is_string($value)){
+
+                throw new UnexpectedValueException('All GET parameters must be strings');
+            }
         }
 
         // Process the service POST parameters
@@ -179,6 +174,15 @@ class WebService{
 
             throw new UnexpectedValueException('Unexpected POST variables received.');
         }
+
+        // All POST parameters must be strings
+        foreach ($postKeys as $key) {
+
+            if(!is_string($this->_receivedPostParameters[$key])){
+
+                throw new UnexpectedValueException('All POST parameters must be strings');
+            }
+        }
     }
 
 
@@ -194,7 +198,7 @@ class WebService{
      *
      * @return string The requested parameter value
      */
-    public function getParam(int $index = 0, bool $removeHtmlTags = true){
+    public function getParam(int $index = 0){
 
         if($index < 0){
 
@@ -211,9 +215,7 @@ class WebService{
             return '';
         }
 
-        return $removeHtmlTags ?
-            strip_tags($this->_receivedGetParameters[$index]) :
-            $this->_receivedGetParameters[$index];
+        return $this->_receivedGetParameters[$index];
     }
 
 
@@ -234,7 +236,7 @@ class WebService{
 
         if(isset($this->_receivedPostParameters[$paramName])){
 
-            return (string) $this->_receivedPostParameters[$paramName];
+            return $this->_receivedPostParameters[$paramName];
         }
 
         return '';
