@@ -14,7 +14,6 @@ namespace org\turbosite\src\main\php\model;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\managers\WebSiteManager;
-use org\turbocommons\src\main\php\utils\ArrayUtils;
 
 
 /**
@@ -41,6 +40,12 @@ class WebService{
     public $isPostDataMandatory = true;
 
 
+    /**
+     * Stores the actual values of the POST parameters that have been passed to this service via POST or via service constructor
+     */
+    private $_receivedPostParameters = [];
+
+
    /**
      * Defines how many GET parameters are accepted by this service. Anyones beyond this limit will make the service fail.
      *
@@ -58,16 +63,16 @@ class WebService{
 
 
     /**
-     * Stores the actual values of the GET parameters that have been passed to this service via the URL, sorted in the same order as specified
-     * in the url
+     * Stores the actual values of the GET parameters that have been passed to this service via the URL or via service constructor,
+     * sorted in the same order as specified in the url or constructor array
      */
-    private $_receivedURLGetParameters = [];
+    private $_receivedGetParameters = [];
 
 
     /**
      * Stores the number of GET parameters that have been passed to this service via the URL
      */
-    private $_receivedURLGetParametersCount = 0;
+    private $_receivedGetParametersCount = 0;
 
 
     /**
@@ -87,14 +92,14 @@ class WebService{
      * Class constructor
      *
      * @param array $getParameters If we create this service via code we can pass the GET data here and it will be loaded
- *            by the service as if it was passed via HTTP GET. It must be an array containing each one of the parameters that
- *            would be passed via the url, sorted in the same way as they would in the url.First array elemtn will be the param 1,
- *            second will be param 2, and so. Same rules as when calling the service via url apply.
-     * @param string $postData If we create this service via code we can pass the POST data here and it will be loaded
-     *        by the service as if it was passed via HTTP POST. It must be a string that contains the info we want to pass
-     *        to the service, as a plain string or encoded any way we want.  Same rules as when calling the service via url apply.
+     *        by the service as if it was passed via HTTP GET. It must be an array containing each one of the parameter values that
+     *        would be passed via the url, sorted in the same way as they would in the url. First array elemtn will be the param 1,
+     *        second will be param 2, and so. Same rules as when calling the service via url apply.
+     * @param array $postParameters If we create this service via code we can pass the POST data here and it will be loaded
+     *        by the service as if it was passed via HTTP POST. It must be an associative array that contains the info we want to pass
+     *        to the service where POST parameters are defined at the array keys.  Same rules as when calling the service via url apply.
      */
-    public function __construct(array $getParameters = null, string $postData = null){
+    public function __construct(array $getParameters = null, array $postParameters = null){
 
         $this->setup();
 
@@ -107,11 +112,11 @@ class WebService{
         // Process the service GET parameters
         if($getParameters !== null){
 
-            $this->_receivedURLGetParameters = $getParameters;
+            $this->_receivedGetParameters = $getParameters;
 
         }else{
 
-            // Parse the service GET parameters if any exist and store them to _receivedURLGetParameters
+            // Parse the service GET parameters if any exist and store them to _receivedGetParameters
             $serviceNameFound = false;
             $serviceName = StringUtils::getPathElement(get_class($this));
 
@@ -119,7 +124,7 @@ class WebService{
 
                 if($serviceNameFound){
 
-                    $this->_receivedURLGetParameters[] = $uriElement;
+                    $this->_receivedGetParameters[] = $uriElement;
 
                 }else if(StringUtils::formatCase($uriElement, StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceName){
 
@@ -128,24 +133,35 @@ class WebService{
             }
         }
 
-        $this->_receivedURLGetParametersCount = count($this->_receivedURLGetParameters);
+        $this->_receivedGetParametersCount = count($this->_receivedGetParameters);
 
         // Check get parameters are valid
-        if(($this->isGetDataMandatory && $this->_receivedURLGetParametersCount !== $this->enabledGetParams) ||
-            $this->_receivedURLGetParametersCount > $this->enabledGetParams){
+        if(($this->isGetDataMandatory && $this->_receivedGetParametersCount !== $this->enabledGetParams) ||
+            $this->_receivedGetParametersCount > $this->enabledGetParams){
 
             throw new UnexpectedValueException('Invalid number of GET parameters passed to service. Received '.
-                $this->_receivedURLGetParametersCount.' but expected '.$this->enabledGetParams);
+                $this->_receivedGetParametersCount.' but expected '.$this->enabledGetParams);
         }
 
         // Process the service POST parameters
-        if($postData !== null){
+        if($postParameters !== null){
 
-            $_POST['data'] = $postData;
+            foreach ($postParameters as $key => $value) {
+
+                $this->_receivedPostParameters[$key] = $value;
+            }
+
+        }else{
+
+            foreach ($_POST as $key => $value) {
+
+                $this->_receivedPostParameters[$key] = $value;
+            }
         }
 
         // Check post parameters are valid
-        $receivedPostParamsCount = count(array_keys($_POST));
+        $postKeys = array_keys($this->_receivedPostParameters);
+        $receivedPostParamsCount = count($postKeys);
         $enabledPostParamsCount = count($this->enabledPostParams);
 
         if($enabledPostParamsCount > 0 && $this->isPostDataMandatory && $receivedPostParamsCount === 0){
@@ -159,7 +175,7 @@ class WebService{
         }
 
         if(($receivedPostParamsCount > 0 && $receivedPostParamsCount !== $enabledPostParamsCount) ||
-           ($this->isPostDataMandatory && array_diff(array_keys($_POST), $this->enabledPostParams) !== [])){
+            ($this->isPostDataMandatory && array_diff($postKeys, $this->enabledPostParams) !== [])){
 
             throw new UnexpectedValueException('Unexpected POST variables received.');
         }
@@ -187,31 +203,26 @@ class WebService{
 
         if($index >= $this->enabledGetParams){
 
-            if(count($this->enabledPostParams) > 0){
-
-                return '';
-            }
-
             throw new UnexpectedValueException('Disabled service parameter index '.$index.' requested');
         }
 
-        if(!$this->isGetDataMandatory && !isset($this->_receivedURLGetParameters[$index])){
+        if(!$this->isGetDataMandatory && !isset($this->_receivedGetParameters[$index])){
 
             return '';
         }
 
         return $removeHtmlTags ?
-            strip_tags($this->_receivedURLGetParameters[$index]) :
-            $this->_receivedURLGetParameters[$index];
+            strip_tags($this->_receivedGetParameters[$index]) :
+            $this->_receivedGetParameters[$index];
     }
 
 
     /**
-     * Get the value for the specified POST parameter that has been passed to this service as raw string.
+     * Get the value as a raw string for the specified POST parameter that has been passed to this service.
      *
-     * @param string $paramName The name for the POST parameter we want to retrieve
+     * @param string $paramName The name for the POST parameter we want to read
      *
-     * @return string string The value of the received POST variable as a raw string or an empty string if the
+     * @return string The value of the received POST variable as a raw string or an empty string if the
      *         variable has not been passed to the service.
      */
     public function getPost(string $paramName){
@@ -221,9 +232,9 @@ class WebService{
             throw new UnexpectedValueException('Invalid POST parameter name: '.$paramName);
         }
 
-        if(isset($_POST[$paramName])){
+        if(isset($this->_receivedPostParameters[$paramName])){
 
-            return (string) $_POST[$paramName];
+            return (string) $this->_receivedPostParameters[$paramName];
         }
 
         return '';
@@ -231,9 +242,9 @@ class WebService{
 
 
     /**
-     * Get the value casted as an integer for the specified POST parameter as received by this service.
+     * Get the value casted as an integer for the specified POST parameter that has been passed to this service.
      *
-     * @param string $paramName The name for the POST parameter we want to retrieve
+     * @param string $paramName The name for the POST parameter we want to read
      *
      * @return number The value of the received POST variable converted to its integer value or 0 if no
      *         variable has been passed to the service.
@@ -247,9 +258,9 @@ class WebService{
 
 
     /**
-     * Get the value casted as a float for the specified POST parameter as received by this service.
+     * Get the value casted as a float for the specified POST parameter that has been passed to this service.
      *
-     * @param string $paramName The name for the POST parameter we want to retrieve
+     * @param string $paramName The name for the POST parameter we want to read
      *
      * @return number The value of the received POST variable converted to its float value or 0 if no
      *         variable has been passed to the service.
@@ -263,12 +274,12 @@ class WebService{
 
 
     /**
-     * Get the value converted as an associative array for the specified POST parameter as received by this service.
+     * Get the value converted as an associative array for the specified POST parameter that has been passed to this service.
      *
-     * @param string $paramName The name for the POST parameter we want to retrieve
+     * @param string $paramName The name for the POST parameter we want to read
      *
-     * @return array The value of the received POST variable converted to an associative array or [] if no "data"
-     *         variable has been passed to the service.
+     * @return array The value of the received POST variable converted to an associative array or [] if no variable
+     *         has been passed to the service.
      */
     public function getPostAsArray(string $paramName){
 
