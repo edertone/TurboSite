@@ -12,14 +12,14 @@
 	        "enabled": true,
 	        "mandatory": true,
 	        "mustContain": ["org\\turbosite\\src\\$path"],
-	        "excludes": ["autoloader.php", "index.php", "libs"]
+	        "excludes": ["autoloader.php", "autoloader-project.php", "index.php", "libs"]
 	    },
         "copyrightHeaders": [
 	    	{
 	    		"path": "extras/copyright headers/TurboSite-Php.txt",
 	    		"appliesTo": "src",
 	    		"includes": ["php"],
-	    		"excludes": ["autoloader.php", "libs"]
+	    		"excludes": ["autoloader.php", "autoloader-project.php", "libs"]
 	    	}
 	    ]
     },

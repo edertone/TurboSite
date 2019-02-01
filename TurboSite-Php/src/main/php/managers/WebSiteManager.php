@@ -155,6 +155,12 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * Stores the list of API associations between the URLs to webservices and the respective classes namespaces
+     */
+    private $_api = [];
+
+
+    /**
      * Singleton constructor overriden to allow the global error manager initialization as fast as possible
      *
      * @return WebSiteManager The Singleton instance.
@@ -254,6 +260,8 @@ class WebSiteManager extends BaseSingletonClass{
         $this->_homeView = $setup->homeView;
         $this->_singleParameterView = $setup->singleParameterView;
         $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
+        $this->_globalCDNS = $setup->globalCDNS;
+        $this->_api = $setup->api;
 
         // Load all the configured resourcebundle paths
         $bundles = [];
@@ -273,16 +281,6 @@ class WebSiteManager extends BaseSingletonClass{
                 throw new UnexpectedValueException(print_r($errors, true));
             }
         });
-
-        // Load all the configured javascript CDNS
-        foreach ($setup->globalCDNS as $cdn) {
-
-            $this->_globalCDNS[] = [
-                'url' => $cdn->url,
-                'fallbackVerify' => $cdn->fallbackVerify,
-                'fallbackResource' => $cdn->fallbackResource
-            ];
-        }
 
         // Detect the primary locale from the url, cookies, browser or the project list of locales
         $this->_primaryLanguage = $this->_URIElements[0];
@@ -445,19 +443,16 @@ class WebSiteManager extends BaseSingletonClass{
         }
 
         // Try to find the data path location and store it on the global variable so it is faster the next time
-        if(is_dir($this->_mainPath.'/../data/storage/')){
+        $lookupPath = $this->_mainPath.'/..';
 
-            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../data');
-        }
+        for ($i = 0; $i < 5; $i++) {
 
-        if(is_dir($this->_mainPath.'/../../data/storage/')){
+            if(is_dir($lookupPath.'/data/storage/')){
 
-            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../../data');
-        }
+                return $this->_dataPath = StringUtils::formatPath($lookupPath.'/data');
+            }
 
-        if(is_dir($this->_mainPath.'/../../../data/storage/')){
-
-            return $this->_dataPath = StringUtils::formatPath($this->_mainPath.'/../../../data');
+            $lookupPath .= '/..';
         }
 
         throw new UnexpectedValueException('Could not find data folder');
@@ -743,13 +738,13 @@ class WebSiteManager extends BaseSingletonClass{
         // Generate the code to load CDN libs
         foreach ($this->_globalCDNS as $cdn) {
 
-            echo '<script src="'.$cdn['url'].'" crossorigin="anonymous"></script>'."\n";
+            echo '<script src="'.$cdn->url.'" crossorigin="anonymous"></script>'."\n";
 
-            if(!StringUtils::isEmpty($cdn['fallbackResource'])){
+            if(!StringUtils::isEmpty($cdn->fallbackResource)){
 
-               $url = $this->getUrl($cdn['fallbackResource']);
+               $url = $this->getUrl($cdn->fallbackResource);
 
-               echo "<script>".$cdn['fallbackVerify']." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
+               echo "<script>".$cdn->fallbackVerify." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
             }
         }
 
@@ -979,6 +974,7 @@ class WebSiteManager extends BaseSingletonClass{
      */
     public function show404Error(){
 
+        // TODO - should this be moved to turbocommons?
         http_response_code(404);
         include('error-404.php');
         die();
@@ -990,36 +986,30 @@ class WebSiteManager extends BaseSingletonClass{
      */
     private function runCurrentURLWebService(){
 
-        // Obtain an array with the folders of the current url after the .../api/ part
-        $apiURI = explode('/', explode('/api/', $this->getFullUrl(), 2)[1]);
+        // Loop all the api definitions to find the one that matches the current url
+        foreach ($this->_api as $apiDefinition) {
 
-        // Try to find the path for a service located on api/.../.../ServiceClass.php
-        if(isset($apiURI[2])){
+            $apiUri = StringUtils::formatPath($apiDefinition->uri, '/').'/';
 
-            $serviceClass = StringUtils::formatCase($apiURI[2], StringUtils::FORMAT_UPPER_CAMEL_CASE);
+            if (strpos($this->_fullURL, $apiUri) !== false) {
 
-            if(is_file($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1].'\\'.$serviceClass.'.php'))){
+                $nameSpace = $apiDefinition->namespace."\\";
+                $explodedUrlParts = explode('/', explode($apiUri, $this->_fullURL, 2)[1]);
 
-                $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$serviceClass;
+                foreach ($explodedUrlParts as $explodedUrlPart) {
 
-                return $this->webServiceResultToString((new $classPath)->run());
+                    $serviceClass = $nameSpace.StringUtils::formatCase($explodedUrlPart, StringUtils::FORMAT_UPPER_CAMEL_CASE);
+
+                    if(class_exists($serviceClass)){
+
+                        return $this->webServiceResultToString((new $serviceClass)->run());
+                    }
+
+                    $nameSpace .= $explodedUrlPart."\\";
+                }
             }
         }
 
-        // Try to find the path for a service located on api/.../.../.../ServiceClass.php
-        if(isset($apiURI[3])){
-
-            $serviceClass = StringUtils::formatCase($apiURI[3], StringUtils::FORMAT_UPPER_CAMEL_CASE);
-
-            if(is_file($this->getPath('api/'.$apiURI[0].'/'.$apiURI[1].'/'.$apiURI[2].'\\'.$serviceClass.'.php'))){
-
-                $classPath = 'project\\src\\main\\api\\'.$apiURI[0].'\\'.$apiURI[1].'\\'.$apiURI[2].'\\'.$serviceClass;
-
-                return $this->webServiceResultToString((new $classPath)->run());
-            }
-        }
-
-        // The specified service url is not correct
         $this->show404Error();
     }
 
