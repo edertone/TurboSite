@@ -369,6 +369,13 @@ class WebSiteManager extends BaseSingletonClass{
         // Php files execution is not allowed
         if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
 
+            if($this->_URIElements[0] === 'api-chain'){
+
+                // TODO - check if the URI represents a chained services call and
+                // implement this functionality
+                die();
+            }
+
             // Check if the URI represents a service
             if($this->_URIElements[0] === 'api'){
 
