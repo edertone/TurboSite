@@ -56,6 +56,17 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * Stores a copy of all the setup files data (turbosite.json, turbousers.json, etc...) that has been loaded by this class.
+     * This is used at initialization and all the relevant values are stored on class properties for an easier access, but we will
+     * still have the full setup files data copy here if required.
+     *
+     * The data is stored as an associative array where each key is the setup file name (like turbosite.json) and each value is an
+     * associative array with all its data parsed from the file json content.
+     */
+    private $_setupFilesData = [];
+
+
+    /**
      * @see WebSiteManager::getDataPath()
      */
     private $_dataPath = '';
@@ -220,13 +231,47 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * Get all the data from the specified setup file
+     *
+     * @param string $setupFileName The name for a setup file that is accessible by this class. For example turbosite.json or any other
+     *        setup file that is located at the root of our project.
+     *
+     * @return \stdClass An object that contains all the setup data parsed from the requested json file. Each setup property can be accessed
+     *         via the -> accessor
+     */
+    public function getSetup($setupFileName){
+
+        if(!isset($this->_setupFilesData[$setupFileName])){
+
+            throw new UnexpectedValueException('Specified setup data was not found: '.$setupFileName);
+        }
+
+        return $this->_setupFilesData[$setupFileName];
+    }
+
+
+    /**
      * Generates all the output that is expected for the current URL
+     * This method is normally called by the index entry point file and doesn't need to be called again by us.
      *
      * @param string $indexFilePath The filesystem path to the project index.php file (src/main/index.php)
+     * @param array $setupFilesData An associative array where each key is the name of a setup file (like turbosite.json) and each
+     *        value contains the setup file as a decoded json object.
      */
-    public function generateContent($indexFilePath){
+    public function generateContent(string $indexFilePath, array $setupFilesData = []){
 
         $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($indexFilePath));
+
+        // Validate the setup files data and load any missing ones
+        foreach ($setupFilesData as $key => $value) {
+
+            if(!property_exists($value, '$schema')){
+
+                die('Invalid setup data specified for '.$key.' on setupFilesData');
+            }
+        }
+
+        $this->_setupFilesData = $setupFilesData;
 
         $this->_initialize();
 
@@ -249,7 +294,7 @@ class WebSiteManager extends BaseSingletonClass{
         $this->_URIElements = explode('/', $this->_URI);
         $this->_fullURL = $this->_browserManager->getCurrentUrl();
 
-        $setup = json_decode($this->_filesManager->readFile('turbosite.json'));
+        $setup = $this->_setupFilesData['turbosite.json'];
 
         GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
         GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
