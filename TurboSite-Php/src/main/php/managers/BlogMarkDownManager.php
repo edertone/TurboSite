@@ -15,7 +15,7 @@ namespace org\turbosite\src\main\php\managers;
 use Exception;
 use org\turbocommons\src\main\php\model\BaseStrictClass;
 use org\turbocommons\src\main\php\utils\StringUtils;
-use org\turbocommons\src\main\php\managers\FilesManager;
+use org\turbodepot\src\main\php\managers\FilesManager;
 use org\turbosite\src\main\php\model\BlogMarkDownPost;
 
 

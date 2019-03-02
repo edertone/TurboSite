@@ -15,7 +15,7 @@ namespace org\turbosite\src\main\php\managers;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbocommons\src\main\php\managers\LocalizationManager;
-use org\turbocommons\src\main\php\managers\FilesManager;
+use org\turbodepot\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
 use org\turbosite\src\main\php\model\WebViewSetup;

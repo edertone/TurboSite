@@ -12,7 +12,7 @@
             "copyrightHeaders": [
                 {
                     "path": "extras/copyright headers/TurboSite-Php.txt",
-                    "affectedPaths": "src",
+                    "affectedPaths": ["src"],
                     "includes": ["php"],
                     "excludes": ["autoloader.php", "autoloader-project.php", "libs"]
                 }

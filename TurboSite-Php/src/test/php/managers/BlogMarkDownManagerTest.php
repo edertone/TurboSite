@@ -13,7 +13,7 @@ namespace org\turbocommons\src\test\php\managers;
 
 use PHPUnit\Framework\TestCase;
 use org\turbosite\src\main\php\managers\BlogMarkDownManager;
-use org\turbocommons\src\main\php\managers\FilesManager;
+use org\turbodepot\src\main\php\managers\FilesManager;
 
 
 /**
@@ -31,7 +31,8 @@ class BlogMarkDownManagerTest extends TestCase {
      */
     public static function setUpBeforeClass(){
 
-        require_once __DIR__.'/../resources/libs/TurboCommons-Php-0.7.3.phar';
+        require_once __DIR__.'/../resources/libs/turbocommons-php-1.0.0.phar';
+        require_once __DIR__.'/../resources/libs/turbodepot-php-0.0.1.phar';
     }
 
 
