@@ -56,7 +56,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Stores a copy of all the setup files data (turbosite.json, turbousers.json, etc...) that has been loaded by this class.
+     * Stores a copy of all the setup files data (turbosite.json, turbodepot.json, etc...) that has been loaded by this class.
      * This is used at initialization and all the relevant values are stored on class properties for an easier access, but we will
      * still have the full setup files data copy here if required.
      *
