@@ -9,7 +9,7 @@
  * CopyRight : -> Copyright 2018 Edertone Advanded Solutions. http://www.edertone.com
  */
 
-namespace org\turbosite\src\test\php\managers;
+namespace org\turbosite\src\test\php\model;
 
 use Throwable;
 use PHPUnit\Framework\TestCase;

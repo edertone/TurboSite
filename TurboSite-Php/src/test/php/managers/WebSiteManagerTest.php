@@ -12,8 +12,8 @@
 namespace org\turbosite\src\test\php\managers;
 
 use PHPUnit\Framework\TestCase;
-use org\turbosite\src\main\php\managers\BlogMarkDownManager;
 use org\turbodepot\src\main\php\managers\FilesManager;
+use org\turbosite\src\main\php\managers\WebSiteManager;
 
 
 /**
@@ -21,7 +21,7 @@ use org\turbodepot\src\main\php\managers\FilesManager;
  *
  * @return void
  */
-class BlogMarkDownManagerTest extends TestCase {
+class WebSiteManagerTest extends TestCase {
 
 
     /**
@@ -44,8 +44,8 @@ class BlogMarkDownManagerTest extends TestCase {
     protected function setUp(){
 
         $this->filesManager = new FilesManager();
-        $this->tempFolder = $this->filesManager->createTempDirectory('TurboSitePhp-BlogMarkDownManagerTest');
-        $this->sut = new BlogMarkDownManager($this->tempFolder);
+        $this->tempFolder = $this->filesManager->createTempDirectory('TurboSitePhp-WebSiteManagerTest');
+        $this->sut = WebSiteManager::getInstance();
     }
 
 
@@ -72,22 +72,22 @@ class BlogMarkDownManagerTest extends TestCase {
 
 
     /**
-     * testConstruct
+     * testGetInstance
      *
      * @return void
      */
-    public function testConstruct(){
+    public function testGetInstance(){
 
-        $this->assertTrue($this->sut instanceof BlogMarkDownManager);
+        $this->assertTrue($this->sut instanceof WebSiteManager);
     }
 
 
     /**
-     * testGetPost
+     * testGetPrimaryLanguage
      *
      * @return void
      */
-    public function testGetPost(){
+    public function testGetPrimaryLanguage(){
 
         // Test empty values
         // TODO
@@ -101,41 +101,6 @@ class BlogMarkDownManagerTest extends TestCase {
         // Test exceptions
         // TODO
         $this->markTestIncomplete('This test has not been implemented yet.');
-    }
-
-
-    /**
-     * testGetLatestPosts
-     *
-     * @return void
-     */
-    public function testGetLatestPosts(){
-
-        $this->filesManager->copyDirectory(__DIR__.'/../resources/managers/blogmarkdownmanager', $this->tempFolder);
-
-        // Test empty values
-        // TODO
-
-        // Test ok values
-        $latestPosts = $this->sut->getLatestPosts('en', 10);
-
-        $this->assertSame(4, count($latestPosts));
-
-        $this->assertSame('Convert string to CamelCase, UpperCamelCase or LowerCamelCase in Javascript, typescript and Php',
-            $latestPosts[0]->title);
-
-        $this->assertSame('Blog post test 2', $latestPosts[1]->title);
-
-        $this->assertSame('Blog post test 1', $latestPosts[2]->title);
-
-        $this->assertSame('Blog post test 18/9/2014', $latestPosts[3]->title);
-        // TODO - more tests
-
-        // Test wrong values
-        // TODO
-
-        // Test exceptions
-        // TODO
     }
 }
 

@@ -97,7 +97,7 @@ class WebService{
 
             $this->_receivedGetParameters = $getParameters;
 
-        }else{
+        }else if(strpos($ws->getFullUrl(), '/api/') !== false){
 
             // Parse the service GET parameters if any exist and store them to _receivedGetParameters
             $URI = explode('/api/', $ws->getFullUrl())[1];
