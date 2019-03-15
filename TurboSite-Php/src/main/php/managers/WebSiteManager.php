@@ -166,9 +166,9 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Stores the list of API associations between the URLs to webservices and the respective classes namespaces
+     * Stores the webservices setup
      */
-    private $_api = [];
+    private $_webServices = null;
 
 
     /**
@@ -306,7 +306,7 @@ class WebSiteManager extends BaseSingletonClass{
         $this->_singleParameterView = $setup->singleParameterView;
         $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
         $this->_globalCDNS = $setup->globalCDNS;
-        $this->_api = $setup->api;
+        $this->_webServices = $setup->webServices;
 
         // Load all the configured resourcebundle paths
         $bundles = [];
@@ -1039,7 +1039,7 @@ class WebSiteManager extends BaseSingletonClass{
     private function runCurrentURLWebService(){
 
         // Loop all the api definitions to find the one that matches the current url
-        foreach ($this->_api as $apiDefinition) {
+        foreach ($this->_webServices->api as $apiDefinition) {
 
             $apiUri = StringUtils::formatPath($apiDefinition->uri, '/').'/';
 
@@ -1053,6 +1053,13 @@ class WebSiteManager extends BaseSingletonClass{
                     $serviceClass = $nameSpace.StringUtils::formatCase($explodedUrlPart, StringUtils::FORMAT_UPPER_CAMEL_CASE);
 
                     if(class_exists($serviceClass)){
+
+                        if($this->_webServices->crossOriginCORS === 'allow'){
+
+                            header("Access-Control-Allow-Origin: *");
+                            header("Access-Control-Allow-Credentials: true");
+                            header('Access-Control-Allow-Methods: GET, POST');
+                        }
 
                         return $this->webServiceResultToString((new $serviceClass)->run());
                     }
