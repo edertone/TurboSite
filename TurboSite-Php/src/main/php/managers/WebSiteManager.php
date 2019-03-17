@@ -765,11 +765,11 @@ class WebSiteManager extends BaseSingletonClass{
         echo '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'."\n";
 
         // Favicons
-        echo '<link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl('/resources/favicons/16x16-'.$this->_cacheHash.'.png').'">'."\n";
-        echo '<link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl('/resources/favicons/32x32-'.$this->_cacheHash.'.png').'">'."\n";
-        echo '<link rel="icon" type="image/png" sizes="96x96" href="'.$this->getUrl('/resources/favicons/96x96-'.$this->_cacheHash.'.png').'">'."\n";
-        echo '<link rel="icon" type="image/png" sizes="128x128" href="'.$this->getUrl('/resources/favicons/128x128-'.$this->_cacheHash.'.png').'">'."\n";
-        echo '<link rel="icon" type="image/png" sizes="196x196" href="'.$this->getUrl('/resources/favicons/196x196-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl('/16x16-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl('/32x32-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="96x96" href="'.$this->getUrl('/96x96-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="128x128" href="'.$this->getUrl('/128x128-'.$this->_cacheHash.'.png').'">'."\n";
+        echo '<link rel="icon" type="image/png" sizes="196x196" href="'.$this->getUrl('/196x196-'.$this->_cacheHash.'.png').'">'."\n";
 
         // Global css file
         echo '<link rel="stylesheet" href="'.$this->getUrl('glob-'.$this->_cacheHash.'.css').'">'."\n";
