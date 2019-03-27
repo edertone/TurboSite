@@ -15,10 +15,10 @@ namespace org\turbosite\src\main\php\managers;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbocommons\src\main\php\managers\LocalizationManager;
-use org\turbodepot\src\main\php\managers\FilesManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
 use org\turbosite\src\main\php\model\WebViewSetup;
+use org\turbodepot\src\main\php\managers\DepotManager;
 
 
 /**
@@ -61,7 +61,7 @@ class WebSiteManager extends BaseSingletonClass{
      * still have the full setup files data copy here if required.
      *
      * The data is stored as an associative array where each key is the setup file name (like turbosite.json) and each value is an
-     * associative array with all its data parsed from the file json content.
+     * \stdClass instance with all its data parsed from the file json content.
      */
     private $_setupFilesData = [];
 
@@ -92,9 +92,11 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Files manager instance for file system interaction
+     * Depot manager instance for storage interaction
+     *
+     * @var DepotManager
      */
-    private $_filesManager = null;
+    private $_depotManager = null;
 
 
     /**
@@ -178,6 +180,7 @@ class WebSiteManager extends BaseSingletonClass{
      */
     public static function getInstance(){
 
+        // We initialize the error manager as early as possible. This is why we do it here.
         GlobalErrorManager::getInstance()->initialize();
 
         return parent::getInstance();
@@ -273,7 +276,7 @@ class WebSiteManager extends BaseSingletonClass{
 
         $this->_setupFilesData = $setupFilesData;
 
-        $this->_initialize();
+        $this->_loadRequiredData();
 
         $this->_sanitizeUrl();
 
@@ -284,11 +287,11 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Initialize all the project global objects and load setup data
      */
-    private function _initialize(){
+    private function _loadRequiredData(){
 
-        $this->_filesManager = new FilesManager();
         $this->_localizationManager = new LocalizationManager();
         $this->_browserManager = new BrowserManager();
+        $this->_depotManager = new DepotManager($this->_setupFilesData['turbodepot.json']);
 
         $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
         $this->_URIElements = explode('/', $this->_URI);
@@ -296,10 +299,15 @@ class WebSiteManager extends BaseSingletonClass{
 
         $setup = $this->_setupFilesData['turbosite.json'];
 
+        GlobalErrorManager::getInstance()->depotManager = $this->_depotManager;
         GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
+        GlobalErrorManager::getInstance()->exceptionsToLog = $setup->errorSetup->exceptionsToLog;
         GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
         GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
+        GlobalErrorManager::getInstance()->warningsToLog = $setup->errorSetup->warningsToLog;
         GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
+        GlobalErrorManager::getInstance()->tooMuchTimeWarning = $setup->errorSetup->tooMuchTimeWarning;
+        GlobalErrorManager::getInstance()->tooMuchMemoryWarning = $setup->errorSetup->tooMuchMemoryWarning;
 
         $this->_cacheHash = $setup->cacheHash;
         $this->_homeView = $setup->homeView;
@@ -319,7 +327,7 @@ class WebSiteManager extends BaseSingletonClass{
             ];
         }
 
-        $this->_localizationManager->initialize($this->_filesManager, $setup->locales, $bundles, function($errors){
+        $this->_localizationManager->initialize($this->_depotManager->getFilesManager(), $setup->locales, $bundles, function($errors){
 
             if(count($errors) > 0){
 
@@ -467,15 +475,15 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Resolve the provided relative project path into a full file system path that can be correctly reached via file system.
      *
-     * @param string $path A path relative to the project src/main folder
+     * Note: This is not an URL path but a File system path, based on the current project main folder
      *
-     * @see StringUtils::formatPath
+     * @param string $path A path relative to the project src/main folder
      *
      * @return string A full file system path that is generated from the provided relative one
      */
     public function getPath(string $path){
 
-        return StringUtils::formatPath($this->_mainPath.$this->_filesManager->dirSep().$path);
+        return StringUtils::formatPath($this->_mainPath.DIRECTORY_SEPARATOR.$path);
     }
 
 

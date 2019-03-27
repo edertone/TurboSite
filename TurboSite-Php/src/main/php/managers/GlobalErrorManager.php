@@ -15,10 +15,9 @@ namespace org\turbosite\src\main\php\managers;
 use Exception;
 use Throwable;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
-use org\turbocommons\src\main\php\managers\BrowserManager;
 use org\turbosite\src\main\php\model\ProblemData;
+use org\turbodepot\src\main\php\managers\DepotManager;
 use org\turbocommons\src\main\php\utils\StringUtils;
-use org\turbocommons\src\main\php\managers\MailManager;
 
 
 /**
@@ -29,16 +28,32 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 
     /**
-     * Flag that tells the class to show or hide the all browser exceptions output.
+     * If we want to save exceptions and warnings to a persistent log, we must pass here an initialized instance
+     * of DepotManager, which will be used to store the information
+     *
+     * @var DepotManager
+     */
+    public $depotManager = null;
+
+
+    /**
+     * Flag that tells the class to show or hide the browser exceptions output.
      * This is normally set to false cause html errors will give lots of information to malicious users,
      * so setting it to true will generate an email warning notification if email error notifications are enabled
      */
-    public $exceptionsToBrowser = false;
+    public $exceptionsToBrowser = true;
+
+
+    /**
+     * Enable or disable the error output to the specified log file. If set to empty '' string, errors won't be stored to log files.
+     * If a file name or relative path is specified, any error that happens on the application will be sent to that file.
+     */
+    public $exceptionsToLog = '';
 
 
     /**
      * Enable or disable the email error notifications. If set to empty '' string, no mail notifications will happen.
-     * If an email address is specified, any error or warning that happens on the application will be sent to the specified address with all the detailed information.
+     * If an email address is specified, any error that happens on the application will be sent to the specified address with all the detailed information.
      */
     public $exceptionsToMail = '';
 
@@ -46,13 +61,37 @@ class GlobalErrorManager extends BaseSingletonClass{
     /**
      * Flag that tells the class to show or hide all the browser warnings output.
      */
-    public $warningsToBrowser = false;
+    public $warningsToBrowser = true;
+
+
+    /**
+     * Enable or disable the log warning output. Works the same as $exceptionsToLog
+     *
+     * @see GlobalErrorManager::$exceptionsToLog
+     */
+    public $warningsToLog = '';
 
 
     /**
      * Enable or disable the email warning notifications. Works the same as $exceptionsToMail
+     *
+     * @see GlobalErrorManager::$exceptionsToMail
      */
     public $warningsToMail = '';
+
+
+    /**
+     * When running time on the current script exceeds the number of miliseconds defined here, a warning will be launched.
+     * If set to zero, this feature will be disabled
+     */
+    public $tooMuchTimeWarning = 1000;
+
+
+    /**
+     * When allocated memory on the current script exceeds the number of bytes defined here, a warning will be launched.
+     * If set to zero, this feature will be disabled
+     */
+    public $tooMuchMemoryWarning = 5000000;
 
 
     /**
@@ -90,6 +129,14 @@ class GlobalErrorManager extends BaseSingletonClass{
 
             $this->_setShutdownFunction();
 
+            // Make sure display errors have been really disabled at php level
+            $displayErrors = ini_get('display_errors');
+
+            if($displayErrors === '1' || $displayErrors === 'On' || $displayErrors === 'true'){
+
+                die('Could not deactivate php display_errors');
+            }
+
             $this->_initialized = true;
         }
     }
@@ -107,63 +154,6 @@ class GlobalErrorManager extends BaseSingletonClass{
 
 
     /**
-     * If the php errors are setup to be output to the browser html code, this method will generate an alert that
-     * will be displayed as any other error message that is handled by this class.
-     * This verification is very important, cause showing the errors on browser is very dangerous as gives a lot of information to malicious users.
-     *
-     * @return void
-     */
-    private function _checkBrowserOutputIsDisabled(){
-
-//         $message = '';
-
-//         if($this->exceptionsToBrowser){
-
-//             $message = 'ErrorManager::getInstance()->exceptionsToBrowser Are enabled.';
-//         }
-
-//         $displayErrors = false;
-
-//         switch (ini_get('display_errors')) {
-
-//             case '1':
-//             case 'On':
-//             case 'true':
-//                 $displayErrors = true;
-//                 break;
-
-//             default:
-//         }
-
-//         if($displayErrors){
-
-//             $message = 'PHP Errors are globally enabled (display_errors).';
-//         }
-
-//         if($message != ''){
-
-//             $problemData = new ProblemData();
-//             $problemData->type = ProblemData::PHP_WARNING;
-//             $problemData->fileName = __FILE__;
-//             $problemData->line = '';
-//             $problemData->message = $message.' Malicious users will get lots of information, please disable all php error browser output.';
-
-//             // Check if error needs to be sent by email
-//             if($this->exceptionsToMail != ''){
-
-//                 $this->_sendProblemToMail($problemData);
-//             }
-
-//             // Check if error needs to be sent to browser output
-//             if($this->exceptionsToBrowser){
-
-//                 $this->_sendProblemToBrowser($problemData);
-//             }
-//         }
-    }
-
-
-    /**
      * Set the error handler to manage non fatal php errors
      *
      * @return void
@@ -177,11 +167,11 @@ class GlobalErrorManager extends BaseSingletonClass{
             switch($errorType){
 
                 case E_WARNING:
-                    $type = 'E_WARNING ';
+                    $type = 'E_WARNING';
                     break;
 
                 case E_NOTICE:
-                    $type = 'E_NOTICE ';
+                    $type = 'E_NOTICE';
                     break;
 
                 case E_USER_ERROR:
@@ -209,20 +199,16 @@ class GlobalErrorManager extends BaseSingletonClass{
                     break;
 
                 case E_ALL:
-                    $type = 'E_ALL ';
+                    $type = 'E_ALL';
                     break;
 
                 default:
             }
 
-            $problemData = new ProblemData();
-            $problemData->type = $type;
-            $problemData->fileName = $errorFile;
-            $problemData->line = $errorLine;
-            $problemData->message = $errorMessage;
-            $problemData->context = print_r($errorContext, true);
-
-            $this->_problemsFound[] = $problemData;
+            $this->_problemsFound[] = $this->_createProblemData($type,
+                $errorMessage,
+                $errorFile,
+                $errorLine);
         });
     }
 
@@ -236,14 +222,10 @@ class GlobalErrorManager extends BaseSingletonClass{
 
         set_exception_handler(function (Throwable $error) {
 
-            $problemData = new ProblemData();
-            $problemData->type = 'FATAL EXCEPTION';
-            $problemData->fileName = $error->getFile();
-            $problemData->line = $error->getLine();
-            $problemData->message = $error->getMessage();
-            $problemData->backTrace = $error->getTraceAsString();
-
-            $this->_problemsFound[] = $problemData;
+            $this->_problemsFound[] = $this->_createProblemData('FATAL EXCEPTION',
+                $error->getMessage(),
+                $error->getFile(),
+                $error->getLine());
         });
     }
 
@@ -258,51 +240,129 @@ class GlobalErrorManager extends BaseSingletonClass{
 
         register_shutdown_function(function() {
 
-            // Check if problems need to be sent to browser output
-            $errorsHtmlCode = '';
+            // If errors or warnings are configured to be sent to logs but no depot manager is available,
+            // We will generate an error to warn about this problem
+            if(($this->exceptionsToLog || $this->warningsToLog) &&
+                $this->depotManager === null){
+
+                    $this->_problemsFound[] = $this->_createProblemData('FATAL EXCEPTION', 'Errors or warnings are configured to be sent to logs but no depotmanager is provided');
+            }
+
+            // If too much memory value has been exceeded, we will generate a warning
+            if($this->tooMuchMemoryWarning > 0 && memory_get_peak_usage() > $this->tooMuchMemoryWarning){
+
+                $message  = "Too much memory used by script:\n";
+                $message .= "The tooMuchMemoryWarning setup memory threshold is ".$this->tooMuchMemoryWarning.' bytes\n';
+                $message .= "Script finished using ".memory_get_usage().' bytes\n';
+                $message .= "Script memory peaked at ".memory_get_peak_usage().' bytes';
+
+                $this->_problemsFound[] = $this->_createProblemData('E_WARNING', $message);
+            }
+
+            // If too much time value has been exceeded, we will generate a warning
+            $runningTime = round(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 4) * 1000;
+
+            if($this->tooMuchTimeWarning > 0 && $runningTime > $this->tooMuchTimeWarning){
+
+                $message  = "Too much time used by script:\n";
+                $message .= "The tooMuchTimeWarning setup memory threshold is ".$this->tooMuchTimeWarning.' ms\n';
+                $message .= "Script finished in ".$runningTime.' ms';
+
+                $this->_problemsFound[] = $this->_createProblemData('E_WARNING', $message);
+            }
+
+            $problemsHtmlCode = '';
+            $exceptionsLog = '';
+            $warningsLog = '';
 
             foreach ($this->_problemsFound as $problem) {
 
                 if(($this->exceptionsToBrowser && $problem->type === 'FATAL EXCEPTION') ||
                     ($this->warningsToBrowser && $problem->type !== 'FATAL EXCEPTION')){
 
-                        $errorsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
+                        $problemsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
 
-                        $errorsHtmlCode .= $problem->type.'<br>'.htmlspecialchars($problem->message).'</b><br>';
+                        $problemsHtmlCode .= $problem->type.'<br>'.htmlspecialchars($problem->message).'</b><br>';
 
-                        $errorsHtmlCode .= $problem->fileName;
+                        $problemsHtmlCode .= $problem->fileName;
 
                         if(isset($problem->line) && $problem->line !== ''){
 
-                            $errorsHtmlCode .= ' line '.$problem->line;
+                            $problemsHtmlCode .= ' line '.$problem->line;
                         }
 
-                        $errorsHtmlCode .= '<br>'.str_replace("\n", '<br>', $problem->trace);
+                        $problemsHtmlCode .= '<br>'.str_replace("\n", '<br>', $problem->trace);
 
-                        $errorsHtmlCode .= '</p>';
+                        $problemsHtmlCode .= '</p>';
+                }
+
+                // Generate the log text for this problem so it can be output to log file later (if enabled)
+                $logText  = $problem->type.' '.$problem->message."\n";
+                $logText .= 'IP: '.$_SERVER['REMOTE_ADDR']."\n";
+                $logText .= $problem->fileName.' line '.$problem->line."\n";
+                $logText .= $problem->trace."\n";
+                $logText .= 'URL: '.$problem->fullUrl."\n";
+                $logText .= 'URL referer: '.$problem->referer."\n";
+                $logText .= 'Browser: '.$_SERVER['HTTP_USER_AGENT']."\n";
+                $logText .= 'Used memory: '.$problem->usedMemory.' of '.ini_get('memory_limit')."\n";
+                $logText .= 'GET params: '.$problem->getParams;
+                $logText .= 'POST params: '.$problem->postParams;
+                $logText .= 'Cookies: '.print_r($_COOKIE, true)."\n";
+
+                if($problem->type === 'FATAL EXCEPTION'){
+
+                    $exceptionsLog .= $logText;
+
+                }else{
+
+                    $warningsLog .= $logText;
                 }
             }
 
-            if($errorsHtmlCode !== ''){
+            // Output the html problems info if any was generated
+            if($problemsHtmlCode !== ''){
 
-                echo '<div id="turbosite-global-error-manager-problem" style="left:0px; right:0px; top:0px; background-color: #000; opacity: .8; position: fixed; padding: 15px">';
-                echo $errorsHtmlCode;
+                echo '<div id="turbosite-global-error-manager-problem" style="left:0px; right:0px; top:0px; background-color: #000; opacity: .8; position: fixed; padding: 15px; z-index: 5000000">';
+                echo $problemsHtmlCode;
                 echo '</div>';
             }
 
-            // Check if problems need to be sent to mail
-//             foreach ($this->_problemsFound as $problem) {
+            // Check if errors need to be sent to a log file
+            if($this->exceptionsToLog !== '' && !StringUtils::isEmpty($exceptionsLog)){
 
+                $this->depotManager->getLogsManager()->write($exceptionsLog, $this->exceptionsToLog);
+            }
 
+            // Check if warnings need to be sent to a log file
+            if($this->warningsToLog !== '' && !StringUtils::isEmpty($warningsLog)){
 
-//                 // Check if problem needs to be sent by email
-//                 if(($this->exceptionsToMail && $problem->type === 'FATAL EXCEPTION') ||
-//                     ($this->warningsToMail && $problem->type !== 'FATAL EXCEPTION')){
-
-//                         $this->_sendProblemToMail($problem);
-//                 }
-//             }
+                $this->depotManager->getLogsManager()->write($warningsLog, $this->warningsToLog);
+            }
         });
+    }
+
+
+    /**
+     * Aux method to create an instance of a problem data
+     *
+     * @param string $type See ProblemData
+     * @param string $message See ProblemData
+     * @param string $fileName See ProblemData
+     * @param string $line See ProblemData
+     *
+     * @see ProblemData
+     *
+     * @return ProblemData A fully loaded problem data instance
+     */
+    private function _createProblemData(string $type, string $message, string $fileName = '', string $line = '-'){
+
+        $problemData = new ProblemData();
+        $problemData->type = $type;
+        $problemData->fileName = $fileName === '' ? __FILE__ : $fileName;
+        $problemData->line = $line;
+        $problemData->message = $message;
+
+        return $problemData;
     }
 
 
@@ -320,7 +380,7 @@ class GlobalErrorManager extends BaseSingletonClass{
     private function _sendProblemsToMail(ProblemData $problemData){
 
         // No error type means nothing to do
-        if($problemData->type == '' || $problemData->fileName == ''){
+        /*if($problemData->type == '' || $problemData->fileName == ''){
 
             return;
         }
@@ -374,7 +434,7 @@ class GlobalErrorManager extends BaseSingletonClass{
         if(!$mailManager->sendMail('TODO', $this->exceptionsToMail, $subject, $errorMessage)){
 
             trigger_error($problemData->message.(isset($problemData->trace) ? $problemData->trace : ''), E_USER_WARNING);
-        }
+        }*/
     }
 }
 

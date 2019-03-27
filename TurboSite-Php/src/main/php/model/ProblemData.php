@@ -35,10 +35,6 @@ class ProblemData{
     public $message = '';
 
 
-    /** The error context */
-    public $context = '';
-
-
     /** The full browser URL when the error occurred */
     public $fullUrl = '';
 
