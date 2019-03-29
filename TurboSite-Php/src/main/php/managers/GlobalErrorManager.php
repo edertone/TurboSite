@@ -252,7 +252,7 @@ class GlobalErrorManager extends BaseSingletonClass{
             if($this->tooMuchMemoryWarning > 0 && memory_get_peak_usage() > $this->tooMuchMemoryWarning){
 
                 $message  = "Too much memory used by script:\n";
-                $message .= "The tooMuchMemoryWarning setup memory threshold is ".$this->tooMuchMemoryWarning.' bytes\n';
+                $message .= "The tooMuchMemoryWarning setup memory threshold is ".$this->tooMuchMemoryWarning." bytes\n";
                 $message .= "Script finished using ".memory_get_usage().' bytes\n';
                 $message .= "Script memory peaked at ".memory_get_peak_usage().' bytes';
 
@@ -264,9 +264,8 @@ class GlobalErrorManager extends BaseSingletonClass{
 
             if($this->tooMuchTimeWarning > 0 && $runningTime > $this->tooMuchTimeWarning){
 
-                $message  = "Too much time used by script:\n";
-                $message .= "The tooMuchTimeWarning setup memory threshold is ".$this->tooMuchTimeWarning.' ms\n';
-                $message .= "Script finished in ".$runningTime.' ms';
+                $message  = 'Too much time used by script: tooMuchTimeWarning setup memory threshold is '.$this->tooMuchTimeWarning.' ms, ';
+                $message .= 'but script finished in '.$runningTime.' ms';
 
                 $this->_problemsFound[] = $this->_createProblemData('E_WARNING', $message);
             }
@@ -282,7 +281,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 
                         $problemsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
 
-                        $problemsHtmlCode .= $problem->type.'<br>'.htmlspecialchars($problem->message).'</b><br>';
+                        $problemsHtmlCode .= $problem->type.'<br>'.str_replace("\n", '<br>', htmlspecialchars($problem->message)).'</b><br>';
 
                         $problemsHtmlCode .= $problem->fileName;
 
