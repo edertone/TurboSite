@@ -253,7 +253,7 @@ class GlobalErrorManager extends BaseSingletonClass{
 
                 $message  = "Too much memory used by script:\n";
                 $message .= "The tooMuchMemoryWarning setup memory threshold is ".$this->tooMuchMemoryWarning." bytes\n";
-                $message .= "Script finished using ".memory_get_usage().' bytes\n';
+                $message .= "Script finished using ".memory_get_usage()." bytes of memory\n";
                 $message .= "Script memory peaked at ".memory_get_peak_usage().' bytes';
 
                 $this->_problemsFound[] = $this->_createProblemData('E_WARNING', $message);
