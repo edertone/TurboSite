@@ -9,6 +9,20 @@
     },
     "validate": {
         "filesContent" : {
+            "copyPasteDetect":[
+                {
+                    "path": "src/main",
+                    "maxPercentErrorLevel": 0,
+                    "maxPercentErrorDifference": 1,
+                    "report": ""
+                },
+                {
+                    "path": "src/test",
+                    "maxPercentErrorLevel": 0,
+                    "maxPercentErrorDifference": 1,
+                    "report": ""
+                }
+            ],
             "copyrightHeaders": [
                 {
                     "path": "extras/copyright headers/TurboSite-Php.txt",
