@@ -317,17 +317,18 @@ class WebSiteManager extends BaseSingletonClass{
         $this->_webServices = $setup->webServices;
 
         // Load all the configured resourcebundle paths
-        $bundles = [];
+        $locations = [];
 
-        foreach ($setup->resourceBundles as $bundle) {
+        foreach ($setup->translationLocations as $location) {
 
-            $bundles[] = [
-                'path' => StringUtils::formatPath($this->_mainPath.'/'.$bundle->path),
-                'bundles' => $bundle->bundles
+            $locations[] = [
+                'label' => $location->label,
+                'path' => StringUtils::formatPath($this->_mainPath.'/'.$location->path),
+                'bundles' => $location->bundles
             ];
         }
 
-        $this->_localizationManager->initialize($this->_depotManager->getFilesManager(), $setup->locales, $bundles, function($errors){
+        $this->_localizationManager->initialize($this->_depotManager->getFilesManager(), $setup->locales, $locations, function($errors){
 
             if(count($errors) > 0){
 
@@ -700,9 +701,9 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Adds extra bundles to the currently loaded translation data
      */
-    public function loadBundles(array $bundles){
+    public function loadBundles(string $location, array $bundles){
 
-        $this->_localizationManager->loadBundles('resources/locales/$bundle/$bundle_$locale.properties', $bundles);
+        $this->_localizationManager->loadBundles($location, $bundles);
     }
 
 
