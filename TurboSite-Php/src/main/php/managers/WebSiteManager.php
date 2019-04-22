@@ -701,9 +701,9 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Adds extra bundles to the currently loaded translation data
      */
-    public function loadBundles(string $location, array $bundles){
+    public function loadBundles(array $bundles, string $location = ''){
 
-        $this->_localizationManager->loadBundles($location, $bundles);
+        $this->_localizationManager->loadBundles($bundles, $location);
     }
 
 
