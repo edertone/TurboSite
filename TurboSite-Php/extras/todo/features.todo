@@ -2,5 +2,5 @@ Sorted by priority:
 
 - Implement the errors to mail feature
 
-- Prevent url access to folders like data, release, trash, etc.. and allow to folders like data/storage and similar.
+- Prevent url access to folders like storage, _dev, _trash, etc.. and allow to folders like storage/custom and similar.
   Review that all this is correctly implemented

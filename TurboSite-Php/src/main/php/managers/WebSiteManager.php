@@ -67,9 +67,9 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * @see WebSiteManager::getDataPath()
+     * @see WebSiteManager::getStoragePath()
      */
-    private $_dataPath = '';
+    private $_storagePath = '';
 
 
     /**
@@ -489,49 +489,49 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Gives the filesystem location to the data folder, which is the one that contains the webiste files and storage when
-     * deployed and running.
+     * Gives the filesystem location to the storage folder, which is the one that contains all the physical project data that is accessed
+     * when the project is deployed and running.
      *
-     * Note that the full data folder structure must be correct or this method may not find it correctly.
+     * Note that the storage folder structure must be correct or this method may not find it correctly or fail.
      *
      * @return string
      */
-    public function getDataPath(){
+    public function getStoragePath(){
 
-        if($this->_dataPath !== ''){
+        if($this->_storagePath !== ''){
 
-            return $this->_dataPath;
+            return $this->_storagePath;
         }
 
-        // Try to find the data path location and store it on the global variable so it is faster the next time
-        $lookupPath = $this->_mainPath.'/..';
+        // Try to find the storage path location and store it on the global variable so it is faster the next time
+        $lookupPath = $this->_mainPath.DIRECTORY_SEPARATOR.'..';
 
         for ($i = 0; $i < 5; $i++) {
 
-            if(is_dir($lookupPath.'/data/storage/')){
+            if(is_dir($lookupPath.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'custom')){
 
-                return $this->_dataPath = StringUtils::formatPath($lookupPath.'/data');
+                return $this->_storagePath = StringUtils::formatPath($lookupPath.DIRECTORY_SEPARATOR.'storage');
             }
 
-            $lookupPath .= '/..';
+            $lookupPath .= DIRECTORY_SEPARATOR.'..';
         }
 
-        throw new UnexpectedValueException('Could not find data folder');
+        throw new UnexpectedValueException('Could not find storage folder');
     }
 
 
     /**
-     * Gives the filesystem location to the data/storage folder
+     * Gives the filesystem location to the storage/custom folder
      *
-     * Note that the full data folder structure must be correct or this method may not find it correctly.
+     * Note that the storage folder structure must be correct or this method may not find it correctly.
      *
-     * @see WebSiteManager::getDataPath()
+     * @see WebSiteManager::getStoragePath()
      *
      * @return string
      */
-    public function getDataStoragePath(){
+    public function getStorageCustomPath(){
 
-       return $this->getDataPath().'/storage';
+        return $this->getStoragePath().DIRECTORY_SEPARATOR.'custom';
     }
 
 
