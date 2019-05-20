@@ -17,7 +17,7 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 
 
 /**
- * BlogMarkDownManagerTest
+ * WebSiteManagerTest
  *
  * @return void
  */
