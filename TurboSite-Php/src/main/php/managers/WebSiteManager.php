@@ -67,7 +67,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * @see WebSiteManager::getStoragePath()
+     * @see WebSiteManager::getPathToStorage()
      */
     private $_storagePath = '';
 
@@ -170,7 +170,7 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Stores the webservices setup
      */
-    private $_webServices = null;
+    private $_webServicesSetup = null;
 
 
     /**
@@ -314,7 +314,7 @@ class WebSiteManager extends BaseSingletonClass{
         $this->_singleParameterView = $setup->singleParameterView;
         $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
         $this->_globalCDNS = $setup->globalCDNS;
-        $this->_webServices = $setup->webServices;
+        $this->_webServicesSetup = $setup->webServices;
 
         // Load all the configured resourcebundle paths
         $locations = [];
@@ -489,6 +489,19 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
+     * Gives the filesystem location to the src/main/resources floder
+     *
+     * @see WebSiteManager::getPath()
+     *
+     * @return string
+     */
+    public function getPathToResources(){
+
+        return $this->_mainPath.DIRECTORY_SEPARATOR.'resources';
+    }
+
+
+    /**
      * Gives the filesystem location to the storage folder, which is the one that contains all the physical project data that is accessed
      * when the project is deployed and running.
      *
@@ -496,7 +509,7 @@ class WebSiteManager extends BaseSingletonClass{
      *
      * @return string
      */
-    public function getStoragePath(){
+    public function getPathToStorage(){
 
         if($this->_storagePath !== ''){
 
@@ -525,13 +538,28 @@ class WebSiteManager extends BaseSingletonClass{
      *
      * Note that the storage folder structure must be correct or this method may not find it correctly.
      *
-     * @see WebSiteManager::getStoragePath()
+     * @see WebSiteManager::getPathToStorage()
      *
      * @return string
      */
-    public function getStorageCustomPath(){
+    public function getPathToStorageCustom(){
 
-        return $this->getStoragePath().DIRECTORY_SEPARATOR.'custom';
+        return $this->getPathToStorage().DIRECTORY_SEPARATOR.'custom';
+    }
+
+
+    /**
+     * Gives the filesystem location to the storage/executable folder
+     *
+     * Note that the storage folder structure must be correct or this method may not find it correctly.
+     *
+     * @see WebSiteManager::getPathToStorage()
+     *
+     * @return string
+     */
+    public function getPathToStorageExecutable(){
+
+        return $this->getPathToStorage().DIRECTORY_SEPARATOR.'executable';
     }
 
 
@@ -1048,7 +1076,7 @@ class WebSiteManager extends BaseSingletonClass{
     private function runCurrentURLWebService(){
 
         // Loop all the api definitions to find the one that matches the current url
-        foreach ($this->_webServices->api as $apiDefinition) {
+        foreach ($this->_webServicesSetup->api as $apiDefinition) {
 
             $apiUri = StringUtils::formatPath($apiDefinition->uri, '/').'/';
 
@@ -1063,7 +1091,7 @@ class WebSiteManager extends BaseSingletonClass{
 
                     if(class_exists($serviceClass)){
 
-                        if($this->_webServices->crossOriginCORS === 'allow'){
+                        if($this->_webServicesSetup->crossOriginCORS === 'allow'){
 
                             header("Access-Control-Allow-Origin: *");
                             header("Access-Control-Allow-Credentials: true");
