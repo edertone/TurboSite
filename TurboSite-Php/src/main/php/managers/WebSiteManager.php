@@ -67,12 +67,6 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * @see WebSiteManager::getPathToStorage()
-     */
-    private $_storagePath = '';
-
-
-    /**
      * Contains the name for the view that is loaded when a single root parameter is
      * specified on the urls
      */
@@ -184,6 +178,15 @@ class WebSiteManager extends BaseSingletonClass{
         GlobalErrorManager::getInstance()->initialize();
 
         return parent::getInstance();
+    }
+
+
+    /**
+     * Get the depot manager instance that has been created as part of this class
+     */
+    public function getDepotManager(){
+
+        return $this->_depotManager;
     }
 
 
@@ -498,68 +501,6 @@ class WebSiteManager extends BaseSingletonClass{
     public function getPathToResources(){
 
         return $this->_mainPath.DIRECTORY_SEPARATOR.'resources';
-    }
-
-
-    /**
-     * Gives the filesystem location to the storage folder, which is the one that contains all the physical project data that is accessed
-     * when the project is deployed and running.
-     *
-     * Note that the storage folder structure must be correct or this method may not find it correctly or fail.
-     *
-     * @return string
-     */
-    public function getPathToStorage(){
-
-        if($this->_storagePath !== ''){
-
-            return $this->_storagePath;
-        }
-
-        // Try to find the storage path location and store it on the global variable so it is faster the next time
-        $lookupPath = $this->_mainPath.DIRECTORY_SEPARATOR.'..';
-
-        for ($i = 0; $i < 5; $i++) {
-
-            if(is_dir($lookupPath.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'custom')){
-
-                return $this->_storagePath = StringUtils::formatPath($lookupPath.DIRECTORY_SEPARATOR.'storage');
-            }
-
-            $lookupPath .= DIRECTORY_SEPARATOR.'..';
-        }
-
-        throw new UnexpectedValueException('Could not find storage folder');
-    }
-
-
-    /**
-     * Gives the filesystem location to the storage/custom folder
-     *
-     * Note that the storage folder structure must be correct or this method may not find it correctly.
-     *
-     * @see WebSiteManager::getPathToStorage()
-     *
-     * @return string
-     */
-    public function getPathToStorageCustom(){
-
-        return $this->getPathToStorage().DIRECTORY_SEPARATOR.'custom';
-    }
-
-
-    /**
-     * Gives the filesystem location to the storage/executable folder
-     *
-     * Note that the storage folder structure must be correct or this method may not find it correctly.
-     *
-     * @see WebSiteManager::getPathToStorage()
-     *
-     * @return string
-     */
-    public function getPathToStorageExecutable(){
-
-        return $this->getPathToStorage().DIRECTORY_SEPARATOR.'executable';
     }
 
 
