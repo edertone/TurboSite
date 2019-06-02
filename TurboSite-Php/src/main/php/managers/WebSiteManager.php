@@ -1039,6 +1039,8 @@ class WebSiteManager extends BaseSingletonClass{
                             header('Access-Control-Allow-Methods: GET, POST');
                         }
 
+                        header('Content-Type: application/json');
+
                         return $this->webServiceResultToString((new $serviceClass)->run());
                     }
 
