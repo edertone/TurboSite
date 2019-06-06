@@ -790,49 +790,43 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Get the translated text for the provided key and options
+     * Get the translated text for the provided key and options with the currently defined locale
      *
      * @param string $key The key we want to read from the specified resource bundle and path
      * @param array|string $options If a string is provided, the value will be used as the bundle where key
      *        must be found. If an associative array is provided, the following keys can be defined:
      *        -bundle: To define which bundle to look for the provided key
-     *        -wildcards: A string or an array of strings that will be replaced on the translated Text
-     *        -replace: A string or array of strings with the replacements for each of the provided wildcards
-     *        An example of complex options : ['bundle' => 'footer', 'wildcards' => '$N', 'replace' => $ws->getRunningTime()]
+     *        -location: To define which location to look for the provided key and bundle
+     *        -toReplace: A string or array of strings with the replacements for the translated text wildcards (see LocalizationManager::get for more info).
+     *        An example of complex options : ['bundle' => 'footer', 'location' => 'resources', 'toReplace' => ['replace1', 'replace2']]
      *
      * @see LocalizationManager::get
      *
      * @return string The translated text with all the options applied
      */
-    public function getLoc(string $key, $options = ''){
+    public function getText(string $key, $options = ''){
 
         if(is_string($options)){
 
-            $bundle = $options;
+            return $this->_localizationManager->get($key, $options);
 
         }else{
 
-            $bundle = isset($options['bundle']) ? $options['bundle'] : '';
+            return $this->_localizationManager->get($key,
+                isset($options['bundle']) ? $options['bundle'] : '',
+                isset($options['location']) ? $options['location'] : '',
+                isset($options['toReplace']) ? (string)$options['toReplace'] : []);
         }
-
-        $text = $this->_localizationManager->get($key, $bundle);
-
-        if(!is_string($options) && isset($options['wildcards'])){
-
-            $text = StringUtils::replace($text, $options['wildcards'], $options['replace']);
-        }
-
-        return $text;
     }
 
 
     /**
-     * @see WebSiteManager::getLoc
+     * @see WebSiteManager::getText
      * @see LocalizationManager::get
      */
-    public function echoLoc(string $key, $options = ''){
+    public function echoText(string $key, $options = ''){
 
-       echo $this->getLoc($key, $options);
+        echo $this->getText($key, $options);
     }
 
 
