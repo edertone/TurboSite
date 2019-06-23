@@ -1026,6 +1026,8 @@ class WebSiteManager extends BaseSingletonClass{
 
                     if(class_exists($serviceClass)){
 
+                        $serviceClassInstance = new $serviceClass;
+
                         if($this->_webServicesSetup->crossOriginCORS === 'allow'){
 
                             header("Access-Control-Allow-Origin: *");
@@ -1033,9 +1035,9 @@ class WebSiteManager extends BaseSingletonClass{
                             header('Access-Control-Allow-Methods: GET, POST');
                         }
 
-                        header('Content-Type: application/json');
+                        header('Content-Type: '.$serviceClassInstance->contentType);
 
-                        return $this->webServiceResultToString((new $serviceClass)->run());
+                        return $this->webServiceResultToString($serviceClassInstance->run());
                     }
 
                     $nameSpace .= $explodedUrlPart."\\";
