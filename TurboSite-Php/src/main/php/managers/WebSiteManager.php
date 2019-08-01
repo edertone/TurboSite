@@ -12,11 +12,14 @@
 
 namespace org\turbosite\src\main\php\managers;
 
+use Throwable;
+use stdClass;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbocommons\src\main\php\managers\LocalizationManager;
 use org\turbocommons\src\main\php\model\BaseSingletonClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
+use org\turbosite\src\main\php\model\WebServiceError;
 use org\turbosite\src\main\php\model\WebViewSetup;
 use org\turbodepot\src\main\php\managers\DepotManager;
 
@@ -993,7 +996,10 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Show a 404 error.
+     * Show a 404 error, which means that the webpage you were trying to reach could not be found on the server.
+     * It is a Client-side Error which means that either the page has been removed or moved and the URL was not changed accordingly,
+     * or that you typed in the URL incorrectly.
+     *
      * Note that this method uses headers so no output must have been generated when calling it or it won't work.
      */
     public function show404Error(){
@@ -1037,7 +1043,16 @@ class WebSiteManager extends BaseSingletonClass{
 
                         header('Content-Type: '.$serviceClassInstance->contentType);
 
-                        return $this->webServiceResultToString($serviceClassInstance->run());
+                        try {
+
+                            return $this->webServiceResultToString($serviceClassInstance->run());
+
+                        } catch (Throwable $e) {
+
+                            // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
+                            return $this->webServiceResultToString($serviceClassInstance->generateError(500, 'Unhandled exception',
+                                $e->getMessage(), $e->getTraceAsString()));
+                        }
                     }
 
                     $nameSpace .= $explodedUrlPart."\\";
@@ -1063,7 +1078,14 @@ class WebSiteManager extends BaseSingletonClass{
             return $result;
         }
 
-        if(is_bool($result) || is_array($result)){
+        if($result instanceof WebServiceError){
+
+            http_response_code($result->code);
+
+            return json_encode($result);
+        }
+
+        if(is_bool($result) || is_array($result) || $result instanceof stdClass){
 
             return json_encode($result);
         }

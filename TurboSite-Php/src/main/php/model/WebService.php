@@ -336,11 +336,37 @@ class WebService{
      *
      * Override this method with the actual service logic
      *
-     * @return mixed The result of the service as any of the PHP basic types.
+     * @return mixed The result of the service as any of the PHP basic types (bool, stint, string, array, stdclass)
+     *         or a WebServiceError instance
      */
     public function run(){
 
         // Override this method to add the actual service execution code
+    }
+
+
+    /**
+     * Creates a WebServiceError instance with the specified data.
+     * This instance is normally used as the result for webservices that need to show an error to the user.
+     *
+     * @param int $code The http response code that will defined for this error instance. Common values are:
+     *        - 400 (Bad Request): is used to tell the client that there was an incorrect value on the request. Problem is client side related.
+     *        - 500 (Internal Server Error): is the generic REST API error response which means that something went wrong at the server side. Normally an exception
+     * @param string $title The title for the error that we want to create
+     * @param string $message The description for the error message that we want to create
+     *
+     * @return WebServiceError A newly created error instance, filled with the specified data, so we can return it on the webservice run() method
+     */
+    public function generateError(int $code, string $title, string $message = '', string $trace = ''){
+
+        $error = new WebServiceError();
+
+        $error->code = $code;
+        $error->title = $title;
+        $error->message = $message;
+        $error->trace = $trace;
+
+        return $error;
     }
 }
 

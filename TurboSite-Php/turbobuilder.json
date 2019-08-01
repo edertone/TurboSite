@@ -5,7 +5,7 @@
     "metadata": {
         "name": "turbosite-php",
         "description": "Php based web framework",
-        "builderVersion": "2.0.0"
+        "builderVersion": "2.1.0"
     },
     "validate": {
         "filesContent" : {
