@@ -1082,7 +1082,8 @@ class WebSiteManager extends BaseSingletonClass{
 
             http_response_code($result->code);
 
-            return json_encode($result);
+            // Error information will only be output if exceptions to browser are enabled.
+            return GlobalErrorManager::getInstance()->exceptionsToBrowser ? json_encode($result) : '';
         }
 
         if(is_bool($result) || is_array($result) || $result instanceof stdClass){
