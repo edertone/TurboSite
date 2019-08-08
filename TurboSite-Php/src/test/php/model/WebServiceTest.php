@@ -90,28 +90,28 @@ class WebServiceTest extends TestCase {
             (new ServiceWithoutParams('', []))->run();
             $this->exceptionMessage = '"" did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Argument 1.*must be of the type array or null.*string given/', $e->getMessage());
         }
 
         try {
             (new ServiceWithoutParams([], ''))->run();
             $this->exceptionMessage = '"" did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Argument 2.*must be of the type array or null.*string given/', $e->getMessage());
         }
 
         try {
             (new ServiceWithoutParams(0, []))->run();
             $this->exceptionMessage = '0 did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Argument 1.*must be of the type array or null.*integer given/', $e->getMessage());
         }
 
         try {
             (new ServiceWithoutParams([], 0))->run();
             $this->exceptionMessage = '0 did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Argument 2.*must be of the type array or null.*integer given/', $e->getMessage());
         }
 
         // Test ok values
@@ -121,54 +121,53 @@ class WebServiceTest extends TestCase {
         $this->assertSame('value0', $serviceData['a']);
         $this->assertSame('value1', $serviceData['b']);
 
+        $serviceData = (new ServiceWithGETandPostParams(['0', '1'], ['a' => '0', 'b' => 1]))->run();
+        $this->assertSame('0', $serviceData['0']);
+        $this->assertSame('1', $serviceData['1']);
+        $this->assertSame('0', $serviceData['a']);
+        $this->assertSame('1', $serviceData['b']);
+
         // Test wrong values
         try {
             (new ServiceWithoutParams(['0', '1']))->run();
             $this->exceptionMessage = 'array on get did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Invalid number of GET parameters passed to service. Received 2 but expected 0/', $e->getMessage());
         }
 
         try {
             (new ServiceWithGETandPostParams(['0', 1], ['a' => '0', 'b' => '1']))->run();
             $this->exceptionMessage = 'numeric get param did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
-        }
-
-        try {
-            (new ServiceWithGETandPostParams(['0', '1'], ['a' => '0', 'b' => 1]))->run();
-            $this->exceptionMessage = 'numeric post param did not cause exception';
-        } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/All GET parameters must be strings/', $e->getMessage());
         }
 
         try {
             (new ServiceWithGETandPostParams(['0'], ['a' => '0', 'b' => '1']))->run();
             $this->exceptionMessage = 'missing 1 did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Invalid number of GET parameters passed to service. Received 1 but expected 2/', $e->getMessage());
         }
 
         try {
             (new ServiceWithGETandPostParams(['0', '1'], ['p0' => 'value0']))->run();
             $this->exceptionMessage = 'missing p1 did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Unexpected POST variables received/', $e->getMessage());
         }
 
         try {
             (new ServiceWithGETandPostParams(['0', '1'], ['a' => '0', 'b' => '1', 'c' => '2']))->run();
             $this->exceptionMessage = 'extra post param did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Unexpected POST variables received/', $e->getMessage());
         }
 
         try {
             (new ServiceWithGETandPostParams('string', ['a' => '0', 'b' => '1']))->run();
             $this->exceptionMessage = 'string did not cause exception';
         } catch (Throwable $e) {
-            // We expect an exception to happen
+            $this->assertRegExp('/Argument 1.*must be of the type array or null.*string given/', $e->getMessage());
         }
 
         // Test exceptions
