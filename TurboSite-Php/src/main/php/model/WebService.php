@@ -98,7 +98,8 @@ class WebService{
      *        second will be param 2, and so. Same rules as when calling the service via url apply.
      * @param array $postParameters If we create this service via code we can pass the POST data here and it will be loaded
      *        by the service as if it was passed via HTTP POST. It must be an associative array that contains the info we want to pass
-     *        to the service where POST parameters are defined at the array keys.  Same rules as when calling the service via url apply.
+     *        to the service where POST parameters are defined at the array keys. The array values will be json_encoded if they are not strings.
+     *        Same rules as when calling the service via url apply here.
      */
     public function __construct(array $getParameters = null, array $postParameters = null){
 
@@ -157,7 +158,7 @@ class WebService{
 
             foreach ($postParameters as $key => $value) {
 
-                $this->_receivedPostParameters[$key] = $value;
+                $this->_receivedPostParameters[$key] = is_string($value) ? $value : json_encode($value);
             }
 
         }else{
@@ -291,6 +292,9 @@ class WebService{
 
     /**
      * Get the value converted as an associative array for the specified POST parameter that has been passed to this service.
+     *
+     * Note that the post parameter must contain a valid string that can be converted into an associative array via json_decode, or an exception
+     * will be thrown
      *
      * @param string $paramName The name for the POST parameter we want to read
      *

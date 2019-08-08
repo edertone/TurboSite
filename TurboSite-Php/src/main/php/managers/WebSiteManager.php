@@ -429,18 +429,10 @@ class WebSiteManager extends BaseSingletonClass{
         // Php files execution is not allowed
         if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
 
-            if($this->_URIElements[0] === 'api-chain'){
-
-                // TODO - check if the URI represents a chained services call and
-                // implement this functionality
-                die();
-            }
-
-            // Check if the URI represents a service
+            // Check if the URI represents a service (all webservice uris must start with api/)
             if($this->_URIElements[0] === 'api'){
 
                 echo $this->runCurrentURLWebService();
-
                 die();
             }
 
@@ -1048,6 +1040,9 @@ class WebSiteManager extends BaseSingletonClass{
                             return $this->webServiceResultToString($serviceClassInstance->run());
 
                         } catch (Throwable $e) {
+
+                            // Log the error so it does not get lost for application logs
+                            error_log($e);
 
                             // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
                             return $this->webServiceResultToString($serviceClassInstance->generateError(500, 'Unhandled exception',
