@@ -30,7 +30,7 @@ class WebService{
      * 'application/json' - When the webservice returns json data
      * 'image/jpg' - When the webservice returns a jpg image
      * 'text/plain' - When the webservice returns simple text data
-     *
+     * 'application/pdf' - When the webservice returns a pdf file
      * TODO - add more
      *
      * @var string
@@ -202,12 +202,12 @@ class WebService{
 
 
     /**
-     * Get the value for a service url parameter, given its parameter index number.
+     * Get the value for a service url GET parameter, given its parameter index number (starting at 0).
      * If the parameter index is valid, but no value has been passed into the url, it will return an empty string.
      * URL parameters are the custom values that can be passed via url to the framework services.
-     * They are encoded this way: http://.../api/site/service-category/service-name/parameter1/parameter2/parameter3/...
+     * They are encoded this way: http://.../api/site/service-category/service-name/parameter0/parameter1/parameter2/...
      *
-     * @param int $index The numeric index for the requested parameter. Invalid index value will throw an exception
+     * @param int $index The numeric index for the requested parameter (starting at 0). Invalid index value will throw an exception
      * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
      *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
      *

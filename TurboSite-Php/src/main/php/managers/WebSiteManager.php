@@ -1024,18 +1024,18 @@ class WebSiteManager extends BaseSingletonClass{
 
                     if(class_exists($serviceClass)){
 
-                        $serviceClassInstance = new $serviceClass;
-
-                        if($this->_webServicesSetup->crossOriginCORS === 'allow'){
-
-                            header("Access-Control-Allow-Origin: *");
-                            header("Access-Control-Allow-Credentials: true");
-                            header('Access-Control-Allow-Methods: GET, POST');
-                        }
-
-                        header('Content-Type: '.$serviceClassInstance->contentType);
-
                         try {
+
+                            if($this->_webServicesSetup->crossOriginCORS === 'allow'){
+
+                                header("Access-Control-Allow-Origin: *");
+                                header("Access-Control-Allow-Credentials: true");
+                                header('Access-Control-Allow-Methods: GET, POST');
+                            }
+
+                            $serviceClassInstance = new $serviceClass;
+
+                            header('Content-Type: '.$serviceClassInstance->contentType);
 
                             return $this->webServiceResultToString($serviceClassInstance->run());
 
@@ -1045,8 +1045,13 @@ class WebSiteManager extends BaseSingletonClass{
                             error_log($e);
 
                             // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
-                            return $this->webServiceResultToString($serviceClassInstance->generateError(500, 'Unhandled exception',
-                                $e->getMessage(), $e->getTraceAsString()));
+                            $error = new WebServiceError();
+                            $error->code = 500;
+                            $error->title = 'Unhandled exception';
+                            $error->message = $e->getMessage();
+                            $error->trace = $e->getTraceAsString();
+
+                            return $this->webServiceResultToString($error);
                         }
                     }
 
