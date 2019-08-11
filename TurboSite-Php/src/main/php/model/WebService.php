@@ -354,8 +354,8 @@ class WebService{
      * This instance is normally used as the result for webservices that need to show an error to the user.
      *
      * @param int $code The http response code that will defined for this error instance. Common values are:
-     *        - 400 (Bad Request): is used to tell the client that there was an incorrect value on the request. Problem is client side related.
-     *        - 500 (Internal Server Error): is the generic REST API error response which means that something went wrong at the server side. Normally an exception
+     *        - 400 (Bad Request): is used to tell the client that there was an incorrect value on the request. Normally is a controled problem and client side related.
+     *        - 500 (Internal Server Error): is the generic REST API error response which means that something went wrong at the server side. Normally an uncontrolled exception
      * @param string $title The title for the error that we want to create
      * @param string $message The description for the error message that we want to create
      *

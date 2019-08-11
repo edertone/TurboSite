@@ -19,7 +19,9 @@ class WebServiceError{
 
 
     /**
-     * Contains the http code for the webservice error
+     * Contains the http code for the webservice error (see WebService::generateError method docs for more info)
+     *
+     * @see WebService::generateError
      *
      * @var int
      */
