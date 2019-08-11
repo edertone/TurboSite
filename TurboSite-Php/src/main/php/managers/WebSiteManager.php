@@ -1035,9 +1035,12 @@ class WebSiteManager extends BaseSingletonClass{
 
                             $serviceClassInstance = new $serviceClass;
 
-                            header('Content-Type: '.$serviceClassInstance->contentType);
+                            $serviceResult = $serviceClassInstance->run();
 
-                            return $this->webServiceResultToString($serviceClassInstance->run());
+                            header('Content-Type: '.($serviceResult instanceof WebServiceError ?
+                                'application/json' : $serviceClassInstance->contentType));
+
+                            return $this->webServiceResultToString($serviceResult);
 
                         } catch (Throwable $e) {
 
