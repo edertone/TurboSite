@@ -13,8 +13,8 @@ namespace org\turbosite\src\test\php\model;
 
 use Throwable;
 use PHPUnit\Framework\TestCase;
-use org\turbosite\src\test\php\resources\model\webservice\ServiceWithoutParams;
-use org\turbosite\src\test\php\resources\model\webservice\ServiceWithGETandPostParams;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams;
 
 
 /**
