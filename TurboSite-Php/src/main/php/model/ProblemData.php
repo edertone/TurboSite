@@ -67,7 +67,7 @@ class ProblemData{
      */
     public function __construct(){
 
-        $this->fullUrl = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        $this->fullUrl = isset($_SERVER['HTTP_HOST']) ? 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'] : '';
 
         $this->referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
 

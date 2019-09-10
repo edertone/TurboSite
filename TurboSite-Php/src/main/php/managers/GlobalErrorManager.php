@@ -297,12 +297,12 @@ class GlobalErrorManager extends BaseSingletonClass{
 
                 // Generate the log text for this problem so it can be output to log file later (if enabled)
                 $logText  = $problem->type.' '.$problem->message."\n";
-                $logText .= 'IP: '.$_SERVER['REMOTE_ADDR']."\n";
+                $logText .= 'IP: '.(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '')."\n";
                 $logText .= $problem->fileName.' line '.$problem->line."\n";
                 $logText .= $problem->trace."\n";
                 $logText .= 'URL: '.$problem->fullUrl."\n";
                 $logText .= 'URL referer: '.$problem->referer."\n";
-                $logText .= 'Browser: '.$_SERVER['HTTP_USER_AGENT']."\n";
+                $logText .= 'Browser: '.(isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '')."\n";
                 $logText .= 'Used memory: '.$problem->usedMemory.' of '.ini_get('memory_limit')."\n";
                 $logText .= 'GET params: '.$problem->getParams;
                 $logText .= 'POST params: '.$problem->postParams;
