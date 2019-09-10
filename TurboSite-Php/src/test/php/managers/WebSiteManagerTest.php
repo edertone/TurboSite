@@ -13,6 +13,7 @@ namespace org\turbosite\src\test\php\managers;
 
 use PHPUnit\Framework\TestCase;
 use org\turbodepot\src\main\php\managers\FilesManager;
+use org\turbosite\src\main\php\managers\GlobalErrorManager;
 use org\turbosite\src\main\php\managers\WebSiteManager;
 
 
@@ -45,6 +46,10 @@ class WebSiteManagerTest extends TestCase {
         $this->filesManager = new FilesManager();
         $this->tempFolder = $this->filesManager->createTempDirectory('TurboSitePhp-WebSiteManagerTest');
         $this->sut = WebSiteManager::getInstance();
+
+        // Disable error manager warnings to prevent test errors
+        GlobalErrorManager::getInstance()->tooMuchMemoryWarning = 0;
+        GlobalErrorManager::getInstance()->tooMuchTimeWarning = 0;
     }
 
 
