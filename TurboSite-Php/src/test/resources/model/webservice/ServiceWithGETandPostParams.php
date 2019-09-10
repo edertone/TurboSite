@@ -9,7 +9,7 @@
  * CopyRight : -> Copyright 2018 Edertone Advanded Solutions. http://www.edertone.com
  */
 
-namespace org\turbosite\src\test\php\resources\model\webservice;
+namespace org\turbosite\src\test\resources\model\webservice;
 
 use org\turbosite\src\main\php\model\WebService;
 
