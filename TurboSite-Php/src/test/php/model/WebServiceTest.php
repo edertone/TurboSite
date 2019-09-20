@@ -201,11 +201,11 @@ class WebServiceTest extends TestCase {
 
 
     /**
-     * testTODO
+     * testGetPost
      *
      * @return void
      */
-    public function testTODO(){
+    public function testGetPost(){
 
         // Test empty values
         // TODO
@@ -222,7 +222,170 @@ class WebServiceTest extends TestCase {
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
-    // TODO - all missing tests
+
+    /**
+     * testGetPostAsInt
+     *
+     * @return void
+     */
+    public function testGetPostAsInt(){
+
+        // Test empty values
+        // TODO
+
+        // Test ok values
+        // TODO
+
+        // Test wrong values
+        // TODO
+
+        // Test exceptions
+        // TODO
+
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+
+    /**
+     * testGetPostAsFloat
+     *
+     * @return void
+     */
+    public function testGetPostAsFloat(){
+
+        // Test empty values
+        // TODO
+
+        // Test ok values
+        // TODO
+
+        // Test wrong values
+        // TODO
+
+        // Test exceptions
+        // TODO
+
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+
+    /**
+     * testGetPostAsArray
+     *
+     * @return void
+     */
+    public function testGetPostAsArray(){
+
+        // Test empty values
+        // TODO
+
+        // Test ok values
+        // TODO
+
+        // Test wrong values
+        // TODO
+
+        // Test exceptions
+        // TODO
+
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+
+    /**
+     * testSetup
+     *
+     * @return void
+     */
+    public function testSetup(){
+
+        // Test empty values
+        // TODO
+
+        // Test ok values
+        // TODO
+
+        // Test wrong values
+        // TODO
+
+        // Test exceptions
+        // TODO
+
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+
+    /**
+     * testRun
+     *
+     * @return void
+     */
+    public function testRun(){
+
+        // Test empty values
+        // TODO
+
+        // Test ok values
+        // TODO
+
+        // Test wrong values
+        // TODO
+
+        // Test exceptions
+        // TODO
+
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+
+    /**
+     * testGenerateError
+     *
+     * @return void
+     */
+    public function testGenerateError(){
+
+        $sut = new ServiceWithoutParams();
+
+        // Test empty values
+        try {
+            $sut->generateError(null, null);
+            $this->exceptionMessage = 'null did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/must be of the type integer, null given/', $e->getMessage());
+        }
+
+        try {
+            $sut->generateError('', '');
+            $this->exceptionMessage = '"" did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/must be of the type integer, string given/', $e->getMessage());
+        }
+
+        try {
+            $sut->generateError(0, null);
+            $this->exceptionMessage = '0 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/must be of the type string, null given/', $e->getMessage());
+        }
+
+        // Test ok values
+        $error = $sut->generateError(400, 'title');
+        $this->assertSame(400, $error->code);
+        $this->assertSame('title', $error->title);
+        $this->assertSame('', $error->message);
+        $this->assertSame('', $error->trace);
+
+        $error = $sut->generateError(400, 'title', 'message', 'trace');
+        $this->assertSame(400, $error->code);
+        $this->assertSame('title', $error->title);
+        $this->assertSame('message', $error->message);
+        $this->assertSame('trace', $error->trace);
+
+        // Test wrong values
+        // Test exceptions
+        // Not necessary
+    }
 }
 
 ?>

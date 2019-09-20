@@ -1047,14 +1047,11 @@ class WebSiteManager extends BaseSingletonClass{
                             // Log the error so it does not get lost for application logs
                             error_log($e);
 
-                            // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
-                            $error = new WebServiceError();
-                            $error->code = 500;
-                            $error->title = 'Unhandled exception';
-                            $error->message = $e->getMessage();
-                            $error->trace = $e->getTraceAsString();
+                            header('Content-Type: application/json');
 
-                            return $this->webServiceResultToString($error);
+                            // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
+                            return $this->webServiceResultToString(WebServiceError::createInstance(
+                                500, 'Unhandled exception', $e->getMessage(), $e->getTraceAsString()));
                         }
                     }
 
