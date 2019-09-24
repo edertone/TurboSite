@@ -18,8 +18,8 @@
                 },
                 {
                     "path": "src/test",
-                    "maxPercentErrorLevel": 3,
-                    "maxPercentErrorDifference": 2,
+                    "maxPercentErrorLevel": 4,
+                    "maxPercentErrorDifference": 3,
                     "report": ""
                 }
             ],

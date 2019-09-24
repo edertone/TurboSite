@@ -59,10 +59,40 @@ class ChainServicesTest extends TestCase {
     public function testConstruct(){
 
         // Test empty values
-        // TODO
+        try {
+            $service = new ChainServices();
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+        }
+
+        try {
+            $service = new ChainServices(null, null);
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+        }
+
+        try {
+            $service = new ChainServices('', '');
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/must be of the type array or null, string given/', $e->getMessage());
+        }
+
+        try {
+            $service = new ChainServices([], []);
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+        }
 
         // Test ok values
-        // TODO
+        $service = new stdClass();
+        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams';
+
+        $this->assertSame('application/json', (new ChainServices([], ['services' => [$service]]))->contentType);
+        $this->assertSame('application/json', (new ChainServices([], ['services' => [$service, $service]]))->contentType);
 
         // Test wrong values
         // Test exceptions
@@ -74,24 +104,30 @@ class ChainServicesTest extends TestCase {
         }
 
         try {
-            $service = new ChainServices();
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
-        }
-
-        try {
-            $service = new ChainServices([], []);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
-        }
-
-        try {
             $service = new ChainServices([], 'string');
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
             $this->assertRegExp('/Argument 2.*must be of the type array or null.*string given/', $e->getMessage());
+        }
+
+        $service = new stdClass();
+        $service->class = '';
+
+        try {
+            $service = new ChainServices([], ['services' => [$service]]);
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/A namespace \+ class or an uri is mandatory to locate the service to execute/', $e->getMessage());
+        }
+
+        $service = new stdClass();
+        $service->class = 'org\turbosite\src\test\resources\model\nonexistantPath\NonExistantClassName';
+
+        try {
+            $service = new ChainServices([], ['services' => [$service]]);
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Provided class does not exist: org.*NonExistantClassName/', $e->getMessage());
         }
     }
 
@@ -228,12 +264,27 @@ class ChainServicesTest extends TestCase {
         $this->assertSame('no params received', $servicesResult[2]);
 
         // Test wrong values
-        // TODO
-
         // Test exceptions
-        // TODO
+        try {
+            $servicesResult = (new ChainServices([], ['services' => [$service1, '', $service3]]));
+            $this->exceptionMessage = '$services did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was /', $e->getMessage());
+        }
 
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        try {
+            $servicesResult = (new ChainServices([], ['services' => [$service1, 123, $service3]]));
+            $this->exceptionMessage = '$services did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was 123/', $e->getMessage());
+        }
+
+        try {
+            $servicesResult = (new ChainServices([], ['services' => [$service1, 'string', $service3]]));
+            $this->exceptionMessage = '$services did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was string/', $e->getMessage());
+        }
     }
 
 
@@ -284,7 +335,7 @@ class ChainServicesTest extends TestCase {
             $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
             $this->exceptionMessage = '$servicesResult did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/ChainServices can only be executed when called via http request/', $e->getMessage());
+            $this->assertRegExp('/ChainServices uri can only be defined when called via http request/', $e->getMessage());
         }
     }
 }

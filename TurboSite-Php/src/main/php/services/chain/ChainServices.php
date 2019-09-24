@@ -12,34 +12,60 @@
 namespace org\turbosite\src\main\php\services\chain;
 
 use UnexpectedValueException;
+use stdClass;
 use org\turbosite\src\main\php\model\WebService;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\managers\WebSiteManager;
 
 
 /**
- * This method is used to execute multiple api calls to different services with a single http request.
- * It receives a list of services that need to be executed, and their respective parameters, and this service
- * will run each one of them in the same order as received, and return a list with all the results of each execution.
+ * ChainServices
  */
 class ChainServices extends WebService{
 
 
-    protected function setup(){
+    /**
+     * TODO - If set to true, when a webservice fails the next ones won't be executed and an empty result will be returned for them
+     * @var string
+     */
+    public $isAnyErrorStoppingExecution = false;
 
-        $this->enabledPostParams = ['services'];
-    }
+
+    /**
+     * Text constant used for post parameter name
+     */
+    private const SERVICES = 'services';
 
 
-    public function run(){
+    /**
+     * ChainServices is a WebService class that is used to sequentially execute multiple WebServices, one after the other. It receives a list
+     * of services to be executed with their respective parameters and it will run each one of them in the same
+     * order as received, returning a list with the results for each one of the executed services.
+     *
+     * @see WebService::__construct
+     *
+     * @param array $getParameters This parameter is not used and will be ignored. It exists here to maintain compatibility with the WebService class on http requests
+     * @param array $postParameters An associative array with only one key 'services' containing an array of stdClass instances. Each instance must have the following properties:<br>
+     *        - class: When specified, it must contain the full classpath for the WebService to execute. For example: 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams'.
+     *        If class property is specified, the uri property is not allowed<br>
+     *        - uri: When specified, it must contain the WebService URL that is relative to the WebServer application root. For example: 'api/site/example/example-service-without-params'.
+     *        If uri property is specified, the class property is not allowed<br>
+     *        - getParameters: The list of GET parameters to pass to the Webservice to execute. @see WebService::__construct for details<br>
+     *        - postParameters: The list of POST parameters to pass to the Webservice to execute. @see WebService::__construct for details
+     */
+    public function __construct(array $getParameters = null, array $postParameters = null){
 
-        $resultsList = [];
+        parent::__construct($getParameters, $postParameters);
 
-        foreach ($this->getPostAsArray('services') as $service) {
+        foreach ($this->getPostAsArray(self::SERVICES) as $service) {
 
+            if(!($service instanceof stdClass)){
+
+                throw new UnexpectedValueException('Each service must be defined as a php stdClass() but was '.print_r($service, true));
+            }
 
             if((!isset($service->class) || StringUtils::isEmpty($service->class)) &&
-               (!isset($service->uri) || StringUtils::isEmpty($service->uri))){
+                (!isset($service->uri) || StringUtils::isEmpty($service->uri))){
 
                 throw new UnexpectedValueException('A namespace + class or an uri is mandatory to locate the service to execute');
             }
@@ -49,6 +75,33 @@ class ChainServices extends WebService{
                 throw new UnexpectedValueException('Services can only be defined by class or uri, not both');
             }
 
+            if(isset($service->class) && !class_exists($service->class)){
+
+                throw new UnexpectedValueException('Provided class does not exist: '.$service->class);
+            }
+
+            // Uri execution will only work when called via http, so $_POST 'services' variable must exist
+            if(isset($service->uri) && !isset($_POST[self::SERVICES])){
+
+                throw new UnexpectedValueException('ChainServices uri can only be defined when called via http request');
+            }
+        }
+    }
+
+
+    protected function setup(){
+
+        $this->enabledPostParams = [self::SERVICES];
+    }
+
+
+    public function run(){
+
+        $resultsList = [];
+        $ws = WebSiteManager::getInstance();
+
+        foreach ($this->getPostAsArray(self::SERVICES) as $service) {
+
             $getParameters = isset($service->getParameters) ? $service->getParameters : [];
             $postParameters = isset($service->postParameters) ? json_decode(json_encode($service->postParameters), true) : [];
 
@@ -56,15 +109,7 @@ class ChainServices extends WebService{
 
                 $resultsList [] = (new $service->class($getParameters, $postParameters))->run();
 
-            } else if(isset($service->uri)){
-
-                // Uri execution will only work when called via http, so $_POST variable must exist
-                if(!isset($_POST['services'])){
-
-                    throw new UnexpectedValueException('ChainServices can only be executed when called via http request');
-                }
-
-                $ws = WebSiteManager::getInstance();
+            }else{
 
                 foreach ($ws->getSetup('turbosite.json')->webServices->api as $apiDefinition) {
 
