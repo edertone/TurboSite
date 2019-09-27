@@ -15,28 +15,20 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with mandatory get and post params
+ * A service that defines a post parameter with an invalid array length, so an exception must be thrown when constructed
  */
-class ServiceWithGETandPostParams extends WebService{
+class ServiceWithInvalidPostParameterArrayLen extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams = 2;
-
-        $this->enabledPostParams[] = ['a'];
-        $this->enabledPostParams[] = ['b'];
+        $this->enabledPostParams[] = [];
     }
 
 
     public function run(){
 
-        return [
-            "0" => $this->getParam(0),
-            "1" => $this->getParam(1),
-            "a" => $this->getPost('a'),
-            "b" => $this->getPost('b')
-        ];
+        return '';
     }
 
 }

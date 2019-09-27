@@ -15,14 +15,12 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with mandatory get and post params
+ * A service with all POST parameters required
  */
-class ServiceWithGETandPostParams extends WebService{
+class ServiceWithPostParams extends WebService{
 
 
     protected function setup(){
-
-        $this->enabledGetParams = 2;
 
         $this->enabledPostParams[] = ['a'];
         $this->enabledPostParams[] = ['b'];
@@ -32,8 +30,6 @@ class ServiceWithGETandPostParams extends WebService{
     public function run(){
 
         return [
-            "0" => $this->getParam(0),
-            "1" => $this->getParam(1),
             "a" => $this->getPost('a'),
             "b" => $this->getPost('b')
         ];
