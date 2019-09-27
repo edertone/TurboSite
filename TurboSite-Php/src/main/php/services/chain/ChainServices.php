@@ -32,12 +32,6 @@ class ChainServices extends WebService{
 
 
     /**
-     * Text constant used for post parameter name
-     */
-    private const SERVICES = 'services';
-
-
-    /**
      * ChainServices is a WebService class that is used to sequentially execute multiple WebServices, one after the other. It receives a list
      * of services to be executed with their respective parameters and it will run each one of them in the same
      * order as received, returning a list with the results for each one of the executed services.
@@ -57,7 +51,10 @@ class ChainServices extends WebService{
 
         parent::__construct($getParameters, $postParameters);
 
-        foreach ($this->getPostAsArray(self::SERVICES) as $service) {
+        // TODO
+        $this->isAnyErrorStoppingExecution = $this->getPost('isAnyErrorStoppingExecution');
+
+        foreach ($this->getPost('services') as $service) {
 
             if(!($service instanceof stdClass)){
 
@@ -81,7 +78,7 @@ class ChainServices extends WebService{
             }
 
             // Uri execution will only work when called via http, so $_POST 'services' variable must exist
-            if(isset($service->uri) && !isset($_POST[self::SERVICES])){
+            if(isset($service->uri) && !isset($_POST['services'])){
 
                 throw new UnexpectedValueException('ChainServices uri can only be defined when called via http request');
             }
@@ -91,7 +88,8 @@ class ChainServices extends WebService{
 
     protected function setup(){
 
-        $this->enabledPostParams = [self::SERVICES];
+        $this->enabledPostParams[] = ['services', WebService::ARRAY];
+        $this->enabledPostParams[] = ['isAnyErrorStoppingExecution', WebService::BOOL, WebService::NOT_REQUIRED, WebService::NOT_RESTRICTED, true];
     }
 
 
@@ -100,7 +98,7 @@ class ChainServices extends WebService{
         $resultsList = [];
         $ws = WebSiteManager::getInstance();
 
-        foreach ($this->getPostAsArray(self::SERVICES) as $service) {
+        foreach ($this->getPost('services') as $service) {
 
             $getParameters = isset($service->getParameters) ? $service->getParameters : [];
             $postParameters = isset($service->postParameters) ? json_decode(json_encode($service->postParameters), true) : [];

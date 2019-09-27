@@ -63,14 +63,14 @@ class ChainServicesTest extends TestCase {
             $service = new ChainServices();
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
         }
 
         try {
             $service = new ChainServices(null, null);
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
         }
 
         try {
@@ -84,7 +84,7 @@ class ChainServicesTest extends TestCase {
             $service = new ChainServices([], []);
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
         }
 
         // Test ok values
@@ -140,9 +140,12 @@ class ChainServicesTest extends TestCase {
     public function testRun_no_services_passed(){
 
         // Test empty values
-        $servicesResult = (new ChainServices([], ['services' => '']))->run();
-        $this->assertTrue(ArrayUtils::isArray($servicesResult));
-        $this->assertSame(0, count($servicesResult));
+        try {
+            $service = new ChainServices([], ['services' => '']);
+            $this->exceptionMessage = print_r($service, true).' did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected services POST param to be a json encoded array but was/', $e->getMessage());
+        }
 
         $servicesResult = (new ChainServices([], ['services' => []]))->run();
         $this->assertTrue(ArrayUtils::isArray($servicesResult));
@@ -154,7 +157,7 @@ class ChainServicesTest extends TestCase {
             $service = new ChainServices(null, null);
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
         }
     }
 
@@ -227,7 +230,7 @@ class ChainServicesTest extends TestCase {
             $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
             $this->exceptionMessage = '$services did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/This service expects POST data/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory POST parameter: a/', $e->getMessage());
         }
     }
 
