@@ -100,7 +100,7 @@ class ChainServicesTest extends TestCase {
             $service = new ChainServices([''], ['services' => '']);
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/Invalid number of GET parameters passed to service. Received 1 but expected 0/', $e->getMessage());
+            $this->assertRegExp('/Unexpected GET parameter received at 0/', $e->getMessage());
         }
 
         try {
@@ -219,7 +219,7 @@ class ChainServicesTest extends TestCase {
             $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
             $this->exceptionMessage = '$services did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/Invalid number of GET parameters passed to service. Received 0 but expected 2/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory GET parameter at 0/', $e->getMessage());
         }
 
         $service = new stdClass();
