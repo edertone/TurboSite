@@ -42,6 +42,9 @@ use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParameterObj
 use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParams3Mandatory;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParams3IncorrectMandatory;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParams5LastNotMandatory;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithGet4ParametersDeclaredViaInt;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParameterIntTyped;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParameterIntTyped;
 
 
 /**
@@ -254,6 +257,15 @@ class WebServiceTest extends TestCase {
         } catch (Throwable $e) {
             $this->assertRegExp('/Missing mandatory GET parameter at 1/', $e->getMessage());
         }
+
+        // Test exceptions
+        try {
+            $service = new ServiceWithoutParams();
+            $service->isGetDataMandatory = false;
+            $this->exceptionMessage = 'isGetDataMandatory did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/property isGetDataMandatory does not exist/', $e->getMessage());
+        }
     }
 
 
@@ -367,6 +379,39 @@ class WebServiceTest extends TestCase {
 
         // Test ok values
 
+        // GET parameters that are declared with an integer value
+        try {
+            (new ServiceWithGet4ParametersDeclaredViaInt([]))->run();
+            $this->exceptionMessage = 'ServiceWithGet4ParametersDeclaredViaInt [] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Missing mandatory GET parameter at 0/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGet4ParametersDeclaredViaInt([1,2]))->run();
+            $this->exceptionMessage = 'ServiceWithGet4ParametersDeclaredViaInt [1,2] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Missing mandatory GET parameter at 2/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGet4ParametersDeclaredViaInt([1,2,3]))->run();
+            $this->exceptionMessage = 'ServiceWithGet4ParametersDeclaredViaInt [1,2,3] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Missing mandatory GET parameter at 3/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGet4ParametersDeclaredViaInt([1,2,3,4,5]))->run();
+            $this->exceptionMessage = 'ServiceWithGet4ParametersDeclaredViaInt [1,2,3,4,5] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Unexpected GET parameter received at 4/', $e->getMessage());
+        }
+
+        $this->assertSame(['0', '1', '2', '3'], (new ServiceWithGet4ParametersDeclaredViaInt([0, 1, 2, 3]))->run());
+        $this->assertSame(['a', 'b', 'c', 'd'], (new ServiceWithGet4ParametersDeclaredViaInt(['a', 'b', 'c', 'd']))->run());
+        $this->assertSame(['235', 'hello', '[1,2,"a"]', '{"a":1}'], (new ServiceWithGet4ParametersDeclaredViaInt([235, 'hello', [1,2,'a'], (object) ['a' => 1]]))->run());
+
         // Non typed post parameter
         $this->assertSame('null', (new ServiceWithPostParameterNotTyped([], ['a' => null]))->run());
         $this->assertSame('false', (new ServiceWithPostParameterNotTyped([], ['a' => false]))->run());
@@ -457,6 +502,136 @@ class WebServiceTest extends TestCase {
             $this->exceptionMessage = 'ServiceWithGetParameterBoolTyped object did not cause exception';
         } catch (Throwable $e) {
             $this->assertRegExp('/Expected GET param 0 to be a json encoded boolean but was ..a..1..b..2./', $e->getMessage());
+        }
+
+        // INT typed post parameter
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => null]))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped null did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was null/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => false]))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped false did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was false/', $e->getMessage());
+        }
+
+        $this->assertSame(0, (new ServiceWithPostParameterIntTyped([], ['a' => 0]))->run());
+        $this->assertSame(0, (new ServiceWithPostParameterIntTyped([], ['a' => '0']))->run());
+        $this->assertSame(1234, (new ServiceWithPostParameterIntTyped([], ['a' => 1234]))->run());
+        $this->assertSame(1234, (new ServiceWithPostParameterIntTyped([], ['a' => '1234']))->run());
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => 1234.890]))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped 1234.890 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was 1234.89/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => '1234.890']))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped "1234.890" did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was 1234.89/', $e->getMessage());
+        }
+
+        $this->assertSame(-250, (new ServiceWithPostParameterIntTyped([], ['a' => -250]))->run());
+        $this->assertSame(-25012, (new ServiceWithPostParameterIntTyped([], ['a' => '-25012']))->run());
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => -25012.792]))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped -25012.792 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was -25012.792/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => '-25012.792']))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped -25012.792 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was -25012.792/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => 'rawstring']))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped rawstring did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was rawstring/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithPostParameterIntTyped([], ['a' => [1,2,3]]))->run();
+            $this->exceptionMessage = 'ServiceWithPostParameterIntTyped [1,2,3] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected a POST param to be a json encoded integer but was .1.2.3./', $e->getMessage());
+        }
+
+        // INT typed GET parameter
+        try {
+            (new ServiceWithGetParameterIntTyped([null]))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped null did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was null/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGetParameterIntTyped([false]))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped false did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was false/', $e->getMessage());
+        }
+
+        $this->assertSame(0, (new ServiceWithGetParameterIntTyped([0]))->run());
+        $this->assertSame(0, (new ServiceWithGetParameterIntTyped(['0']))->run());
+        $this->assertSame(1234, (new ServiceWithGetParameterIntTyped([1234]))->run());
+        $this->assertSame(1234, (new ServiceWithGetParameterIntTyped(['1234']))->run());
+
+        try {
+            (new ServiceWithGetParameterIntTyped([1234.890]))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped 1234.890 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was 1234.89/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGetParameterIntTyped(['1234.890']))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped "1234.890" did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was 1234.89/', $e->getMessage());
+        }
+
+        $this->assertSame(-250, (new ServiceWithGetParameterIntTyped([-250]))->run());
+        $this->assertSame(-25012, (new ServiceWithGetParameterIntTyped(['-25012']))->run());
+
+        try {
+            (new ServiceWithGetParameterIntTyped([-25012.792]))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped -25012.792 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was -25012.792/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGetParameterIntTyped(['-25012.792']))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped -25012.792 did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was -25012.792/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGetParameterIntTyped(['rawstring']))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped rawstring did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was rawstring/', $e->getMessage());
+        }
+
+        try {
+            (new ServiceWithGetParameterIntTyped([[1,2,3]]))->run();
+            $this->exceptionMessage = 'ServiceWithGetParameterIntTyped [1,2,3] did not cause exception';
+        } catch (Throwable $e) {
+            $this->assertRegExp('/Expected GET param 0 to be a json encoded integer but was .1.2.3./', $e->getMessage());
         }
 
         // NUMBER typed post parameter
@@ -815,7 +990,7 @@ class WebServiceTest extends TestCase {
             (new ServiceWithInvalidGetParameter([], []))->run();
             $this->exceptionMessage = 'ServiceWithInvalidGetParameter did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/enabledGetParams must be an array of arrays/', $e->getMessage());
+            $this->assertRegExp('/enabledGetParams must be an int or an array of arrays/', $e->getMessage());
         }
 
         try {
@@ -850,14 +1025,14 @@ class WebServiceTest extends TestCase {
             (new ServiceWithInvalidPostParameterType([], []))->run();
             $this->exceptionMessage = 'ServiceWithInvalidPostParameterType did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/POST param .a. element.1. .invalid-type-here. must be WebService..NOT_TYPED, WebService..BOOL, WebService..NUMBER, WebService..STRING, WebService..ARRAY or WebService..OBJECT/', $e->getMessage());
+            $this->assertRegExp('/POST param .a. element.1. .invalid-type-here. must be WebService..NOT_TYPED, WebService..BOOL, WebService..INT, WebService..NUMBER, WebService..STRING, WebService..ARRAY or WebService..OBJECT/', $e->getMessage());
         }
 
         try {
             (new ServiceWithInvalidGetParameterType([], []))->run();
             $this->exceptionMessage = 'ServiceWithInvalidGetParameterType did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/GET param .0. element.0. .invalid-type-here. must be WebService..NOT_TYPED, WebService..BOOL, WebService..NUMBER, WebService..STRING, WebService..ARRAY or WebService..OBJECT/', $e->getMessage());
+            $this->assertRegExp('/GET param .0. element.0. .invalid-type-here. must be WebService..NOT_TYPED, WebService..BOOL, WebService..INT, WebService..NUMBER, WebService..STRING, WebService..ARRAY or WebService..OBJECT/', $e->getMessage());
         }
 
         try {

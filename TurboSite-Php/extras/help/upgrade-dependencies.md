@@ -5,7 +5,7 @@ This project uses libraries and dependencies from a variety of sources. To make 
     
 - Update all the libraries versions on:
 
-    src/test/php/resources/libs
+    src/test/libs
         
 - Update the library versions at the tests autoloader file:
     
