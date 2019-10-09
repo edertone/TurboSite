@@ -45,6 +45,7 @@ use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParams5LastN
 use org\turbosite\src\test\resources\model\webservice\ServiceWithGet4ParametersDeclaredViaInt;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParameterIntTyped;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithGetParameterIntTyped;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParamsAsArrayOfStrings;
 
 
 /**
@@ -166,6 +167,12 @@ class WebServiceTest extends TestCase {
         $serviceData = (new ServiceWithPostParams([], ['a' => '0', 'b' => 1]))->run();
         $this->assertSame('0', $serviceData['a']);
         $this->assertSame('1', $serviceData['b']);
+
+        $serviceData = (new ServiceWithPostParamsAsArrayOfStrings([], ['a' => '0', 'b' => 1, 'c' => '2', 'd' => 3]))->run();
+        $this->assertSame('0', $serviceData['a']);
+        $this->assertSame('1', $serviceData['b']);
+        $this->assertSame('2', $serviceData['c']);
+        $this->assertSame('3', $serviceData['d']);
 
         $serviceData = (new ServiceWithPostParamsOptionalAndDefaultValues([], ['a' => '0']))->run();
         $this->assertSame('0', $serviceData['a']);
@@ -1011,7 +1018,7 @@ class WebServiceTest extends TestCase {
             (new ServiceWithInvalidPostParameterArrayLen([], []))->run();
             $this->exceptionMessage = 'ServiceWithInvalidPostParameterArrayLen did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/Each enabled POST parameter must be an array with min 1 and max 5 elements/', $e->getMessage());
+            $this->assertRegExp('/Each enabled POST parameter must be a string or an array with min 1 and max 5 elements/', $e->getMessage());
         }
 
         try {

@@ -128,9 +128,9 @@ abstract class WebService extends BaseStrictClass{
     * following form: ../api/..../service-name/param0/param1/param2/... (the standard way to encode GET parameter in urls (?param1=v1&param2=v2...) is not accepted and will be
     * ignored). Also any parameter on the URL which index is not defined here will make the service fail.
     *
-    * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service itself.
+    * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service classes that extend WebService.
     *
-    * Two possible formats are accepted by this property:<br>
+    * <b>Two possible formats are accepted by this property:</b><br>
     *
     * 1 - An integer value representing the exact number of GET parameters that are acepted by the service which will be non typed, mandatory and with no default value<br>
     *
@@ -162,18 +162,21 @@ abstract class WebService extends BaseStrictClass{
 
 
     /**
-     * Specifies how many POST parameters are accepted by this service and allows to setup type and value restrictions.
+     * Specifies how many POST parameters are accepted by this service and allows to setup type and value restrictions (Any POST parameter that is passed to the service
+     * which is not enabled on this list will make the service fail).
      *
-     * It is defined as an array of arrays where each element must have between 1 and 5 elements:<br>
+     * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service classes that extend WebService.
+     *
+     * <b>This property must be an array, where each element accepts two possible formats:</b><br>
+     *
+     * 1 - A string that represents the name for the POST parameter, which will be non typed, mandatory and with no default value<br>
+     *
+     * 2 - An array between 1 and 5 elements:<br>
      *     0 - NAME: A string with the name for a POST parameter that will be accepted by the service.<br>
      *     1 - TYPE: (optional) Specifies the POST parameter data type restriction: WebService::NOT_TYPED (default), WebService::BOOL, WebService::NUMBER, WebService::STRING, WebService::ARRAY, WebService::OBJECT<br>
      *     2 - REQUIRED: (optional) Specifies if the POST parameter is mandatory and must be specified to the service or not: WebService::REQUIRED (default) or WebService::NOT_REQUIRED.<br>
      *     3 - POSSIBLE VALUES: (optional) Specifies the POST parameter allowed values: WebService::NOT_RESTRICTED (default) or an array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
      *     4 - DEFAULT VALUE: (optional) Specifies the POST parameter default value. This value will be used if the parameter is not received by the service.
-     *
-     * Any POST parameter that is passed to the service which is not enabled on this list will make the service fail.
-     *
-     * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service itself.
      *
      * @var array
      */
@@ -310,14 +313,7 @@ abstract class WebService extends BaseStrictClass{
                 $this->enabledGetParams[$i][] = self::NOT_RESTRICTED;
             }
 
-            if($this->enabledGetParams[$i][0] !== self::NOT_TYPED && $this->enabledGetParams[$i][0] !== self::BOOL &&
-               $this->enabledGetParams[$i][0] !== self::INT && $this->enabledGetParams[$i][0] !== self::NUMBER &&
-               $this->enabledGetParams[$i][0] !== self::STRING && $this->enabledGetParams[$i][0] !== self::ARRAY &&
-               $this->enabledGetParams[$i][0] !== self::OBJECT){
-
-                throw new UnexpectedValueException(
-                    'GET param <'.$i.'> element[0] <'.$this->enabledGetParams[$i][0].'> must be WebService::NOT_TYPED, WebService::BOOL, WebService::INT, WebService::NUMBER, WebService::STRING, WebService::ARRAY or WebService::OBJECT');
-            }
+            $this->_validateParameterExpectedType($this->enabledGetParams[$i][0], 'GET param <'.$i.'> element[0] <'.$this->enabledGetParams[$i][0].'>');
 
             if(!isset($this->_receivedGetParams[$i]) && isset($this->enabledGetParams[$i][2])){
 
@@ -349,42 +345,7 @@ abstract class WebService extends BaseStrictClass{
 
                 if($i === $j){
 
-                    if($this->enabledGetParams[$j][0] === self::NOT_TYPED){
-
-                        break;
-                    }
-
-                    $jsonDecodedValue = json_decode($this->_receivedGetParams[$i]);
-
-                    if($this->enabledGetParams[$j][0] === self::BOOL && !is_bool($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded boolean but was '.$this->_receivedGetParams[$i]);
-                    }
-
-                    if($this->enabledGetParams[$j][0] === self::INT && !is_int($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded integer but was '.$this->_receivedGetParams[$i]);
-                    }
-
-                    if($this->enabledGetParams[$j][0] === self::NUMBER && !is_numeric($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded number but was '.$this->_receivedGetParams[$i]);
-                    }
-
-                    if($this->enabledGetParams[$j][0] === self::STRING && !is_string($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded string but was '.$this->_receivedGetParams[$i]);
-                    }
-
-                    if($this->enabledGetParams[$j][0] === self::ARRAY && !is_array($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded array but was '.$this->_receivedGetParams[$i]);
-                    }
-
-                    if($this->enabledGetParams[$j][0] === self::OBJECT && (!is_object($jsonDecodedValue) || get_class($jsonDecodedValue) !== 'stdClass')){
-
-                        throw new UnexpectedValueException('Expected GET param '.$i.' to be a json encoded object but was '.$this->_receivedGetParams[$i]);
-                    }
+                    $this->_validateParameterType($this->_receivedGetParams[$i], json_decode($this->_receivedGetParams[$i]), $this->enabledGetParams[$j][0], 'Expected GET param '.$i);
 
                     break;
                 }
@@ -412,9 +373,14 @@ abstract class WebService extends BaseStrictClass{
 
         for ($i = 0, $l = count($this->enabledPostParams); $i < $l; $i++) {
 
+            if(is_string($this->enabledPostParams[$i])){
+
+                $this->enabledPostParams[$i] = [$this->enabledPostParams[$i]];
+            }
+
             if(!is_array($this->enabledPostParams[$i]) || count($this->enabledPostParams[$i]) < 1 || count($this->enabledPostParams[$i]) > 5){
 
-                throw new UnexpectedValueException('Each enabled POST parameter must be an array with min 1 and max 5 elements');
+                throw new UnexpectedValueException('Each enabled POST parameter must be a string or an array with min 1 and max 5 elements');
             }
 
             if(!isset($this->enabledPostParams[$i][0]) || !is_string($this->enabledPostParams[$i][0])){
@@ -437,14 +403,7 @@ abstract class WebService extends BaseStrictClass{
                 $this->enabledPostParams[$i][] = self::NOT_RESTRICTED;
             }
 
-            if($this->enabledPostParams[$i][1] !== self::NOT_TYPED && $this->enabledPostParams[$i][1] !== self::BOOL &&
-               $this->enabledPostParams[$i][1] !== self::INT && $this->enabledPostParams[$i][1] !== self::NUMBER &&
-               $this->enabledPostParams[$i][1] !== self::STRING && $this->enabledPostParams[$i][1] !== self::ARRAY &&
-               $this->enabledPostParams[$i][1] !== self::OBJECT){
-
-                throw new UnexpectedValueException(
-                    'POST param <'.$this->enabledPostParams[$i][0].'> element[1] <'.$this->enabledPostParams[$i][1].'> must be WebService::NOT_TYPED, WebService::BOOL, WebService::INT, WebService::NUMBER, WebService::STRING, WebService::ARRAY or WebService::OBJECT');
-            }
+            $this->_validateParameterExpectedType($this->enabledPostParams[$i][1], 'POST param <'.$this->enabledPostParams[$i][0].'> element[1] <'.$this->enabledPostParams[$i][1].'>');
 
             if($this->enabledPostParams[$i][2] !== self::REQUIRED && $this->enabledPostParams[$i][2] !== self::NOT_REQUIRED){
 
@@ -476,44 +435,9 @@ abstract class WebService extends BaseStrictClass{
 
                 if($receivedPostParamName === $enabledPostParam[0]){
 
+                    $this->_validateParameterType($receivedPostParamValue, json_decode($receivedPostParamValue), $enabledPostParam[1], 'Expected '.$receivedPostParamName.' POST param');
+
                     $isReceivedPostFound = true;
-
-                    if($enabledPostParam[1] === self::NOT_TYPED){
-
-                        break;
-                    }
-
-                    $jsonDecodedValue = json_decode($receivedPostParamValue);
-
-                    if($enabledPostParam[1] === self::BOOL && !is_bool($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded boolean but was '.$receivedPostParamValue);
-                    }
-
-                    if($enabledPostParam[1] === self::INT && !is_int($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded integer but was '.$receivedPostParamValue);
-                    }
-
-                    if($enabledPostParam[1] === self::NUMBER && !is_numeric($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded number but was '.$receivedPostParamValue);
-                    }
-
-                    if($enabledPostParam[1] === self::STRING && !is_string($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded string but was '.$receivedPostParamValue);
-                    }
-
-                    if($enabledPostParam[1] === self::ARRAY && !is_array($jsonDecodedValue)){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded array but was '.$receivedPostParamValue);
-                    }
-
-                    if($enabledPostParam[1] === self::OBJECT && (!is_object($jsonDecodedValue) || get_class($jsonDecodedValue) !== 'stdClass')){
-
-                        throw new UnexpectedValueException('Expected '.$receivedPostParamName.' POST param to be a json encoded object but was '.$receivedPostParamValue);
-                    }
 
                     break;
                 }
@@ -523,6 +447,72 @@ abstract class WebService extends BaseStrictClass{
 
                 throw new UnexpectedValueException('Unexpected POST parameter received: '.$receivedPostParamName);
             }
+        }
+    }
+
+
+    /**
+     * Aux method to validate the type definition for a parameter
+     *
+     * @param string $typeDef The type definition to test
+     * @param string $errorMessage Custom error message
+     */
+    private function _validateParameterExpectedType($typeDef, $errorMessage){
+
+        if($typeDef !== self::NOT_TYPED && $typeDef !== self::BOOL &&
+           $typeDef !== self::INT && $typeDef !== self::NUMBER &&
+           $typeDef !== self::STRING && $typeDef !== self::ARRAY &&
+           $typeDef !== self::OBJECT){
+
+            throw new UnexpectedValueException(
+                $errorMessage.' must be WebService::NOT_TYPED, WebService::BOOL, WebService::INT, WebService::NUMBER, WebService::STRING, WebService::ARRAY or WebService::OBJECT');
+        }
+    }
+
+
+    /**
+     * Aux method to validate that the type for a parameter matches the expected type definition
+     *
+     * @param mixed $originalValue The raw value for the parameter
+     * @param mixed $decodedValue The json decoded value for the parameter
+     * @param string $typeDef The type definition to test
+     * @param string $errorMessage Custom error message
+     */
+    private function _validateParameterType($originalValue, $decodedValue, $typeDef, $errorMessage){
+
+        if($typeDef === self::NOT_TYPED){
+
+            return;
+        }
+
+        if($typeDef === self::BOOL && !is_bool($decodedValue)){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded boolean but was '.$originalValue);
+        }
+
+        if($typeDef === self::INT && !is_int($decodedValue)){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded integer but was '.$originalValue);
+        }
+
+        if($typeDef === self::NUMBER && !is_numeric($decodedValue)){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded number but was '.$originalValue);
+        }
+
+        if($typeDef === self::STRING && !is_string($decodedValue)){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded string but was '.$originalValue);
+        }
+
+        if($typeDef === self::ARRAY && !is_array($decodedValue)){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded array but was '.$originalValue);
+        }
+
+        if($typeDef === self::OBJECT && (!is_object($decodedValue) || get_class($decodedValue) !== 'stdClass')){
+
+            throw new UnexpectedValueException($errorMessage.' to be a json encoded object but was '.$originalValue);
         }
     }
 

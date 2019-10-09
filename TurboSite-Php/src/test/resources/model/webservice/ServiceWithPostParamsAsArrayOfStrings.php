@@ -15,15 +15,14 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with all POST parameters required
+ * A service with all POST parameters required which are declared as an array of strings
  */
-class ServiceWithPostParams extends WebService{
+class ServiceWithPostParamsAsArrayOfStrings extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a'];
-        $this->enabledPostParams[] = 'b';
+        $this->enabledPostParams = ['a', 'b', 'c', 'd'];
     }
 
 
@@ -31,7 +30,9 @@ class ServiceWithPostParams extends WebService{
 
         return [
             "a" => $this->getPost('a'),
-            "b" => $this->getPost('b')
+            "b" => $this->getPost('b'),
+            "c" => $this->getPost('c'),
+            "d" => $this->getPost('d')
         ];
     }
 
