@@ -519,9 +519,12 @@ abstract class WebService extends BaseStrictClass{
 
     /**
      * Get the value for a service url GET parameter, given its parameter index number (starting at 0).
-     * If the parameter index is valid, but no value has been passed into the url and there's no default value, an exception will be thrown
+     * If the parameter index is valid, but no value has been passed into the url and there's no default value, an exception will be thrown.
+     *
      * URL parameters are the custom values that can be passed via url to the framework services.
      * They are encoded this way: http://.../api/site/service-category/service-name/parameter0/parameter1/parameter2/...
+     *
+     * @see WebService::$enabledGetParams
      *
      * @param int $index The numeric index for the requested parameter (starting at 0). Invalid index value will throw an exception
      *
@@ -553,6 +556,8 @@ abstract class WebService extends BaseStrictClass{
      *
      * If the POST parameter has some specific type defined, this method will return the value converted to that type, otherwise the raw string
      * will be given.
+     *
+     * @see WebService::$enabledPostParams
      *
      * @param string $paramName The name for the POST parameter we want to read
      *

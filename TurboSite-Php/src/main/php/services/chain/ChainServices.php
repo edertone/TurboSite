@@ -25,7 +25,10 @@ class ChainServices extends WebService{
 
 
     /**
-     * TODO - If set to true, when a webservice fails the next ones won't be executed and an empty result will be returned for them
+     * If set to true, when a webservice fails then the next ones won't be executed and an empty result will be returned for each of them.
+     * If set to false, all webservices will be executed even if errors happen on any of them.
+     *
+     * @default false
      * @var string
      */
     public $isAnyErrorStoppingExecution = false;
