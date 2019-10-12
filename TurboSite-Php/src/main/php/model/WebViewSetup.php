@@ -21,7 +21,7 @@ class WebViewSetup{
      * Defines how many parameters are accepted by this view. Anyones beyond this limit will be removed from the current url.
      * If a view has a missing value for any of the enabled parameters and there's no default value defined, a 404 error will happen
      */
-    public $enabledParams = 0;
+    public $enabledGetParams = 0;
 
 
     /**

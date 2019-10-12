@@ -503,13 +503,13 @@ class WebSiteManager extends BaseSingletonClass{
      * Declares the current document as a view, initializes its structure and checks all possible restrictions.
      * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
      * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
-     * view that must be initialized via the initializeSingleParameterView method.
+     * view that must be initialized via the initializeAsSingleParameterView method.
      *
      * @param WebViewSetup $setup The setup parameters that must be aplied to the view
      *
      * @return void
      */
-    public function initializeView(WebViewSetup $setup = null){
+    public function initializeAsView(WebViewSetup $setup = null){
 
         if($setup === null){
 
@@ -523,12 +523,12 @@ class WebSiteManager extends BaseSingletonClass{
         $allowedParameterValuesCount = count($setup->allowedParameterValues);
         $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
 
-        $this->_URLEnabledParameters = $setup->enabledParams + $firstViewParamOffset;
+        $this->_URLEnabledParameters = $setup->enabledGetParams + $firstViewParamOffset;
 
         $redirectRequired = false;
 
         // Check no parameter without default value is empty
-        for ($i = 0; $i < $setup->enabledParams; $i++) {
+        for ($i = 0; $i < $setup->enabledGetParams; $i++) {
 
             if($this->getParam($i) === '' &&
                 (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
@@ -540,7 +540,7 @@ class WebSiteManager extends BaseSingletonClass{
         if($defaultParametersCount > 0){
 
             // Default parameters count must not exceed the enabled params
-            if($defaultParametersCount > $setup->enabledParams){
+            if($defaultParametersCount > $setup->enabledGetParams){
 
                 throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
             }
@@ -571,11 +571,11 @@ class WebSiteManager extends BaseSingletonClass{
         }
 
         // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-        if($receivedParamsCount > $setup->enabledParams){
+        if($receivedParamsCount > $setup->enabledGetParams){
 
             $redirectRequired = true;
 
-            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledParams));
+            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledGetParams));
         }
 
         // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
@@ -600,8 +600,7 @@ class WebSiteManager extends BaseSingletonClass{
 
                     $redirectRequired = true;
 
-                    // TODO - we must find here the most similar allowed parameter value to the uri element and set it
-                    $this->_URIElements[$firstViewParamOffset + $i] = $setup->allowedParameterValues[$i][0];
+                    $this->_URIElements[$firstViewParamOffset + $i] = StringUtils::findMostSimilarString($this->_URIElements[$firstViewParamOffset + $i], $setup->allowedParameterValues[$i]);
                 }
             }
         }
@@ -617,9 +616,9 @@ class WebSiteManager extends BaseSingletonClass{
             $forcedParameters = ($setup->forcedParametersCallback)();
             $forcedParametersCount = count($forcedParameters);
 
-            if($forcedParametersCount !== $setup->enabledParams){
+            if($forcedParametersCount !== $setup->enabledGetParams){
 
-                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledParams.')');
+                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledGetParams.')');
             }
 
             for ($i = 0; $i < $forcedParametersCount; $i++) {
@@ -641,13 +640,24 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-    * TODO docs
-    */
-    public function initializeSingleParameterView($language, $allowedParameters = []){
+     * Declares the current document as a single parameter view, which is a special type of view that only accepts a single URL parameter, initializes its
+     * structure and checks all possible restrictions.
+     *
+     * @see WebSiteManager::initializeAsView
+     *
+     * @param string $language As the single parameter view does not accept language parameter, we must define which language it is using by setting it here.
+     * @param string|array $allowedURLParameterValues Array with a list of accepted values for the only one URL parameter that is accepted by this view. If the array is empty,
+     *        any value will be accepted by the parameter view.
+     *
+     * @return void
+     */
+    public function initializeAsSingleParameterView($language, $allowedURLParameterValues = []){
 
         $this->_URLEnabledParameters = 1;
 
-        if($allowedParameters !== '*' && !in_array($this->getParam(), $allowedParameters)){
+        if($allowedURLParameterValues !== [] && !in_array($this->getParam(), $allowedURLParameterValues)){
+
+            // TODO - use string similarity to redirect to the most similar value if necessary (configurable??)
 
             $this->show404Error();
         }
