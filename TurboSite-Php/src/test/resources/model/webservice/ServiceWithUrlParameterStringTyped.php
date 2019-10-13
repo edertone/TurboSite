@@ -15,20 +15,20 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a BOOL typed get parameter
+ * A service that defines a STRING typed URL parameter
  */
-class ServiceWithGetParameterBoolTyped extends WebService{
+class ServiceWithUrlParameterStringTyped extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [WebService::BOOL];
+        $this->enabledUrlParams[] = [WebService::STRING];
     }
 
 
     public function run(){
 
-        return $this->getParam(0);
+        return $this->getUrlParam(0);
     }
 
 }

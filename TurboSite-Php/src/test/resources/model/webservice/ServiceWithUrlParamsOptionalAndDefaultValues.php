@@ -15,20 +15,26 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a get parameter with an invalid array length, so an exception must be thrown when constructed
+ * A service with some required URL params and some optional URL params with default values
  */
-class ServiceWithInvalidGetParameterArrayLen extends WebService{
+class ServiceWithUrlParamsOptionalAndDefaultValues extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default', 'shit'];
+        $this->enabledUrlParams[] = [];
+        $this->enabledUrlParams[] = [WebService::NOT_TYPED];
+        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default'];
     }
 
 
     public function run(){
 
-        return '';
+        return [
+            "0" => $this->getUrlParam(0),
+            "1" => $this->getUrlParam(1),
+            "2" => $this->getUrlParam(2)
+        ];
     }
 
 }

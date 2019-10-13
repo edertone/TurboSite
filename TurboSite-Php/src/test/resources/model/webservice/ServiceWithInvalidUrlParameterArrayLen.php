@@ -15,14 +15,14 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a get parameter with an invalid restricted value, so an exception must be thrown when constructed
+ * A service that defines a URL parameter with an invalid array length, so an exception must be thrown when constructed
  */
-class ServiceWithInvalidGetParameterRestrictedValue extends WebService{
+class ServiceWithInvalidUrlParameterArrayLen extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [WebService::NOT_TYPED, WebService::BOOL];
+        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default', 'shit'];
     }
 
 

@@ -29,10 +29,10 @@ class ServiceWithPostParamsAsArrayOfStrings extends WebService{
     public function run(){
 
         return [
-            "a" => $this->getPost('a'),
-            "b" => $this->getPost('b'),
-            "c" => $this->getPost('c'),
-            "d" => $this->getPost('d')
+            "a" => $this->getPostParam('a'),
+            "b" => $this->getPostParam('b'),
+            "c" => $this->getPostParam('c'),
+            "d" => $this->getPostParam('d')
         ];
     }
 

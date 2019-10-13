@@ -15,20 +15,29 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines ARRAY typed get parameter
+ * A service with mandatory URL and post params
  */
-class ServiceWithGetParameterArrayTyped extends WebService{
+class ServiceWithUrlAndPostParams extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [WebService::ARRAY];
+        $this->enabledUrlParams[] = [];
+        $this->enabledUrlParams[] = [];
+
+        $this->enabledPostParams[] = ['a'];
+        $this->enabledPostParams[] = ['b'];
     }
 
 
     public function run(){
 
-        return $this->getParam(0);
+        return [
+            "0" => $this->getUrlParam(0),
+            "1" => $this->getUrlParam(1),
+            "a" => $this->getPostParam('a'),
+            "b" => $this->getPostParam('b')
+        ];
     }
 
 }

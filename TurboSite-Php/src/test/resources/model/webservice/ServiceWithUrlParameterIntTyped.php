@@ -15,23 +15,22 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with 3 GET params being the second one non mandatory. This must make the service creation fail
+ * A service that defines a INT typed URL parameter
  */
-class ServiceWithGetParams3IncorrectMandatory extends WebService{
+class ServiceWithUrlParameterIntTyped extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [];
-        $this->enabledGetParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default'];
-        $this->enabledGetParams[] = [];
+        $this->enabledUrlParams[] = [WebService::INT];
     }
 
 
     public function run(){
 
-        return '';
+        return $this->getUrlParam(0);
     }
+
 }
 
 ?>

@@ -30,8 +30,8 @@ class ServiceWithPostParams extends WebService{
     public function run(){
 
         return [
-            "a" => $this->getPost('a'),
-            "b" => $this->getPost('b')
+            "a" => $this->getPostParam('a'),
+            "b" => $this->getPostParam('b')
         ];
     }
 

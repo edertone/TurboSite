@@ -15,14 +15,16 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a post parameter with an invalid enabledGetParams structure
+ * A service with 3 URL params being the second one non mandatory. This must make the service creation fail
  */
-class ServiceWithInvalidGetParameter extends WebService{
+class ServiceWithUrlParams3IncorrectMandatory extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams = 'hello';
+        $this->enabledUrlParams[] = [];
+        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default'];
+        $this->enabledUrlParams[] = [];
     }
 
 
@@ -30,7 +32,6 @@ class ServiceWithInvalidGetParameter extends WebService{
 
         return '';
     }
-
 }
 
 ?>

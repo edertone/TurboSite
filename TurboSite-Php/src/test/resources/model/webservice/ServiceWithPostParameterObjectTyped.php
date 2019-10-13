@@ -28,7 +28,7 @@ class ServiceWithPostParameterObjectTyped extends WebService{
 
     public function run(){
 
-        return $this->getPost('a');
+        return $this->getPostParam('a');
     }
 
 }

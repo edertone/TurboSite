@@ -100,7 +100,7 @@ class ChainServicesTest extends TestCase {
             $service = new ChainServices([''], ['services' => '']);
             $this->exceptionMessage = print_r($service, true).' did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/Unexpected GET parameter received at 0/', $e->getMessage());
+            $this->assertRegExp('/Unexpected URL parameter received at 0/', $e->getMessage());
         }
 
         try {
@@ -191,8 +191,8 @@ class ChainServicesTest extends TestCase {
 
         // Service with get and post parameters, where post parameters are passed as an associative array
         $service = new stdClass();
-        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams';
-        $service->getParameters = ['1', '2'];
+        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
+        $service->urlParameters = ['1', '2'];
         $service->postParameters = ['a' => 1, 'b' => '2'];
         $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
         $this->assertTrue(ArrayUtils::isArray($servicesResult));
@@ -201,8 +201,8 @@ class ChainServicesTest extends TestCase {
 
         // Service with get and post parameters, where post parameters are passed as an stdclass object
         $service = new stdClass();
-        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams';
-        $service->getParameters = ['1', '2'];
+        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
+        $service->urlParameters = ['1', '2'];
         $service->postParameters = new stdClass();
         $service->postParameters->a = 1;
         $service->postParameters->b = '2';
@@ -214,17 +214,17 @@ class ChainServicesTest extends TestCase {
         // Test wrong values
         // Test exceptions
         $service = new stdClass();
-        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams';
+        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
         try {
             $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
             $this->exceptionMessage = '$services did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory GET parameter at 0/', $e->getMessage());
+            $this->assertRegExp('/Missing mandatory URL parameter at 0/', $e->getMessage());
         }
 
         $service = new stdClass();
-        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams';
-        $service->getParameters = ['1', '2'];
+        $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
+        $service->urlParameters = ['1', '2'];
         $service->postParameters = [];
         try {
             $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
@@ -252,8 +252,8 @@ class ChainServicesTest extends TestCase {
         $service1->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams';
 
         $service2 = new stdClass();
-        $service2->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithGETandPostParams';
-        $service2->getParameters = ['1', '2'];
+        $service2->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
+        $service2->urlParameters = ['1', '2'];
         $service2->postParameters = ['a' => 1, 'b' => '2'];
 
         $service3 = new stdClass();

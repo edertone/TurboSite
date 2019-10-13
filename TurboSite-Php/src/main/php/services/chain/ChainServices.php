@@ -41,23 +41,23 @@ class ChainServices extends WebService{
      *
      * @see WebService::__construct
      *
-     * @param array $getParameters This parameter is not used and will be ignored. It exists here to maintain compatibility with the WebService class on http requests
+     * @param array $urlParameters This parameter is not used and will be ignored. It exists here to maintain compatibility with the WebService class on http requests
      * @param array $postParameters An associative array with only one key 'services' containing an array of stdClass instances. Each instance must have the following properties:<br>
      *        - class: When specified, it must contain the full classpath for the WebService to execute. For example: 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams'.
      *        If class property is specified, the uri property is not allowed<br>
      *        - uri: When specified, it must contain the WebService URL that is relative to the WebServer application root. For example: 'api/site/example/example-service-without-params'.
      *        If uri property is specified, the class property is not allowed<br>
-     *        - getParameters: The list of GET parameters to pass to the Webservice to execute. @see WebService::__construct for details<br>
+     *        - urlParameters: The list of URL parameters to pass to the Webservice to execute. @see WebService::__construct for details<br>
      *        - postParameters: The list of POST parameters to pass to the Webservice to execute. @see WebService::__construct for details
      */
-    public function __construct(array $getParameters = null, array $postParameters = null){
+    public function __construct(array $urlParameters = null, array $postParameters = null){
 
-        parent::__construct($getParameters, $postParameters);
+        parent::__construct($urlParameters, $postParameters);
 
         // TODO
-        $this->isAnyErrorStoppingExecution = $this->getPost('isAnyErrorStoppingExecution');
+        $this->isAnyErrorStoppingExecution = $this->getPostParam('isAnyErrorStoppingExecution');
 
-        foreach ($this->getPost('services') as $service) {
+        foreach ($this->getPostParam('services') as $service) {
 
             if(!($service instanceof stdClass)){
 
@@ -101,14 +101,14 @@ class ChainServices extends WebService{
         $resultsList = [];
         $ws = WebSiteManager::getInstance();
 
-        foreach ($this->getPost('services') as $service) {
+        foreach ($this->getPostParam('services') as $service) {
 
-            $getParameters = isset($service->getParameters) ? $service->getParameters : [];
+            $urlParameters = isset($service->urlParameters) ? $service->urlParameters : [];
             $postParameters = isset($service->postParameters) ? json_decode(json_encode($service->postParameters), true) : [];
 
             if(isset($service->class)){
 
-                $resultsList [] = (new $service->class($getParameters, $postParameters))->run();
+                $resultsList [] = (new $service->class($urlParameters, $postParameters))->run();
 
             }else{
 
@@ -121,7 +121,7 @@ class ChainServices extends WebService{
                         $nameSpace = StringUtils::getPath($apiDefinition->namespace."\\".(explode($apiUri, $service->uri, 2)[1]), 1, "\\")."\\";
                         $serviceClass = $nameSpace.StringUtils::formatCase(StringUtils::getPathElement($service->uri), StringUtils::FORMAT_UPPER_CAMEL_CASE);
 
-                        $resultsList [] = (new $serviceClass($getParameters, $postParameters))->run();
+                        $resultsList [] = (new $serviceClass($urlParameters, $postParameters))->run();
 
                         break;
                     }

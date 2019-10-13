@@ -31,9 +31,9 @@ class ServiceWithPostParamsOptionalAndDefaultValues extends WebService{
     public function run(){
 
         return [
-            "a" => $this->getPost('a'),
-            "b" => $this->getPost('b'),
-            "c" => $this->getPost('c')
+            "a" => $this->getPostParam('a'),
+            "b" => $this->getPostParam('b'),
+            "c" => $this->getPostParam('c')
         ];
     }
 

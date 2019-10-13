@@ -15,20 +15,20 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a get parameter with an invalid type, so an exception must be thrown when constructed
+ * A service that defines OBJECT typed URL parameter
  */
-class ServiceWithInvalidGetParameterType extends WebService{
+class ServiceWithUrlParameterObjectTyped extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = ['invalid-type-here'];
+        $this->enabledUrlParams[] = [WebService::OBJECT];
     }
 
 
     public function run(){
 
-        return '';
+        return $this->getUrlParam(0);
     }
 
 }

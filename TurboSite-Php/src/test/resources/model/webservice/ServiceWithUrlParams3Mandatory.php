@@ -15,22 +15,22 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with 3 required GET params
+ * A service with 3 required URL params
  */
-class ServiceWithGetParams3Mandatory extends WebService{
+class ServiceWithUrlParams3Mandatory extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [];
-        $this->enabledGetParams[] = [WebService::ARRAY];
-        $this->enabledGetParams[] = [WebService::STRING];
+        $this->enabledUrlParams[] = [];
+        $this->enabledUrlParams[] = [WebService::ARRAY];
+        $this->enabledUrlParams[] = [WebService::STRING];
     }
 
 
     public function run(){
 
-        return [$this->getParam(0), $this->getParam(1), $this->getParam(2)];
+        return [$this->getUrlParam(0), $this->getUrlParam(1), $this->getUrlParam(2)];
     }
 }
 

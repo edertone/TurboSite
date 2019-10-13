@@ -224,7 +224,7 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * If the current document is a view, this method will give it's view name
      */
-    public function getcurrentViewName(){
+    public function getCurrentViewName(){
 
         return $this->_currentViewName;
     }
@@ -523,14 +523,14 @@ class WebSiteManager extends BaseSingletonClass{
         $allowedParameterValuesCount = count($setup->allowedParameterValues);
         $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
 
-        $this->_URLEnabledParameters = $setup->enabledGetParams + $firstViewParamOffset;
+        $this->_URLEnabledParameters = $setup->enabledUrlParams + $firstViewParamOffset;
 
         $redirectRequired = false;
 
         // Check no parameter without default value is empty
-        for ($i = 0; $i < $setup->enabledGetParams; $i++) {
+        for ($i = 0; $i < $setup->enabledUrlParams; $i++) {
 
-            if($this->getParam($i) === '' &&
+            if($this->getUrlParam($i) === '' &&
                 (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
 
                $this->show404Error();
@@ -540,7 +540,7 @@ class WebSiteManager extends BaseSingletonClass{
         if($defaultParametersCount > 0){
 
             // Default parameters count must not exceed the enabled params
-            if($defaultParametersCount > $setup->enabledGetParams){
+            if($defaultParametersCount > $setup->enabledUrlParams){
 
                 throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
             }
@@ -561,7 +561,7 @@ class WebSiteManager extends BaseSingletonClass{
 
                 if(isset($setup->defaultParameters[$j]) &&
                    (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
-                   (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getParam($j))))){
+                   (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getUrlParam($j))))){
 
                     $redirectRequired = true;
 
@@ -571,11 +571,11 @@ class WebSiteManager extends BaseSingletonClass{
         }
 
         // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-        if($receivedParamsCount > $setup->enabledGetParams){
+        if($receivedParamsCount > $setup->enabledUrlParams){
 
             $redirectRequired = true;
 
-            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledGetParams));
+            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledUrlParams));
         }
 
         // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
@@ -616,9 +616,9 @@ class WebSiteManager extends BaseSingletonClass{
             $forcedParameters = ($setup->forcedParametersCallback)();
             $forcedParametersCount = count($forcedParameters);
 
-            if($forcedParametersCount !== $setup->enabledGetParams){
+            if($forcedParametersCount !== $setup->enabledUrlParams){
 
-                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledGetParams.')');
+                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledUrlParams.')');
             }
 
             for ($i = 0; $i < $forcedParametersCount; $i++) {
@@ -655,7 +655,7 @@ class WebSiteManager extends BaseSingletonClass{
 
         $this->_URLEnabledParameters = 1;
 
-        if($allowedURLParameterValues !== [] && !in_array($this->getParam(), $allowedURLParameterValues)){
+        if($allowedURLParameterValues !== [] && !in_array($this->getUrlParam(), $allowedURLParameterValues)){
 
             // TODO - use string similarity to redirect to the most similar value if necessary (configurable??)
 
@@ -700,7 +700,7 @@ class WebSiteManager extends BaseSingletonClass{
      *
      * @return string The requested parameter value
      */
-    public function getParam(int $index = 0, bool $removeHtmlTags = true){
+    public function getUrlParam(int $index = 0, bool $removeHtmlTags = true){
 
         if($index < 0){
 

@@ -124,48 +124,55 @@ abstract class WebService extends BaseStrictClass{
 
 
    /**
-    * Specifies how many GET parameters are accepted by this service and allows to setup type and value restrictions. Get parameters on http services are passed to the url in the
-    * following form: ../api/..../service-name/param0/param1/param2/... (the standard way to encode GET parameter in urls (?param1=v1&param2=v2...) is not accepted and will be
-    * ignored). Also any parameter on the URL which index is not defined here will make the service fail.
+    * Specifies how many URL parameters are accepted by this service and allows to setup type and value restrictions. URL parameters on
+    * http services are passed in the following form: ../api/..../service-name/param0/param1/param2/... (parameters that are passed
+    * via GET to the service url (?param1=v1&param2=v2...) are not accepted and will be ignored). Also any parameter on the URL which
+    * index is not defined here will make the service fail.
     *
-    * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service classes that extend WebService.
+    * NOTE: This property can only be set when overriding the WebService setup() method by the service classes that extend WebService.
     *
     * <b>Two possible formats are accepted by this property:</b><br>
     *
-    * 1 - An integer value representing the exact number of GET parameters that are acepted by the service which will be non typed, mandatory and with no default value<br>
+    * 1 - An integer value representing the exact number of URL parameters that are acepted by the service which will be non typed, mandatory
+    * and with no default value<br>
     *
-    * 2 - An array of arrays with the list of GET parameters that are accepted by this service and their respective type and value restrictions.
+    * 2 - An array of arrays with the list of URL parameters that are accepted by this service and their respective type and value restrictions:
     *
-    *     Each element on the enabledGetParams array must be an array with between 0 and 3 elements:<br>
-    *         0 - TYPE: (optional) Specifies the GET parameter data type restriction: WebService::NOT_TYPED (default), WebService::BOOL, WebService::NUMBER, WebService::STRING, WebService::ARRAY, WebService::OBJECT<br>
-    *         1 - POSSIBLE VALUES: (optional) Specifies the GET parameter allowed values: WebService::NOT_RESTRICTED (default) or an array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
-    *         2 - DEFAULT VALUE: (optional) Specifies the GET parameter default value. This value will be used if the parameter is not received by the service.
+    *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements:<br>
+    *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebService::NOT_TYPED (default), WebService::BOOL,
+    *         WebService::NUMBER, WebService::STRING, WebService::ARRAY, WebService::OBJECT<br>
     *
-    *     The index for the parameter at the enabledGetParams array is the same as the parameter at the URL.
+    *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebService::NOT_RESTRICTED (default) or an
+    *         array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
+    *
+    *         2 - DEFAULT VALUE: (optional) Specifies the URL parameter default value. This value will be used if the parameter is not
+    *         received by the service.
+    *
+    *     The index for the parameter at the enabledUrlParams array is the same as the parameter at the URL.
     *
     * @var int|array
     */
-    protected $enabledGetParams = [];
+    protected $enabledUrlParams = [];
 
 
     /**
-     * Stores the actual values of the GET parameters that have been passed to this service via the URL or via service constructor,
+     * Stores the actual values of the URL parameters that have been passed to this service via the URL or via service constructor,
      * sorted in the same order as specified in the url or constructor array
      */
-    private $_receivedGetParams = [];
+    private $_receivedUrlParams = [];
 
 
     /**
-     * Stores the number of GET parameters that have been passed to this service via the URL
+     * Stores the number of URL parameters that have been passed to this service via the URL or class constructor
      */
-    private $_receivedGetParamsCount = 0;
+    private $_receivedUrlParamsCount = 0;
 
 
     /**
      * Specifies how many POST parameters are accepted by this service and allows to setup type and value restrictions (Any POST parameter that is passed to the service
      * which is not enabled on this list will make the service fail).
      *
-     * NOTE: This vaule can only be initialized when overriding the WebService setup() method by the service classes that extend WebService.
+     * NOTE: This property can only be set when overriding the WebService setup() method by the service classes that extend WebService.
      *
      * <b>This property must be an array, where each element accepts two possible formats:</b><br>
      *
@@ -192,7 +199,7 @@ abstract class WebService extends BaseStrictClass{
     /**
      * This method is always called before any other thing at the web service constructor.
 
-     * It must be declared to define the service setup values like enabling GET or POST parameters and
+     * It must be declared to define the service setup values like enabling URL or POST parameters and
      * any other required customizations.
      *
      * @return void
@@ -214,24 +221,25 @@ abstract class WebService extends BaseStrictClass{
     /**
      * Class constructor
      *
-     * @param array $getParameters If we create this service via code we can pass the GET data here and it will be loaded
-     *        by the service as if it was passed via HTTP GET. It must be an array containing each one of the parameter values that
+     * @param array $urlParameters If we create this service via code we can pass the URL data here and it will be loaded
+     *        by the service as if it was passed via HTTP. It must be an array containing each one of the parameter values that
      *        would be passed via the url, sorted in the same way as they would in the url. First array element will be the param 0,
-     *        second will be param 1, and so. Type restrictions will be applied to the parameters if a type has been defined: Not typed parameters will
-     *        be left as received if the value is a string, and json encoded if the received value is a non string type. Same rules as when calling the service via url apply.
+     *        second will be param 1, and so. Type restrictions will be applied to the parameters if a type has been defined: Not typed
+     *        parameters will be left as received if the value is a string, and json encoded if the received value is a non string type.
+     *        Same rules as when calling the service via url apply.
      * @param array $postParameters If we create this service via code we can pass the POST data here and it will be loaded
      *        by the service as if it was passed via HTTP POST. It must be an associative array that contains the info we want to pass
      *        to the service where POST parameters are defined at the array keys. Type restrictions will be applied to the parameters if a type has been defined:
      *        Not typed parameters will be left as received if the value is a string, and json encoded if the received value is a non string type. Same rules as when
      *        calling the service via url apply.
      */
-    public function __construct(array $getParameters = null, array $postParameters = null){
+    public function __construct(array $urlParameters = null, array $postParameters = null){
 
         $this->setup();
 
-        if(!is_int($this->enabledGetParams) && !is_array($this->enabledGetParams)){
+        if(!is_int($this->enabledUrlParams) && !is_array($this->enabledUrlParams)){
 
-            throw new UnexpectedValueException('enabledGetParams must be an int or an array of arrays');
+            throw new UnexpectedValueException('enabledUrlParams must be an int or an array of arrays');
         }
 
         if(!is_array($this->enabledPostParams)){
@@ -239,17 +247,17 @@ abstract class WebService extends BaseStrictClass{
             throw new UnexpectedValueException('enabledPostParams must be an array of arrays');
         }
 
-        if(is_int($this->enabledGetParams)){
+        if(is_int($this->enabledUrlParams)){
 
-            $this->enabledGetParams = array_fill(0, $this->enabledGetParams, []);
+            $this->enabledUrlParams = array_fill(0, $this->enabledUrlParams, []);
         }
 
-        // Process the service GET parameters
-        if($getParameters !== null){
+        // Process the service URL parameters
+        if($urlParameters !== null){
 
-            foreach ($getParameters as $i => $value) {
+            foreach ($urlParameters as $i => $value) {
 
-                $this->_receivedGetParams[$i] = is_string($value) ? $value : json_encode($value);
+                $this->_receivedUrlParams[$i] = is_string($value) ? $value : json_encode($value);
             }
 
         }else{
@@ -258,7 +266,7 @@ abstract class WebService extends BaseStrictClass{
 
             if(strpos($fullUrl, '/api/') !== false){
 
-                // Parse the service GET parameters if any exist and store them to _receivedGetParameters
+                // Parse the service URL parameters if any exist and store them to _receivedUrlParams
                 $URIElements = explode('/', explode('/api/', $fullUrl)[1]);
 
                 $serviceNameFound = false;
@@ -268,7 +276,7 @@ abstract class WebService extends BaseStrictClass{
 
                     if($serviceNameFound){
 
-                        $this->_receivedGetParams[] = $uriElement;
+                        $this->_receivedUrlParams[] = $uriElement;
 
                     }else if(StringUtils::formatCase($uriElement, StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceName){
 
@@ -278,74 +286,74 @@ abstract class WebService extends BaseStrictClass{
             }
         }
 
-        $enabledGetParamsCount = count($this->enabledGetParams);
+        $enabledUrlParamsCount = count($this->enabledUrlParams);
 
-        // Check that optional GET parameters are correctly defined
-        $optionalGetParamFound = -1;
+        // Check that optional URL parameters are correctly defined
+        $optionalUrlParamFound = -1;
 
-        for ($i = 0; $i < $enabledGetParamsCount; $i++) {
+        for ($i = 0; $i < $enabledUrlParamsCount; $i++) {
 
-            if(isset($this->enabledGetParams[$i][2])){
+            if(isset($this->enabledUrlParams[$i][2])){
 
-                $optionalGetParamFound = $i;
+                $optionalUrlParamFound = $i;
 
-            }else if ($optionalGetParamFound > 0){
+            }else if ($optionalUrlParamFound > 0){
 
-                throw new UnexpectedValueException('All GET parameters must have a default value after the non mandatory defined at '.$optionalGetParamFound);
+                throw new UnexpectedValueException('All URL parameters must have a default value after the non mandatory defined at '.$optionalUrlParamFound);
             }
         }
 
-        // Format and verify all the enabled GET parameters
-        for ($i = 0; $i < $enabledGetParamsCount; $i++) {
+        // Format and verify all the enabled URL parameters
+        for ($i = 0; $i < $enabledUrlParamsCount; $i++) {
 
-            if(!is_array($this->enabledGetParams[$i]) || count($this->enabledGetParams[$i]) > 3){
+            if(!is_array($this->enabledUrlParams[$i]) || count($this->enabledUrlParams[$i]) > 3){
 
-                throw new UnexpectedValueException('Each enabled GET parameter must be an array with min 0 and max 3 elements');
+                throw new UnexpectedValueException('Each enabled URL parameter must be an array with min 0 and max 3 elements');
             }
 
-            if(!isset($this->enabledGetParams[$i][0])){
+            if(!isset($this->enabledUrlParams[$i][0])){
 
-                $this->enabledGetParams[$i][] = self::NOT_TYPED;
+                $this->enabledUrlParams[$i][] = self::NOT_TYPED;
             }
 
-            if(!isset($this->enabledGetParams[$i][1])){
+            if(!isset($this->enabledUrlParams[$i][1])){
 
-                $this->enabledGetParams[$i][] = self::NOT_RESTRICTED;
+                $this->enabledUrlParams[$i][] = self::NOT_RESTRICTED;
             }
 
-            $this->_validateParameterExpectedType($this->enabledGetParams[$i][0], 'GET param <'.$i.'> element[0] <'.$this->enabledGetParams[$i][0].'>');
+            $this->_validateParameterExpectedType($this->enabledUrlParams[$i][0], 'URL param <'.$i.'> element[0] <'.$this->enabledUrlParams[$i][0].'>');
 
-            if(!isset($this->_receivedGetParams[$i]) && isset($this->enabledGetParams[$i][2])){
+            if(!isset($this->_receivedUrlParams[$i]) && isset($this->enabledUrlParams[$i][2])){
 
-                $this->_receivedGetParams[$i] = is_string($this->enabledGetParams[$i][2]) ? $this->enabledGetParams[$i][2] : json_encode($this->enabledGetParams[$i][2]);
+                $this->_receivedUrlParams[$i] = is_string($this->enabledUrlParams[$i][2]) ? $this->enabledUrlParams[$i][2] : json_encode($this->enabledUrlParams[$i][2]);
             }
 
-            if($this->enabledGetParams[$i][1] !== self::NOT_RESTRICTED && !is_array($this->enabledGetParams[$i][1])){
+            if($this->enabledUrlParams[$i][1] !== self::NOT_RESTRICTED && !is_array($this->enabledUrlParams[$i][1])){
 
-                throw new UnexpectedValueException('GET param <'.$i.'> element[1] <'.$this->enabledGetParams[$i][1].'> must be WebService::NOT_RESTRICTED or an array of values');
+                throw new UnexpectedValueException('URL param <'.$i.'> element[1] <'.$this->enabledUrlParams[$i][1].'> must be WebService::NOT_RESTRICTED or an array of values');
             }
 
-            if(!isset($this->_receivedGetParams[$i])){
+            if(!isset($this->_receivedUrlParams[$i])){
 
-                throw new UnexpectedValueException('Missing mandatory GET parameter at '.$i);
+                throw new UnexpectedValueException('Missing mandatory URL parameter at '.$i);
             }
         }
 
-        // Validate all the received GET parameteres
-        $this->_receivedGetParamsCount = count($this->_receivedGetParams);
+        // Validate all the received URL parameteres
+        $this->_receivedUrlParamsCount = count($this->_receivedUrlParams);
 
-        for ($i = 0; $i < $this->_receivedGetParamsCount; $i++) {
+        for ($i = 0; $i < $this->_receivedUrlParamsCount; $i++) {
 
-            if(!isset($this->enabledGetParams[$i])){
+            if(!isset($this->enabledUrlParams[$i])){
 
-                throw new UnexpectedValueException('Unexpected GET parameter received at '.$i);
+                throw new UnexpectedValueException('Unexpected URL parameter received at '.$i);
             }
 
-            for ($j = 0; $j < $enabledGetParamsCount; $j++) {
+            for ($j = 0; $j < $enabledUrlParamsCount; $j++) {
 
                 if($i === $j){
 
-                    $this->_validateParameterType($this->_receivedGetParams[$i], json_decode($this->_receivedGetParams[$i]), $this->enabledGetParams[$j][0], 'Expected GET param '.$i);
+                    $this->_validateParameterType($this->_receivedUrlParams[$i], json_decode($this->_receivedUrlParams[$i]), $this->enabledUrlParams[$j][0], 'Expected URL param '.$i);
 
                     break;
                 }
@@ -518,41 +526,41 @@ abstract class WebService extends BaseStrictClass{
 
 
     /**
-     * Get the value for a service url GET parameter, given its parameter index number (starting at 0).
+     * Get the value for a service url parameter, given its parameter index number (starting at 0).
      * If the parameter index is valid, but no value has been passed into the url and there's no default value, an exception will be thrown.
      *
      * URL parameters are the custom values that can be passed via url to the framework services.
      * They are encoded this way: http://.../api/site/service-category/service-name/parameter0/parameter1/parameter2/...
      *
-     * @see WebService::$enabledGetParams
+     * @see WebService::$enabledUrlParams
      *
      * @param int $index The numeric index for the requested parameter (starting at 0). Invalid index value will throw an exception
      *
      * @return string The requested parameter value
      */
-    public function getParam(int $index = 0){
+    public function getUrlParam(int $index = 0){
 
         if($index < 0){
 
-            throw new UnexpectedValueException('Invalid GET parameter index: '.$index);
+            throw new UnexpectedValueException('Invalid URL parameter index: '.$index);
         }
 
-        if(!isset($this->enabledGetParams[$index]) || !isset($this->_receivedGetParams[$index])){
+        if(!isset($this->enabledUrlParams[$index]) || !isset($this->_receivedUrlParams[$index])){
 
-            throw new UnexpectedValueException('Disabled service parameter GET index '.$index.' requested');
+            throw new UnexpectedValueException('Disabled service parameter URL index '.$index.' requested');
         }
 
-        if($this->enabledGetParams[$index][0] !== self::NOT_TYPED){
+        if($this->enabledUrlParams[$index][0] !== self::NOT_TYPED){
 
-            return json_decode($this->_receivedGetParams[$index]);
+            return json_decode($this->_receivedUrlParams[$index]);
         }
 
-        return $this->_receivedGetParams[$index];
+        return $this->_receivedUrlParams[$index];
     }
 
 
     /**
-     * Get the value for the specified POST parameter that has been passed to this service.
+     * Get the value for a POST parameter which has been passed to this service.
      *
      * If the POST parameter has some specific type defined, this method will return the value converted to that type, otherwise the raw string
      * will be given.
@@ -564,7 +572,7 @@ abstract class WebService extends BaseStrictClass{
      * @return string The value of the received POST parameter converted to the correctly expected data type or null if
      *         the post parameter was not provided to the service
      */
-    public function getPost(string $paramName){
+    public function getPostParam(string $paramName){
 
         foreach ($this->enabledPostParams as $enabledPostParam) {
 

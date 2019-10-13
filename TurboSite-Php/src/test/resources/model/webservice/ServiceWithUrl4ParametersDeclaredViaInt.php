@@ -15,25 +15,23 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service with some required GET params and some optional GET params with default values
+ * A service that defines 4 URL parameters directly with an INT number
  */
-class ServiceWithGetParamsOptionalAndDefaultValues extends WebService{
+class ServiceWithUrl4ParametersDeclaredViaInt extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [];
-        $this->enabledGetParams[] = [WebService::NOT_TYPED];
-        $this->enabledGetParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default'];
+        $this->enabledUrlParams = 4;
     }
 
 
     public function run(){
 
-        return [
-            "0" => $this->getParam(0),
-            "1" => $this->getParam(1),
-            "2" => $this->getParam(2)
+        return [$this->getUrlParam(0),
+            $this->getUrlParam(1),
+            $this->getUrlParam(2),
+            $this->getUrlParam(3)
         ];
     }
 

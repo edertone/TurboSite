@@ -15,20 +15,20 @@ use org\turbosite\src\main\php\model\WebService;
 
 
 /**
- * A service that defines a INT typed get parameter
+ * A service that defines a post parameter with an invalid enabledUrlParams structure
  */
-class ServiceWithGetParameterIntTyped extends WebService{
+class ServiceWithInvalidUrlParameter extends WebService{
 
 
     protected function setup(){
 
-        $this->enabledGetParams[] = [WebService::INT];
+        $this->enabledUrlParams = 'hello';
     }
 
 
     public function run(){
 
-        return $this->getParam(0);
+        return '';
     }
 
 }
