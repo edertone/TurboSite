@@ -1,5 +1,5 @@
 # This repository is configured to force all line endings to LF on the following file extensions, so they are saved
-# to the repository with a unique type of new line character. If a file is added to the repository with CRL, it will
+# to the repository with a unique new line character. If a file is added to the repository with CRL, it will
 # be automatically converted to LF by git once commited.
 
 # Any git configuration people may have on their computers will be overriden with this one:
