@@ -233,6 +233,8 @@ class WebServiceManagerTest extends TestCase {
 
         $service = new ServiceWithPostParameterStringTyped([], ['a' => '"string"']);
 
+        $this->assertNotNull($service);
+
         // Test empty values
         AssertUtils::throwsException(function() use ($service) {$service->getPostParam(null);}, '/must be of the type string, null given/');
         AssertUtils::throwsException(function() use ($service) {$service->getPostParam('');}, '/POST parameter is not enabled by the service: /');
