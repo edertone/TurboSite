@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines OBJECT typed post parameter
  */
-class ServiceWithPostParameterObjectTyped extends WebService{
+class ServiceWithPostParameterObjectTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::OBJECT];
+        $this->enabledPostParams[] = ['a', WebServiceManager::OBJECT];
     }
 
 

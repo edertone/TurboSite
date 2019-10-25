@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a post parameter with an invalid required value, so an exception must be thrown when constructed
  */
-class ServiceWithInvalidPostParameterRequiredValue extends WebService{
+class ServiceWithInvalidPostParameterRequiredValue extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::NOT_TYPED, WebService::ARRAY];
+        $this->enabledPostParams[] = ['a', WebServiceManager::NOT_TYPED, WebServiceManager::ARRAY];
     }
 
 

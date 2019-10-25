@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a post parameter with an invalid enabledPostParams structure
  */
-class ServiceWithInvalidPostParameter extends WebService{
+class ServiceWithInvalidPostParameter extends WebServiceManager{
 
 
     protected function setup(){

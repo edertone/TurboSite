@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a URL parameter with an invalid restricted value, so an exception must be thrown when constructed
  */
-class ServiceWithInvalidUrlParameterRestrictedValue extends WebService{
+class ServiceWithInvalidUrlParameterRestrictedValue extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::BOOL];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::BOOL];
     }
 
 

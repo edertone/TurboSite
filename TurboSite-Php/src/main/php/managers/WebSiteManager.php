@@ -13,40 +13,39 @@
 namespace org\turbosite\src\main\php\managers;
 
 use Throwable;
-use stdClass;
 use UnexpectedValueException;
-use org\turbocommons\src\main\php\utils\StringUtils;
+use stdClass;
 use org\turbocommons\src\main\php\managers\LocalizationManager;
-use org\turbocommons\src\main\php\model\BaseSingletonClass;
-use org\turbocommons\src\main\php\managers\BrowserManager;
+use org\turbocommons\src\main\php\utils\StringUtils;
+use org\turbodepot\src\main\php\managers\DepotManager;
+use org\turbosite\src\main\php\model\UrlParamsBase;
 use org\turbosite\src\main\php\model\WebServiceError;
 use org\turbosite\src\main\php\model\WebViewSetup;
-use org\turbodepot\src\main\php\managers\DepotManager;
 
 
 /**
- * The global application instance where all the framework methods are found
+ * The global application instance where all the methods to interact with the website are found
  */
-class WebSiteManager extends BaseSingletonClass{
+class WebSiteManager extends UrlParamsBase{
 
 
     /**
-     * Contains the title to show on the html metadata. This is very important for SEO purposes, so an exception will happen if
-     * this value is empty
+     * Title to show on the html metadata (recommended lenght is 60 characters).
+     * Very important for SEO purposes, so an exception will happen if empty.
      */
     public $metaTitle = '';
 
 
     /**
-     * Contains the description to show on the html metadata. This is very important for SEO purposes, so an exception will happen if
-     * this value is empty. Note that meta description recommended lenght is 150 characters.
+     * Description to show on the html metadata (recommended lenght is 150 characters).
+     * Very important for SEO purposes, so an exception will happen if empty.
      */
     public $metaDescription = '';
 
 
     /**
      * Stores the generated hash string that is used to prevent browser from caching static resources.
-     * This value is dinamically created when project is built, added as a property named "cacheHash" to turbosite setup.
+     * This value is dynamically created when project is built and added as a property named "cacheHash" to turbosite setup.
      */
     private $_cacheHash = '';
 
@@ -59,19 +58,8 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Stores a copy of all the setup files data (turbosite.json, turbodepot.json, etc...) that has been loaded by this class.
-     * This is used at initialization and all the relevant values are stored on class properties for an easier access, but we will
-     * still have the full setup files data copy here if required.
-     *
-     * The data is stored as an associative array where each key is the setup file name (like turbosite.json) and each value is an
-     * \stdClass instance with all its data parsed from the file json content.
-     */
-    private $_setupFilesData = [];
-
-
-    /**
-     * Contains the name for the view that is loaded when a single root parameter is
-     * specified on the urls
+     * Contains the name for the view that is configured at turbosite.json to be used as the single parameter view.
+     * This view is automatically loaded when a single root parameter is specified at the url
      */
     private $_singleParameterView = '';
 
@@ -89,57 +77,22 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Depot manager instance for storage interaction
-     *
+     * Instance for storage interaction
      * @var DepotManager
      */
     private $_depotManager = null;
 
 
     /**
-     * Class that manages the text translations
+     * Instance that manages the text translations
      */
     private $_localizationManager = null;
-
-
-    /**
-     * Class that manages the browser operations
-     */
-    private $_browserManager = null;
 
 
     /**
      * @see WebSiteManager::getPrimaryLanguage
      */
     private $_primaryLanguage = '';
-
-
-    /**
-     * Parameters are variable values that can be passed to the website directly into the url, seppared by the slash / character.
-     * This property defines the amount of parameters that are currently accepted by the url.
-     * This is the url parameters format: https://somehost.com/param0/param1/param2/param3
-     *
-     * Note that url parameters are different from view parameters. Url first parameter is the inmediate after the host, while view first
-     * parameter is the one after the view name: https://host.com/2-digit-language/view-name/param0/param1/param2/....
-     */
-    private $_URLEnabledParameters = 0;
-
-
-    /**
-     * Contains the value for the current url URI fragment
-     *
-     * Note that this string does not contain the baseURL part of the current browser URI
-     */
-    private $_URI = '';
-
-
-    /**
-     * Contains the value for the current url URI fragment but splitted as an array
-     * where each element is a URI fragment (fragments are divided by /).
-     *
-     * Note that this array does not contain the baseURL part of the current browser URI
-     */
-    private $_URIElements = [];
 
 
     /**
@@ -153,25 +106,36 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Contains the value for the current url including the initial https://
-     */
-    private $_fullURL = '';
-
-
-    /**
-     * Stores the list of required JS cdns and their respective fallback resources
+     * Stores the list of required JS cdns as an array of stdclass instances (check turbosite.json docs for more info)
      */
     private $_globalCDNS = [];
 
 
     /**
-     * Stores the webservices setup
+     * Stores the webservices setup (check turbosite.json docs for more info)
      */
     private $_webServicesSetup = null;
 
 
     /**
-     * Singleton constructor overriden to allow the global error manager initialization as fast as possible
+     * Stores a copy of all the setup files data (turbosite.json, turbodepot.json, etc...) that has been loaded by this class.
+     * This is used at initialization and all the relevant values are stored on class properties for an easier access, but we will
+     * still have the full setup files data copy here if required.
+     *
+     * The data is stored as an associative array where each key is the setup file name (like turbosite.json) and each value is an
+     * \stdClass instance with all its data parsed from the file json content.
+     */
+    private $_setupFilesData = [];
+
+
+    /**
+     * Contains all the singleton global instances. In php we must do it this way to avoid singletons from returning wrong class objects.
+     */
+    private static $_instances = [];
+
+
+    /**
+     * Returns the global WebSiteManager Singleton instance that is used across all the project
      *
      * @return WebSiteManager The Singleton instance.
      */
@@ -180,12 +144,21 @@ class WebSiteManager extends BaseSingletonClass{
         // We initialize the error manager as early as possible. This is why we do it here.
         GlobalErrorManager::getInstance()->initialize();
 
-        return parent::getInstance();
+        $class = get_called_class();
+
+        if(!isset(self::$_instances[$class])) {
+
+            self::$_instances[$class] = new $class();
+        }
+
+        return self::$_instances[$class];
     }
 
 
     /**
      * Get the depot manager instance that has been created as part of this class
+     *
+     * @return DepotManager
      */
     public function getDepotManager(){
 
@@ -213,7 +186,7 @@ class WebSiteManager extends BaseSingletonClass{
 
 
     /**
-     * Get the view that is defined as home
+     * Get the view that is defined as home on turbosite setup
      */
     public function getHomeView(){
 
@@ -265,7 +238,8 @@ class WebSiteManager extends BaseSingletonClass{
      *
      * @param string $indexFilePath The filesystem path to the project index.php file (src/main/index.php)
      * @param array $setupFilesData An associative array where each key is the name of a setup file (like turbosite.json) and each
-     *        value contains the setup file as a decoded json object.
+     *        value contains the setup file as a decoded json object. This is normally injected on the index.php file by the turbobuilder
+     *        application when the project is built
      */
     public function generateContent(string $indexFilePath, array $setupFilesData = []){
 
@@ -282,7 +256,7 @@ class WebSiteManager extends BaseSingletonClass{
 
         $this->_setupFilesData = $setupFilesData;
 
-        $this->_loadRequiredData();
+        $this->_initObjectsAndLoadData();
 
         $this->_sanitizeUrl();
 
@@ -293,48 +267,40 @@ class WebSiteManager extends BaseSingletonClass{
     /**
      * Initialize all the project global objects and load setup data
      */
-    private function _loadRequiredData(){
+    private function _initObjectsAndLoadData(){
 
         $this->_localizationManager = new LocalizationManager();
-        $this->_browserManager = new BrowserManager();
         $this->_depotManager = new DepotManager($this->_setupFilesData['turbodepot.json']);
 
-        $this->_URI = isset($_GET['q']) ? $_GET['q'] : '';
-        $this->_URIElements = explode('/', $this->_URI);
-        $this->_fullURL = $this->_browserManager->getCurrentUrl();
-
-        $setup = $this->_setupFilesData['turbosite.json'];
+        $turboSiteSetup = $this->_setupFilesData['turbosite.json'];
 
         GlobalErrorManager::getInstance()->depotManager = $this->_depotManager;
-        GlobalErrorManager::getInstance()->exceptionsToBrowser = $setup->errorSetup->exceptionsToBrowser;
-        GlobalErrorManager::getInstance()->exceptionsToLog = $setup->errorSetup->exceptionsToLog;
-        GlobalErrorManager::getInstance()->exceptionsToMail = $setup->errorSetup->exceptionsToMail;
-        GlobalErrorManager::getInstance()->warningsToBrowser = $setup->errorSetup->warningsToBrowser;
-        GlobalErrorManager::getInstance()->warningsToLog = $setup->errorSetup->warningsToLog;
-        GlobalErrorManager::getInstance()->warningsToMail = $setup->errorSetup->warningsToMail;
-        GlobalErrorManager::getInstance()->tooMuchTimeWarning = $setup->errorSetup->tooMuchTimeWarning;
-        GlobalErrorManager::getInstance()->tooMuchMemoryWarning = $setup->errorSetup->tooMuchMemoryWarning;
+        GlobalErrorManager::getInstance()->exceptionsToBrowser = $turboSiteSetup->errorSetup->exceptionsToBrowser;
+        GlobalErrorManager::getInstance()->exceptionsToLog = $turboSiteSetup->errorSetup->exceptionsToLog;
+        GlobalErrorManager::getInstance()->exceptionsToMail = $turboSiteSetup->errorSetup->exceptionsToMail;
+        GlobalErrorManager::getInstance()->warningsToBrowser = $turboSiteSetup->errorSetup->warningsToBrowser;
+        GlobalErrorManager::getInstance()->warningsToLog = $turboSiteSetup->errorSetup->warningsToLog;
+        GlobalErrorManager::getInstance()->warningsToMail = $turboSiteSetup->errorSetup->warningsToMail;
+        GlobalErrorManager::getInstance()->tooMuchTimeWarning = $turboSiteSetup->errorSetup->tooMuchTimeWarning;
+        GlobalErrorManager::getInstance()->tooMuchMemoryWarning = $turboSiteSetup->errorSetup->tooMuchMemoryWarning;
 
-        $this->_cacheHash = $setup->cacheHash;
-        $this->_homeView = $setup->homeView;
-        $this->_singleParameterView = $setup->singleParameterView;
-        $this->_baseURL = StringUtils::formatPath($setup->baseURL, '/');
-        $this->_globalCDNS = $setup->globalCDNS;
-        $this->_webServicesSetup = $setup->webServices;
+        $this->_cacheHash = $turboSiteSetup->cacheHash;
+        $this->_homeView = $turboSiteSetup->homeView;
+        $this->_singleParameterView = $turboSiteSetup->singleParameterView;
+        $this->_baseURL = StringUtils::formatPath($turboSiteSetup->baseURL, '/');
+        $this->_globalCDNS = $turboSiteSetup->globalCDNS;
+        $this->_webServicesSetup = $turboSiteSetup->webServices;
 
         // Load all the configured resourcebundle paths
-        $locations = [];
+        $locations = array_map(function ($location) {
 
-        foreach ($setup->translationLocations as $location) {
+            return ['label' => $location->label,
+                    'path' => StringUtils::formatPath($this->_mainPath.'/'.$location->path),
+                    'bundles' => $location->bundles];
 
-            $locations[] = [
-                'label' => $location->label,
-                'path' => StringUtils::formatPath($this->_mainPath.'/'.$location->path),
-                'bundles' => $location->bundles
-            ];
-        }
+        }, $turboSiteSetup->translationLocations);
 
-        $this->_localizationManager->initialize($this->_depotManager->getFilesManager(), $setup->locales, $locations, function($errors){
+        $this->_localizationManager->initialize($this->_depotManager->getFilesManager(), $turboSiteSetup->locales, $locations, function($errors){
 
             if(count($errors) > 0){
 
@@ -501,11 +467,18 @@ class WebSiteManager extends BaseSingletonClass{
 
     /**
      * Declares the current document as a view, initializes its structure and checks all possible restrictions.
-     * All view urls must obey the following format: https://host.com/2-digit-language/view-name/param0/param1/param2/....
-     * The only exceptions are the home view which follows the format: https://host.com/2-digit-language and the single parameter
-     * view that must be initialized via the initializeAsSingleParameterView method.
      *
-     * @param WebViewSetup $setup The setup parameters that must be aplied to the view
+     * All view urls must obey the following format: https://host/2-digit-language/view-name/param0/param1/param2/...
+     *
+     * The only exceptions are:<br>
+     *     - The home view which follows the format: https://host/2-digit-language<br>
+     *     - The single parameter view which must be initialized via the initializeAsSingleParameterView() method and follows the
+     *     format: https://host/parameter<br>
+     *
+     * Note that any extra parameters on the url which are not enabled will be discarted and removed with a 301 redirect. Also
+     * GET url parameters like ?param1=v1&param2=v2.. will be ignored and removed from the url.
+     *
+     * @param WebViewSetup $setup The setup parameters that must be aplied to the view. If not specified, all the defaults will be used
      *
      * @return void
      */
@@ -519,95 +492,39 @@ class WebSiteManager extends BaseSingletonClass{
         // Defines the index where the current url parameters start to be view parameters
         $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
 
-        $defaultParametersCount = count($setup->defaultParameters);
-        $allowedParameterValuesCount = count($setup->allowedParameterValues);
-        $receivedParamsCount = count($this->_URIElements) - $firstViewParamOffset;
-
-        $this->_URLEnabledParameters = $setup->enabledUrlParams + $firstViewParamOffset;
-
         $redirectRequired = false;
+        $this->_setReceivedParamsFromUrl($firstViewParamOffset);
+        $this->_setEnabledUrlParams($setup->enabledUrlParams);
 
-        // Check no parameter without default value is empty
-        for ($i = 0; $i < $setup->enabledUrlParams; $i++) {
+        try {
 
-            if($this->getUrlParam($i) === '' &&
-                (!isset($setup->defaultParameters[$i]) || StringUtils::isEmpty($setup->defaultParameters[$i]))){
+            $redirectRequired = $this->_processUrlParams();
 
-               $this->show404Error();
-            }
-        }
+        } catch (UnexpectedValueException $e) {
 
-        if($defaultParametersCount > 0){
+            switch ($e->getCode()) {
 
-            // Default parameters count must not exceed the enabled params
-            if($defaultParametersCount > $setup->enabledUrlParams){
+                case 404:
+                    $this->show404Error();
+                    break;
 
-                throw new UnexpectedValueException('Default parameters count must not exceed enabled params');
-            }
-
-            // All default parameters must have a value
-            for ($i = 0; $i < $defaultParametersCount; $i++) {
-
-                if(StringUtils::isEmpty($setup->defaultParameters[$i])){
-
-                    throw new UnexpectedValueException('Default view parameters cannot be empty (default value for param '.$i.' is empty)');
-                }
-            }
-
-            // Received empty params will be filled with their defaults
-            $maxParams = max($receivedParamsCount, $defaultParametersCount);
-
-            for ($j = 0; $j < $maxParams; $j++) {
-
-                if(isset($setup->defaultParameters[$j]) &&
-                   (!isset($this->_URIElements[$firstViewParamOffset + $j]) ||
-                   (isset($this->_URIElements[$firstViewParamOffset + $j]) && StringUtils::isEmpty($this->getUrlParam($j))))){
-
+                case 301:
                     $redirectRequired = true;
+                    break;
 
-                    $this->_URIElements[$firstViewParamOffset + $j] = $setup->defaultParameters[$j];
-                }
-            }
-        }
-
-        // If received view parameters exceed the enabled ones, a redirect to remove unaccepted params will be performed
-        if($receivedParamsCount > $setup->enabledUrlParams){
-
-            $redirectRequired = true;
-
-            array_splice($this->_URIElements, - ($receivedParamsCount - $setup->enabledUrlParams));
-        }
-
-        // If the view parameters do not match the defined allowed values, a redirect to the most similar values will be performed
-        for ($i = 0; $i < $allowedParameterValuesCount; $i++) {
-
-            $allowedValuesCount = count($setup->allowedParameterValues[$i]);
-
-            if(is_array($setup->allowedParameterValues[$i]) && $allowedValuesCount > 0){
-
-                $parameterIsValid = false;
-
-                for ($j = 0; $j < $allowedValuesCount; $j++) {
-
-                    if($setup->allowedParameterValues[$i][$j] === $this->_URIElements[$firstViewParamOffset + $i]){
-
-                        $parameterIsValid = true;
-                        break;
-                    }
-                }
-
-                if(!$parameterIsValid){
-
-                    $redirectRequired = true;
-
-                    $this->_URIElements[$firstViewParamOffset + $i] = StringUtils::findMostSimilarString($this->_URIElements[$firstViewParamOffset + $i], $setup->allowedParameterValues[$i]);
-                }
+                default:
+                    throw $e;
             }
         }
 
         if($redirectRequired){
 
-            $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
+            for ($i = $firstViewParamOffset - 1; $i >= 0; $i--) {
+
+                array_unshift($this->_receivedUrlParams, $this->_URIElements[$i]);
+            }
+
+            $this->redirect301($this->getUrl(implode('/', $this->_receivedUrlParams), true));
         }
 
         // Check if a method to obtain the forced parameters needs to be executed and redirect if necessary
@@ -653,18 +570,29 @@ class WebSiteManager extends BaseSingletonClass{
      */
     public function initializeAsSingleParameterView($language, $allowedURLParameterValues = []){
 
-        $this->_URLEnabledParameters = 1;
+        if($this->_currentViewName !== $this->_singleParameterView){
 
-        if($allowedURLParameterValues !== [] && !in_array($this->getUrlParam(), $allowedURLParameterValues)){
-
-            // TODO - use string similarity to redirect to the most similar value if necessary (configurable??)
-
-            $this->show404Error();
+            throw new UnexpectedValueException('Trying to initialize a view called <'.$this->_currentViewName.'> as single param view, but <'.$this->_singleParameterView.'> is the one configured at turbosite.json');
         }
 
         if(!in_array($language, $this->_localizationManager->languages())){
 
             throw new UnexpectedValueException('Invalid language specified <'.$language.'> for single parameter view');
+        }
+
+        $this->_setEnabledUrlParams(1);
+
+        if($this->_setReceivedParamsFromUrl(0) !== 1){
+
+            $this->show404Error();
+        }
+
+        $this->_processUrlParams();
+
+        if($allowedURLParameterValues !== [] && !in_array($this->getUrlParam(), $allowedURLParameterValues)){
+
+            // TODO - use string similarity to redirect to the most similar value if necessary (configurable??)
+            $this->show404Error();
         }
 
         $this->_primaryLanguage = $language;
@@ -684,6 +612,8 @@ class WebSiteManager extends BaseSingletonClass{
     // TODO - this should include all component parts inline: css, php and js
     public function includeComponent(string $componentPath){
 
+        // If the component is global, skip css and js cause they will be already loaded
+
         require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
     }
 
@@ -700,12 +630,7 @@ class WebSiteManager extends BaseSingletonClass{
      *
      * @return string The requested parameter value
      */
-    public function getUrlParam(int $index = 0, bool $removeHtmlTags = true){
-
-        if($index < 0){
-
-            throw new UnexpectedValueException('Invalid parameter index: '.$index);
-        }
+    public function getUrlParam(int $index = 0){
 
         if($this->_currentViewName === $this->_singleParameterView){
 
@@ -717,18 +642,7 @@ class WebSiteManager extends BaseSingletonClass{
             return $this->_URIElements[0];
         }
 
-        // Defines the index where the current url parameters start to be view parameters
-        $firstViewParamOffset = $this->_currentViewName === $this->_homeView ? 1 : 2;
-
-        if($index >= $this->_URLEnabledParameters - $firstViewParamOffset){
-
-            throw new UnexpectedValueException('Disabled parameter index '.$index.' requested');
-        }
-
-        $paramValue = isset($this->_URIElements[$index + $firstViewParamOffset]) ?
-           $this->_URIElements[$index + $firstViewParamOffset] : '';
-
-        return $removeHtmlTags ? strip_tags($paramValue) : $paramValue;
+        return parent::getUrlParam($index);
     }
 
 

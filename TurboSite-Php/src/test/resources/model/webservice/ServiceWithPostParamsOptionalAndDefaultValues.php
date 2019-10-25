@@ -11,20 +11,20 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with some required POST params, some optional POST params and some optional post params with default values
  */
-class ServiceWithPostParamsOptionalAndDefaultValues extends WebService{
+class ServiceWithPostParamsOptionalAndDefaultValues extends WebServiceManager{
 
 
     protected function setup(){
 
         $this->enabledPostParams[] = ['a'];
-        $this->enabledPostParams[] = ['b', WebService::NOT_TYPED, WebService::NOT_REQUIRED];
-        $this->enabledPostParams[] = ['c', WebService::NOT_TYPED, WebService::NOT_REQUIRED, WebService::NOT_RESTRICTED, 'default'];
+        $this->enabledPostParams[] = ['b', WebServiceManager::NOT_TYPED, WebServiceManager::NOT_REQUIRED];
+        $this->enabledPostParams[] = ['c', WebServiceManager::NOT_TYPED, WebServiceManager::NOT_REQUIRED, WebServiceManager::NOT_RESTRICTED, 'default'];
     }
 
 

@@ -13,7 +13,7 @@ namespace org\turbosite\src\main\php\services\chain;
 
 use UnexpectedValueException;
 use stdClass;
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\managers\WebSiteManager;
 
@@ -21,7 +21,7 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 /**
  * ChainServices
  */
-class ChainServices extends WebService{
+class ChainServices extends WebServiceManager{
 
 
     /**
@@ -39,7 +39,7 @@ class ChainServices extends WebService{
      * of services to be executed with their respective parameters and it will run each one of them in the same
      * order as received, returning a list with the results for each one of the executed services.
      *
-     * @see WebService::__construct
+     * @see WebServiceManager::__construct
      *
      * @param array $urlParameters This parameter is not used and will be ignored. It exists here to maintain compatibility with the WebService class on http requests
      * @param array $postParameters An associative array with only one key 'services' containing an array of stdClass instances. Each instance must have the following properties:<br>
@@ -47,8 +47,8 @@ class ChainServices extends WebService{
      *        If class property is specified, the uri property is not allowed<br>
      *        - uri: When specified, it must contain the WebService URL that is relative to the WebServer application root. For example: 'api/site/example/example-service-without-params'.
      *        If uri property is specified, the class property is not allowed<br>
-     *        - urlParameters: The list of URL parameters to pass to the Webservice to execute. @see WebService::__construct for details<br>
-     *        - postParameters: The list of POST parameters to pass to the Webservice to execute. @see WebService::__construct for details
+     *        - urlParameters: The list of URL parameters to pass to the Webservice to execute. @see WebServiceManager::__construct for details<br>
+     *        - postParameters: The list of POST parameters to pass to the Webservice to execute. @see WebServiceManager::__construct for details
      */
     public function __construct(array $urlParameters = null, array $postParameters = null){
 
@@ -91,8 +91,8 @@ class ChainServices extends WebService{
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['services', WebService::ARRAY];
-        $this->enabledPostParams[] = ['isAnyErrorStoppingExecution', WebService::BOOL, WebService::NOT_REQUIRED, WebService::NOT_RESTRICTED, true];
+        $this->enabledPostParams[] = ['services', WebServiceManager::ARRAY];
+        $this->enabledPostParams[] = ['isAnyErrorStoppingExecution', WebServiceManager::BOOL, WebServiceManager::NOT_REQUIRED, WebServiceManager::NOT_RESTRICTED, true];
     }
 
 

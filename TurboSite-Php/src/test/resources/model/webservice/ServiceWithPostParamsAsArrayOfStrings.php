@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with all POST parameters required which are declared as an array of strings
  */
-class ServiceWithPostParamsAsArrayOfStrings extends WebService{
+class ServiceWithPostParamsAsArrayOfStrings extends WebServiceManager{
 
 
     protected function setup(){

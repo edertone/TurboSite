@@ -17,36 +17,48 @@ namespace org\turbosite\src\main\php\model;
  */
 class WebViewSetup{
 
+
     /**
-     * Defines how many URL parameters are accepted by this view. Anyones beyond this limit will be removed from the current url.
-     * If a view has a missing value for any of the enabled parameters and there's no default value defined, a 404 error will happen
+     * Specifies how many URL parameters are accepted by this view and allows to setup type and value restrictions.
+     * If a view has a missing value for any of the enabled parameters and there's no default value defined, a 404
+     * error will happen.
+     *
+     * <b>Two possible formats are accepted by this property:</b><br>
+     *
+     * 1 - An integer representing the exact number of URL parameters that are acepted by the view which will be non typed, mandatory
+     * and with no default value<br>
+     *
+     * 2 - An array of arrays with the list of URL parameters that are accepted by this view and their respective type and value restrictions:
+     *
+     *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements:<br>
+     *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebServiceManager::NOT_TYPED (default), WebServiceManager::BOOL,
+     *         WebServiceManager::NUMBER, WebServiceManager::STRING, WebServiceManager::ARRAY, WebServiceManager::OBJECT<br>
+     *
+     *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebServiceManager::NOT_RESTRICTED (default) or an
+     *         array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
+     *
+     *         2 - DEFAULT VALUE: (optional) Specifies the URL parameter default value. This value will be used if the parameter is not
+     *         received by the view. If the url does not have a value or has an empty value for this default parameter, the url will
+     *         be modified via a 301 redirect to set the defined default.
+     *
+     *     The index for the parameter at the enabledUrlParams array is the same as the parameter at the URL.
+     *
+     * @var int|array
      */
-    public $enabledUrlParams = 0;
+    public $enabledUrlParams = [];
 
 
     /**
-     * A list of default values for the view parameters. If the current url does not have a value or has an empty value for
-     * a default parameter, the url will be modified via a 301 redirect to set the defined default.
-     */
-    public $defaultParameters = [];
-
-
-    /**
-     * Forces several view parameters to a fixed value. A callback function will be passed here, which will be executed
-     * after the view and default params have been initialized. This method must return an array with the same length as the enabled
-     * parameters. Each array element will be a value that will be forced on the same index view parameter and the current url
-     * redirected if any of the forced parameters values differ from the actual ones.
+     * If we want to fix some of the URL parameters to a fixed value, we can use this method.
+     * When the url is loaded, if any of the URL parameters that have been fixed has a different value, a redirect will be
+     * performed to replace them with the fixed value.
+     *
+     * A callback function will be passed here, which will be executed after the view and default params have been
+     * initialized. This method must return an array with the same length as the enabled URL parameters. Each array element
+     * will be a value that will be forced on the same index view parameter and the current url redirected if any of the
+     * forced parameters values differ from the actual ones.
      */
     public $forcedParametersCallback = null;
-
-
-    /**
-     * A list of arrays that will define the only possible values that are allowed for each one of the view parameters.
-     * If an array of this list is empty, the view parameter on the same index will have no restrictions.
-     * If the array is not empty, the respective view parameter will accept only the provided values. If the received parameter
-     * value does not match any of them, the url will be redirected to the most similar of the possible ones.
-     */
-    public $allowedParameterValues = [];
 
 
     /**

@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a NUMBER typed Url parameter
  */
-class ServiceWithUrlParameterNumberTyped extends WebService{
+class ServiceWithUrlParameterNumberTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::NUMBER];
+        $this->enabledUrlParams[] = [WebServiceManager::NUMBER];
     }
 
 

@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a URL parameter with an invalid array length, so an exception must be thrown when constructed
  */
-class ServiceWithInvalidUrlParameterArrayLen extends WebService{
+class ServiceWithInvalidUrlParameterArrayLen extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default', 'shit'];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default', 'shit'];
     }
 
 

@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with all POST parameters required
  */
-class ServiceWithPostParams extends WebService{
+class ServiceWithPostParams extends WebServiceManager{
 
 
     protected function setup(){

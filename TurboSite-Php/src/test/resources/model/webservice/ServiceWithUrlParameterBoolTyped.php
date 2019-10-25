@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a BOOL typed URL parameter
  */
-class ServiceWithUrlParameterBoolTyped extends WebService{
+class ServiceWithUrlParameterBoolTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::BOOL];
+        $this->enabledUrlParams[] = [WebServiceManager::BOOL];
     }
 
 

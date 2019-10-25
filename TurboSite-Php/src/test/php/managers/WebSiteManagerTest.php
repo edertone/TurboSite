@@ -50,6 +50,10 @@ class WebSiteManagerTest extends TestCase {
         // Disable error manager warnings to prevent test errors
         GlobalErrorManager::getInstance()->tooMuchMemoryWarning = 0;
         GlobalErrorManager::getInstance()->tooMuchTimeWarning = 0;
+
+        // Clone the $_GET object so it can be restored after the test
+        // TODO - use ObjectUtils::clone() to do this instead of assigning it directly (note that arrays in php are copied by assignation)
+        $this->_GETBackup = $_GET;
     }
 
 
@@ -61,6 +65,8 @@ class WebSiteManagerTest extends TestCase {
     protected function tearDown(){
 
         $this->filesManager->deleteDirectory($this->tempFolder);
+
+        $_GET = $this->_GETBackup;
     }
 
 
@@ -87,25 +93,32 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
+     * testGetDepotManager
+     *
+     * @return void
+     */
+    public function testGetDepotManager(){
+
+        $this->assertSame(null, $this->sut->getDepotManager());
+
+        // TODO - implement all necessary steps to obtain a valid DepotManager instance when calling this method
+        // TODO - $this->assertTrue($this->sut->getDepotManager() instanceof DepotManager);
+    }
+
+
+    /**
      * testGetPrimaryLanguage
      *
      * @return void
      */
     public function testGetPrimaryLanguage(){
 
-        // Test empty values
-        // TODO
+        $this->assertSame('', $this->sut->getPrimaryLanguage());
 
-        // Test ok values
-        // TODO
-
-        // Test wrong values
-        // TODO
-
-        // Test exceptions
-        // TODO
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        // TODO - Test more complex scenarios where an url with a valid language exists
     }
+
+    // TODO - add all pending tests
 }
 
 ?>

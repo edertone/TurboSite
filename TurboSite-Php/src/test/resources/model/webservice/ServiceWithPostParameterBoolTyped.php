@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a BOOL typed post parameter
  */
-class ServiceWithPostParameterBoolTyped extends WebService{
+class ServiceWithPostParameterBoolTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::BOOL];
+        $this->enabledPostParams[] = ['a', WebServiceManager::BOOL];
     }
 
 

@@ -11,20 +11,20 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with some required URL params and some optional URL params with default values
  */
-class ServiceWithUrlParamsOptionalAndDefaultValues extends WebService{
+class ServiceWithUrlParamsOptionalAndDefaultValues extends WebServiceManager{
 
 
     protected function setup(){
 
         $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [WebService::NOT_TYPED];
-        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default'];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default'];
     }
 
 

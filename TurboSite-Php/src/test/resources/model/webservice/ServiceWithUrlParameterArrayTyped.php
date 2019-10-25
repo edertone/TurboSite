@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines ARRAY typed URL parameter
  */
-class ServiceWithUrlParameterArrayTyped extends WebService{
+class ServiceWithUrlParameterArrayTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::ARRAY];
+        $this->enabledUrlParams[] = [WebServiceManager::ARRAY];
     }
 
 

@@ -11,20 +11,20 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with 3 required URL params
  */
-class ServiceWithUrlParams3Mandatory extends WebService{
+class ServiceWithUrlParams3Mandatory extends WebServiceManager{
 
 
     protected function setup(){
 
         $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [WebService::ARRAY];
-        $this->enabledUrlParams[] = [WebService::STRING];
+        $this->enabledUrlParams[] = [WebServiceManager::ARRAY];
+        $this->enabledUrlParams[] = [WebServiceManager::STRING];
     }
 
 

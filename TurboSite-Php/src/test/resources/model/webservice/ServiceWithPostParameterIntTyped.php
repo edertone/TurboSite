@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines an INT typed post parameter
  */
-class ServiceWithPostParameterIntTyped extends WebService{
+class ServiceWithPostParameterIntTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::INT];
+        $this->enabledPostParams[] = ['a', WebServiceManager::INT];
     }
 
 

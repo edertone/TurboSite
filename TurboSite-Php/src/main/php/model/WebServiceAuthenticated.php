@@ -15,7 +15,7 @@ namespace org\turbosite\src\main\php\model;
 /**
  * WebServiceAuthenticated
  */
-abstract class WebServiceAuthenticated extends WebService{
+abstract class WebServiceAuthenticated extends WebServiceManager{
 
 
     // This class will extend the base webservice one to provide user login authentication on each call by default.

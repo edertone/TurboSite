@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a non typed post parameter
  */
-class ServiceWithPostParameterNotTyped extends WebService{
+class ServiceWithPostParameterNotTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::NOT_TYPED];
+        $this->enabledPostParams[] = ['a', WebServiceManager::NOT_TYPED];
     }
 
 

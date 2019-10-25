@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a STRING typed URL parameter
  */
-class ServiceWithUrlParameterStringTyped extends WebService{
+class ServiceWithUrlParameterStringTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::STRING];
+        $this->enabledUrlParams[] = [WebServiceManager::STRING];
     }
 
 

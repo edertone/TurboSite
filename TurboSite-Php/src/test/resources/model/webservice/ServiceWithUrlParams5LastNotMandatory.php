@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service with 3 URL params being the 2 last ones non mandatory
  */
-class ServiceWithUrlParams5LastNotMandatory extends WebService{
+class ServiceWithUrlParams5LastNotMandatory extends WebServiceManager{
 
 
     protected function setup(){
@@ -25,8 +25,8 @@ class ServiceWithUrlParams5LastNotMandatory extends WebService{
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [WebService::NOT_TYPED, WebService::NOT_RESTRICTED, 'default3'];
-        $this->enabledUrlParams[] = [WebService::BOOL, WebService::NOT_RESTRICTED, 'true'];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default3'];
+        $this->enabledUrlParams[] = [WebServiceManager::BOOL, WebServiceManager::NOT_RESTRICTED, 'true'];
     }
 
 

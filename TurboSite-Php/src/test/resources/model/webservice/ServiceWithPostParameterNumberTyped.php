@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a NUMBER typed post parameter
  */
-class ServiceWithPostParameterNumberTyped extends WebService{
+class ServiceWithPostParameterNumberTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::NUMBER];
+        $this->enabledPostParams[] = ['a', WebServiceManager::NUMBER];
     }
 
 

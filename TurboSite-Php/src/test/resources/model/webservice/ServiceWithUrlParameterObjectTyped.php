@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines OBJECT typed URL parameter
  */
-class ServiceWithUrlParameterObjectTyped extends WebService{
+class ServiceWithUrlParameterObjectTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledUrlParams[] = [WebService::OBJECT];
+        $this->enabledUrlParams[] = [WebServiceManager::OBJECT];
     }
 
 

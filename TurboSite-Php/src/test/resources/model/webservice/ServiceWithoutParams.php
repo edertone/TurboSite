@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service without any parameter
  */
-class ServiceWithoutParams extends WebService{
+class ServiceWithoutParams extends WebServiceManager{
 
 
     protected function setup(){

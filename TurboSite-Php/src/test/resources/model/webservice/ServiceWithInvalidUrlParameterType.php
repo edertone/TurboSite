@@ -11,13 +11,13 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines a URL parameter with an invalid type, so an exception must be thrown when constructed
  */
-class ServiceWithInvalidUrlParameterType extends WebService{
+class ServiceWithInvalidUrlParameterType extends WebServiceManager{
 
 
     protected function setup(){

@@ -11,18 +11,18 @@
 
 namespace org\turbosite\src\test\resources\model\webservice;
 
-use org\turbosite\src\main\php\model\WebService;
+use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
  * A service that defines ARRAY typed post parameter
  */
-class ServiceWithPostParameterArrayTyped extends WebService{
+class ServiceWithPostParameterArrayTyped extends WebServiceManager{
 
 
     protected function setup(){
 
-        $this->enabledPostParams[] = ['a', WebService::ARRAY];
+        $this->enabledPostParams[] = ['a', WebServiceManager::ARRAY];
     }
 
 
