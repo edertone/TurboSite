@@ -31,10 +31,10 @@ class WebViewSetup{
      * 2 - An array of arrays with the list of URL parameters that are accepted by this view and their respective type and value restrictions:
      *
      *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements:<br>
-     *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebServiceManager::NOT_TYPED (default), WebServiceManager::BOOL,
-     *         WebServiceManager::NUMBER, WebServiceManager::STRING, WebServiceManager::ARRAY, WebServiceManager::OBJECT<br>
+     *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebSiteManager::NOT_TYPED (default), WebSiteManager::BOOL,
+     *         WebSiteManager::NUMBER, WebSiteManager::STRING, WebSiteManager::ARRAY, WebSiteManager::OBJECT<br>
      *
-     *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebServiceManager::NOT_RESTRICTED (default) or an
+     *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebSiteManager::NOT_RESTRICTED (default) or an
      *         array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
      *
      *         2 - DEFAULT VALUE: (optional) Specifies the URL parameter default value. This value will be used if the parameter is not
@@ -62,8 +62,8 @@ class WebViewSetup{
 
 
     /**
-     * Defines the amount of seconds that the view will remain on cache.
-     * If set to -1 the view will remain on cache for an infinite amount of time
+     * Defines the amount of seconds that the whole view will remain on cache.
+     * If set to -1 the view will remain on cache for an infinite amount of time or until the cache is cleared
      *
      * @example 1 minute = 60 seconds
      * @example 1 hour = 3600 seconds
