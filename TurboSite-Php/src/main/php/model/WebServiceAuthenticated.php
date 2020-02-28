@@ -11,6 +11,8 @@
 
 namespace org\turbosite\src\main\php\model;
 
+use org\turbosite\src\main\php\managers\WebServiceManager;
+
 
 /**
  * WebServiceAuthenticated

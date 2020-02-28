@@ -70,7 +70,7 @@ abstract class WebServiceManager extends UrlParamsBase{
      *
      *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements:<br>
      *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebServiceManager::NOT_TYPED (default), WebServiceManager::BOOL,
-     *         WebServiceManager::NUMBER, WebServiceManager::STRING, WebServiceManager::ARRAY, WebServiceManager::OBJECT<br>
+     *         WebServiceManager::INT, WebServiceManager::NUMBER, WebServiceManager::STRING, WebServiceManager::ARRAY, WebServiceManager::OBJECT<br>
      *
      *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebServiceManager::NOT_RESTRICTED (default) or an
      *         array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
