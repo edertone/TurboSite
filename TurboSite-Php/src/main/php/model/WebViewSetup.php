@@ -35,7 +35,7 @@ class WebViewSetup{
      *         WebSiteManager::NUMBER, WebSiteManager::STRING, WebSiteManager::ARRAY, WebSiteManager::OBJECT<br>
      *
      *         1 - POSSIBLE VALUES: (optional) Specifies the URL parameter allowed values: WebSiteManager::NOT_RESTRICTED (default) or an
-     *         array with all the possible values (withih the defined type) that the parameter is allowed to have.<br>
+     *         array with all the possible values (same as the defined type) that the parameter is allowed to have.<br>
      *
      *         2 - DEFAULT VALUE: (optional) Specifies the URL parameter default value. This value will be used if the parameter is not
      *         received by the view. If the url does not have a value or has an empty value for this default parameter, the url will

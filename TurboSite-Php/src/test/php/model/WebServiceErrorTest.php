@@ -61,14 +61,14 @@ class WebServiceErrorTest extends TestCase {
             WebServiceError::createInstance(null, null);
             $this->exceptionMessage = 'null did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/must be of the type integer, null given/', $e->getMessage());
+            $this->assertRegExp('/must be of the type int(eger)?, null given/', $e->getMessage());
         }
 
         try {
             WebServiceError::createInstance('', '');
             $this->exceptionMessage = '"" did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/must be of the type integer, string given/', $e->getMessage());
+            $this->assertRegExp('/must be of the type int(eger)?, string given/', $e->getMessage());
         }
 
         try {

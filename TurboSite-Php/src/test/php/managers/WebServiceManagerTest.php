@@ -120,8 +120,8 @@ class WebServiceManagerTest extends TestCase {
 
         AssertUtils::throwsException(function() {(new ServiceWithoutParams('', []))->run();}, '/Argument 1.*must be of the type array or null.*string given/');
         AssertUtils::throwsException(function() {(new ServiceWithoutParams([], ''))->run();}, '/Argument 2.*must be of the type array or null.*string given/');
-        AssertUtils::throwsException(function() {(new ServiceWithoutParams(0, []))->run();}, '/Argument 1.*must be of the type array or null.*integer given/');
-        AssertUtils::throwsException(function() {(new ServiceWithoutParams([], 0))->run();}, '/Argument 2.*must be of the type array or null.*integer given/');
+        AssertUtils::throwsException(function() {(new ServiceWithoutParams(0, []))->run();}, '/Argument 1.*must be of the type array or null.*int(eger)? given/');
+        AssertUtils::throwsException(function() {(new ServiceWithoutParams([], 0))->run();}, '/Argument 2.*must be of the type array or null.*int(eger)? given/');
 
         // Test ok values
         $serviceData = (new ServiceWithUrlAndPostParams(['0', '1'], ['a' => 'value0', 'b' => 'value1']))->run();
@@ -195,8 +195,8 @@ class WebServiceManagerTest extends TestCase {
     public function testGetUrlParam(){
 
         // Test empty values
-        AssertUtils::throwsException(function() {(new ServiceWithUrlParamsOptionalAndDefaultValues([0, 1]))->getUrlParam(null);}, '/must be of the type integer, null given/');
-        AssertUtils::throwsException(function() {(new ServiceWithUrlParamsOptionalAndDefaultValues([0, 1]))->getUrlParam('');}, '/must be of the type integer, string given/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParamsOptionalAndDefaultValues([0, 1]))->getUrlParam(null);}, '/must be of the type int(eger)?, null given/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParamsOptionalAndDefaultValues([0, 1]))->getUrlParam('');}, '/must be of the type int(eger)?, string given/');
 
         // Test ok values
         $service = new ServiceWithUrlAndPostParams(['v0', 'v1'], ['a' => '0', 'b' => '1']);
@@ -1022,14 +1022,14 @@ class WebServiceManagerTest extends TestCase {
             $sut->generateError(null, null);
             $this->exceptionMessage = 'null did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/must be of the type integer, null given/', $e->getMessage());
+            $this->assertRegExp('/must be of the type int(eger)?, null given/', $e->getMessage());
         }
 
         try {
             $sut->generateError('', '');
             $this->exceptionMessage = '"" did not cause exception';
         } catch (Throwable $e) {
-            $this->assertRegExp('/must be of the type integer, string given/', $e->getMessage());
+            $this->assertRegExp('/must be of the type int(eger)?, string given/', $e->getMessage());
         }
 
         try {

@@ -5,7 +5,7 @@
     "metadata": {
         "name": "turbosite-php",
         "description": "Php based web framework",
-        "builderVersion": "2.2.0"
+        "builderVersion": "4.0.0"
     },
     "validate": {
         "filesContent" : {
@@ -27,7 +27,7 @@
                 {
                     "path": "extras/copyright headers/TurboSite-Php.txt",
                     "affectedPaths": ["src"],
-                    "includes": ["php"],
+                    "includes": [".php"],
                     "excludes": ["autoloader.php", "autoloader-project.php", "libs"]
                 }
             ]
