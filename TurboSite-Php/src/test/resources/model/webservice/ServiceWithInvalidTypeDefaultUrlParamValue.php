@@ -15,18 +15,16 @@ use org\turbosite\src\main\php\managers\WebServiceManager;
 
 
 /**
- * A service with 3 URL params being the 2 last ones non mandatory
+ * A service with a default value that does not match its defined type
  */
-class ServiceWithUrlParams5LastNotMandatory extends WebServiceManager{
+class ServiceWithInvalidTypeDefaultUrlParamValue extends WebServiceManager{
 
 
     protected function setup(){
 
         $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [];
-        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default3'];
-        $this->enabledUrlParams[] = [WebServiceManager::BOOL, WebServiceManager::NOT_RESTRICTED, true];
+        $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED];
+        $this->enabledUrlParams[] = [WebServiceManager::INT, [1,3,5,6], 'string'];
     }
 
 
@@ -35,11 +33,10 @@ class ServiceWithUrlParams5LastNotMandatory extends WebServiceManager{
         return [
             "0" => $this->getUrlParam(0),
             "1" => $this->getUrlParam(1),
-            "2" => $this->getUrlParam(2),
-            "3" => $this->getUrlParam(3),
-            "4" => $this->getUrlParam(4)
+            "2" => $this->getUrlParam(2)
         ];
     }
+
 }
 
 ?>

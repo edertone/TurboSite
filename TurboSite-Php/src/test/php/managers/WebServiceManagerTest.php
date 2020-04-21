@@ -46,6 +46,7 @@ use org\turbosite\src\test\resources\model\webservice\ServiceWithUrl4ParametersD
 use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParameterIntTyped;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithUrlParameterIntTyped;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParamsAsArrayOfStrings;
+use org\turbosite\src\test\resources\model\webservice\ServiceWithInvalidTypeDefaultUrlParamValue;
 use org\turbotesting\src\main\php\utils\AssertUtils;
 
 
@@ -970,41 +971,12 @@ class WebServiceManagerTest extends TestCase {
         $this->assertSame(['1','2','3','500',true], (new ServiceWithUrlParams5LastNotMandatory([1,2,3,500,'true']))->run());
 
         // Test wrong values
-        try {
-            (new ServiceWithUrlParams3Mandatory([1,[1,2],'string']))->run();
-            $this->exceptionMessage = 'ServiceWithUrlParams3Mandatory [1,[1,2] did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Expected URL param 2 to be a json encoded string but was string/', $e->getMessage());
-        };
-
-        try {
-            (new ServiceWithUrlParams3Mandatory([1,[1,2]]))->run();
-            $this->exceptionMessage = 'ServiceWithUrlParams3Mandatory [1,[1,2]] did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory URL parameter at 2/', $e->getMessage());
-        };
-
-        try {
-            (new ServiceWithUrlParams3Mandatory([1]))->run();
-            $this->exceptionMessage = 'ServiceWithUrlParams3Mandatory [1] did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory URL parameter at 1/', $e->getMessage());
-        };
-
-        try {
-            (new ServiceWithUrlParams5LastNotMandatory([1,2,3,500,'1']))->run();
-            $this->exceptionMessage = 'ServiceWithUrlParams5LastNotMandatory [1,2,3,500,1] did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Expected URL param 4 to be a json encoded boolean but was 1/', $e->getMessage());
-        };
-
-        // Test exceptions
-        try {
-            (new ServiceWithUrlParams3IncorrectMandatory([]))->run();
-            $this->exceptionMessage = 'ServiceWithUrlParams3IncorrectMandatory [1] did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/All URL parameters must have a default value after the non mandatory defined at 1/', $e->getMessage());
-        };
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParams3Mandatory([1,[1,2],'string']))->run();}, '/Expected URL param 2 to be a json encoded string but was string/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParams3Mandatory([1,[1,2]]))->run();}, '/Missing mandatory URL parameter at 2/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParams3Mandatory([1]))->run();}, '/Missing mandatory URL parameter at 1/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParams5LastNotMandatory([1,2,3,500,'1']))->run();}, '/Expected URL param 4 to be a json encoded boolean but was 1/');
+        AssertUtils::throwsException(function() {(new ServiceWithUrlParams3IncorrectMandatory([]))->run();}, '/All URL parameters must have a default value after the non mandatory defined at 1/');
+        AssertUtils::throwsException(function() {(new ServiceWithInvalidTypeDefaultUrlParamValue(['hello', 'world']))->run();}, '/Expected URL param 2 to be a json encoded integer but was "string"/');
     }
 
 

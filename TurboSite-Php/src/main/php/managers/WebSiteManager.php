@@ -565,10 +565,12 @@ class WebSiteManager extends UrlParamsBase{
      * @param string $language As the single parameter view does not accept language parameter, we must define which language it is using by setting it here.
      * @param string|array $allowedURLParameterValues Array with a list of accepted values for the only one URL parameter that is accepted by this view. If the array is empty,
      *        any value will be accepted by the parameter view.
+     * @param string $redirectToClosest if set to true, when the received single parameter is not found on the list of allowed parameters, a redirect to
+     *        the most similar one will be performed
      *
      * @return void
      */
-    public function initializeAsSingleParameterView($language, $allowedURLParameterValues = []){
+    public function initializeAsSingleParameterView($language, $allowedURLParameterValues = [], $redirectToClosest = true){
 
         if($this->_currentViewName !== $this->_singleParameterView){
 
@@ -591,8 +593,14 @@ class WebSiteManager extends UrlParamsBase{
 
         if($allowedURLParameterValues !== [] && !in_array($this->getUrlParam(), $allowedURLParameterValues)){
 
-            // TODO - use string similarity to redirect to the most similar value if necessary (configurable??)
-            $this->show404Error();
+            if($redirectToClosest){
+
+                $this->redirect301($this->getUrl(StringUtils::findMostSimilarString($this->getUrlParam(), $allowedURLParameterValues), true));
+
+            }else{
+
+                $this->show404Error();
+            }
         }
 
         $this->_primaryLanguage = $language;

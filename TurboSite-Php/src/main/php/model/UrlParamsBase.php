@@ -15,6 +15,7 @@ namespace org\turbosite\src\main\php\model;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\model\BaseStrictClass;
 use org\turbocommons\src\main\php\managers\BrowserManager;
+use org\turbocommons\src\main\php\utils\StringUtils;
 
 
 /**
@@ -77,12 +78,6 @@ abstract class UrlParamsBase extends BaseStrictClass{
      * Specifies that a parameter is mandatory: Any webservice call that does not specify the parameter will throw an exception
      */
     public const REQUIRED = 'REQUIRED';
-
-
-    /**
-     * Specifies that a parameter is NOT mandatory: It can be avoided when calling the webservice
-     */
-    public const NOT_REQUIRED = 'NOT_REQUIRED';
 
 
     /**
@@ -294,7 +289,7 @@ abstract class UrlParamsBase extends BaseStrictClass{
             if(!isset($this->_receivedUrlParams[$i]) && isset($this->_enabledUrlParams[$i][2])){
 
                 $receivedUrlParamsModified = true;
-                $this->_receivedUrlParams[$i] = is_string($this->_enabledUrlParams[$i][2]) ? $this->_enabledUrlParams[$i][2] : json_encode($this->_enabledUrlParams[$i][2]);
+                $this->_receivedUrlParams[$i] = $this->_enabledUrlParams[$i][0] === self::NOT_TYPED ? $this->_enabledUrlParams[$i][2] : json_encode($this->_enabledUrlParams[$i][2]);
             }
 
             if($this->_enabledUrlParams[$i][1] !== self::NOT_RESTRICTED && !is_array($this->_enabledUrlParams[$i][1])){
@@ -313,6 +308,7 @@ abstract class UrlParamsBase extends BaseStrictClass{
 
         for ($i = 0; $i < $this->_receivedUrlParamsCount; $i++) {
 
+            // Test that received parameters have been enabled by enabledUrlParams
             if(!isset($this->_enabledUrlParams[$i])){
 
                 array_splice($this->_receivedUrlParams, $i);
@@ -325,7 +321,27 @@ abstract class UrlParamsBase extends BaseStrictClass{
 
                 if($i === $j){
 
+                    // Test that the received parameter matches its respective enabled parameter type definition
                     $this->_validateParameterType($this->_receivedUrlParams[$i], json_decode($this->_receivedUrlParams[$i]), $this->_enabledUrlParams[$j][0], 'Expected URL param '.$i);
+
+                    // test that the received parameter value matches the restricted values (if set on enabled url params)
+                    if($this->_enabledUrlParams[$i][1] !== self::NOT_RESTRICTED &&
+                       !in_array($this->decodeUrlParam($i), $this->_enabledUrlParams[$i][1])){
+
+                           $receivedUrlParamsModified = true;
+
+                           if($this->_enabledUrlParams[$i][0] === self::NOT_TYPED){
+
+                               $mostSimilarValue = StringUtils::findMostSimilarString($this->_receivedUrlParams[$i], $this->_enabledUrlParams[$i][1]);
+
+                           }else{
+
+                               $mostSimilarValue = StringUtils::findMostSimilarString($this->_receivedUrlParams[$i],
+                                   array_map(function ($p) {return json_encode($p);}, $this->_enabledUrlParams[$i][1]));
+                           }
+
+                           $this->_receivedUrlParams[$i] = $mostSimilarValue;
+                    }
 
                     break;
                 }
@@ -426,6 +442,19 @@ abstract class UrlParamsBase extends BaseStrictClass{
 
             throw new UnexpectedValueException('Disabled parameter URL index '.$index.' requested');
         }
+
+        return $this->decodeUrlParam($index);
+    }
+
+
+    /**
+     * Obtain the real value for the specified url parameter based on its type
+     *
+     * @param int $index The index for the url param we want to obtain
+     *
+     * @return mixed The real Php type for the parameter we are looking for
+     */
+    private function decodeUrlParam(int $index){
 
         if($this->_enabledUrlParams[$index][0] !== self::NOT_TYPED){
 

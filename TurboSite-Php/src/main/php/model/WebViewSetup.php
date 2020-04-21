@@ -30,7 +30,7 @@ class WebViewSetup{
      *
      * 2 - An array of arrays with the list of URL parameters that are accepted by this view and their respective type and value restrictions:
      *
-     *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements:<br>
+     *     Each element on the enabledUrlParams array must be an array with between 0 and 3 elements (in this same order):<br>
      *         0 - TYPE: (optional) Specifies the URL parameter data type restriction: WebSiteManager::NOT_TYPED (default), WebSiteManager::BOOL,
      *         WebSiteManager::NUMBER, WebSiteManager::STRING, WebSiteManager::ARRAY, WebSiteManager::OBJECT<br>
      *
