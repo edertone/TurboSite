@@ -533,9 +533,9 @@ class WebSiteManager extends UrlParamsBase{
             $forcedParameters = ($setup->forcedParametersCallback)();
             $forcedParametersCount = count($forcedParameters);
 
-            if($forcedParametersCount !== $setup->enabledUrlParams){
+            if($forcedParametersCount !== count($setup->enabledUrlParams)){
 
-                throw new UnexpectedValueException('Forced parameters array must have the same length as enabled parameters ('.$setup->enabledUrlParams.')');
+                throw new UnexpectedValueException('forcedParametersCallback result must have the same length as enabledUrlParams ('.print_r($setup->enabledUrlParams, true).')');
             }
 
             for ($i = 0; $i < $forcedParametersCount; $i++) {
