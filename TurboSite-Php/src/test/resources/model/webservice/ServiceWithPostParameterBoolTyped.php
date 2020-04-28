@@ -23,6 +23,8 @@ class ServiceWithPostParameterBoolTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::BOOL];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

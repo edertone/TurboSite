@@ -23,6 +23,8 @@ class ServiceWithPostParameterStringTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::STRING];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

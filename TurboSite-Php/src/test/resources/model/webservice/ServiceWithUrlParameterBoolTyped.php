@@ -23,6 +23,8 @@ class ServiceWithUrlParameterBoolTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::BOOL];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

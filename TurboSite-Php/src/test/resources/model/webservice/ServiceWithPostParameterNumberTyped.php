@@ -23,6 +23,8 @@ class ServiceWithPostParameterNumberTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::NUMBER];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

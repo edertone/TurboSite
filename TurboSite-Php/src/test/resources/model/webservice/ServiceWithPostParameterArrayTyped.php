@@ -23,6 +23,8 @@ class ServiceWithPostParameterArrayTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::ARRAY];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

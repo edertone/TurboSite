@@ -23,6 +23,8 @@ class ServiceWithInvalidPostParameterRequiredValue extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::NOT_TYPED, WebServiceManager::ARRAY];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

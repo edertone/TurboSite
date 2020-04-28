@@ -23,6 +23,8 @@ class ServiceWithUrlParameterObjectTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::OBJECT];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

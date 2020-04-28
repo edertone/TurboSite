@@ -23,6 +23,8 @@ class ServiceWithPostParameterObjectTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::OBJECT];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

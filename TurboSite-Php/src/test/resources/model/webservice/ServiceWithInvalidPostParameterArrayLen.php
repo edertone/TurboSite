@@ -23,6 +23,8 @@ class ServiceWithInvalidPostParameterArrayLen extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = [];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

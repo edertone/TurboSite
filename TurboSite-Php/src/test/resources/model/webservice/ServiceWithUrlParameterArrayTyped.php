@@ -23,6 +23,8 @@ class ServiceWithUrlParameterArrayTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::ARRAY];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

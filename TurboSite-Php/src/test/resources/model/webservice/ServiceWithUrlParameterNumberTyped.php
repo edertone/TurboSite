@@ -23,6 +23,8 @@ class ServiceWithUrlParameterNumberTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::NUMBER];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

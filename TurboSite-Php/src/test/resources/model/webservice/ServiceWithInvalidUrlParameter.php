@@ -23,6 +23,8 @@ class ServiceWithInvalidUrlParameter extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams = 'hello';
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

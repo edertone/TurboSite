@@ -11,11 +11,11 @@
 
 namespace org\turbosite\src\test\php\services\chain;
 
-use stdClass;
 use PHPUnit\Framework\TestCase;
-use Throwable;
+use stdClass;
 use org\turbocommons\src\main\php\utils\ArrayUtils;
 use org\turbosite\src\main\php\services\chain\ChainServices;
+use org\turbotesting\src\main\php\utils\AssertUtils;
 
 
 /**
@@ -32,8 +32,6 @@ class ChainServicesTest extends TestCase {
      * @return void
      */
     protected function setUp(){
-
-        $this->exceptionMessage = '';
     }
 
 
@@ -43,11 +41,6 @@ class ChainServicesTest extends TestCase {
      * @return void
      */
     protected function tearDown(){
-
-        if($this->exceptionMessage != ''){
-
-            $this->fail($this->exceptionMessage);
-        }
     }
 
 
@@ -59,33 +52,10 @@ class ChainServicesTest extends TestCase {
     public function testConstruct(){
 
         // Test empty values
-        try {
-            $service = new ChainServices();
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
-        }
-
-        try {
-            $service = new ChainServices(null, null);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
-        }
-
-        try {
-            $service = new ChainServices('', '');
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/must be of the type array or null, string given/', $e->getMessage());
-        }
-
-        try {
-            $service = new ChainServices([], []);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() { new ChainServices(); }, '/Missing mandatory POST parameter: services/');
+        AssertUtils::throwsException(function() { new ChainServices(null, null); }, '/Missing mandatory POST parameter: services/');
+        AssertUtils::throwsException(function() { new ChainServices('', ''); }, '/must be of the type array or null, string given/');
+        AssertUtils::throwsException(function() { new ChainServices([], []); }, '/Missing mandatory POST parameter: services/');
 
         // Test ok values
         $service = new stdClass();
@@ -96,39 +66,19 @@ class ChainServicesTest extends TestCase {
 
         // Test wrong values
         // Test exceptions
-        try {
-            $service = new ChainServices([''], ['services' => '']);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Unexpected URL parameter received at 0/', $e->getMessage());
-        }
-
-        try {
-            $service = new ChainServices([], 'string');
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Argument 2.*must be of the type array or null.*string given/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() { new ChainServices([''], ['services' => '']); }, '/Unexpected URL parameter received at 0/');
+        AssertUtils::throwsException(function() { new ChainServices([], 'string'); }, '/Argument 2.*must be of the type array or null.*string given/');
 
         $service = new stdClass();
         $service->class = '';
 
-        try {
-            $service = new ChainServices([], ['services' => [$service]]);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/A namespace \+ class or an uri is mandatory to locate the service to execute/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service) {new ChainServices([], ['services' => [$service]]); },
+            '/A namespace \+ class or an uri is mandatory to locate the service to execute/');
 
         $service = new stdClass();
         $service->class = 'org\turbosite\src\test\resources\model\nonexistantPath\NonExistantClassName';
 
-        try {
-            $service = new ChainServices([], ['services' => [$service]]);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Provided class does not exist: org.*NonExistantClassName/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service) { new ChainServices([], ['services' => [$service]]); }, '/Provided class does not exist: org.*NonExistantClassName/');
     }
 
 
@@ -140,12 +90,7 @@ class ChainServicesTest extends TestCase {
     public function testRun_no_services_passed(){
 
         // Test empty values
-        try {
-            $service = new ChainServices([], ['services' => '']);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Expected services POST param to be a json encoded array but was/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() { new ChainServices([], ['services' => '']); }, '/Expected services POST param to be a json encoded array but was/');
 
         $servicesResult = (new ChainServices([], ['services' => []]))->run();
         $this->assertTrue(ArrayUtils::isArray($servicesResult));
@@ -153,12 +98,7 @@ class ChainServicesTest extends TestCase {
 
         // Test exceptions
         // Test wrong values
-        try {
-            $service = new ChainServices(null, null);
-            $this->exceptionMessage = print_r($service, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory POST parameter: services/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() { new ChainServices(null, null); }, '/Missing mandatory POST parameter: services/');
     }
 
 
@@ -172,12 +112,8 @@ class ChainServicesTest extends TestCase {
         // Test empty values
         $service = new stdClass();
         $service->class = '';
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/A namespace \+ class or an uri is mandatory to locate the service to execute/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/A namespace \+ class or an uri is mandatory to locate the service to execute/');
 
         // Test ok values
 
@@ -215,23 +151,15 @@ class ChainServicesTest extends TestCase {
         // Test exceptions
         $service = new stdClass();
         $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory URL parameter at 0/', $e->getMessage());
-        }
+
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); }, '/Missing mandatory URL parameter at 0/');
 
         $service = new stdClass();
         $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithUrlandPostParams';
         $service->urlParameters = ['1', '2'];
         $service->postParameters = [];
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Missing mandatory POST parameter: a/', $e->getMessage());
-        }
+
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); }, '/Missing mandatory POST parameter: a/');
     }
 
 
@@ -268,26 +196,14 @@ class ChainServicesTest extends TestCase {
 
         // Test wrong values
         // Test exceptions
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service1, '', $service3]]));
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was /', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service1, $service3) { (new ChainServices([], ['services' => [$service1, '', $service3]])); },
+            '/Each service must be defined as a php stdClass.*but was /');
 
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service1, 123, $service3]]));
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was 123/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service1, $service3) { (new ChainServices([], ['services' => [$service1, 123, $service3]])); },
+            '/Each service must be defined as a php stdClass.*but was 123/');
 
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service1, 'string', $service3]]));
-            $this->exceptionMessage = '$services did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Each service must be defined as a php stdClass.*but was string/', $e->getMessage());
-        }
+        AssertUtils::throwsException(function() use ($service1, $service3) { (new ChainServices([], ['services' => [$service1, 'string', $service3]])); },
+            '/Each service must be defined as a php stdClass.*but was string/');
     }
 
 
@@ -301,12 +217,9 @@ class ChainServicesTest extends TestCase {
         $service = new stdClass();
         $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams';
         $service->uri = 'api/site/example/example-service-without-params';
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = print_r($servicesResult, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/Services can only be defined by class or uri, not both/', $e->getMessage());
-        }
+
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/Services can only be defined by class or uri, not both/');
     }
 
 
@@ -320,12 +233,9 @@ class ChainServicesTest extends TestCase {
         // Test empty values
         $service = new stdClass();
         $service->uri = '';
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = print_r($servicesResult, true).' did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/A namespace \+ class or an uri is mandatory to locate the service to execute/', $e->getMessage());
-        }
+
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/A namespace \+ class or an uri is mandatory to locate the service to execute/');
 
         // Test ok values
         // Ok values can only be tested when calling ChainServices service via http request
@@ -334,12 +244,9 @@ class ChainServicesTest extends TestCase {
         // Test exceptions
         $service = new stdClass();
         $service->uri = 'api/site/example/example-service-without-params';
-        try {
-            $servicesResult = (new ChainServices([], ['services' => [$service]]))->run();
-            $this->exceptionMessage = '$servicesResult did not cause exception';
-        } catch (Throwable $e) {
-            $this->assertRegExp('/ChainServices uri can only be defined when called via http request/', $e->getMessage());
-        }
+
+        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/ChainServices uri can only be defined when called via http request/');
     }
 }
 

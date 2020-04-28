@@ -25,6 +25,8 @@ class ServiceWithInvalidTypeDefaultUrlParamValue extends WebServiceManager{
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED];
         $this->enabledUrlParams[] = [WebServiceManager::INT, [1,3,5,6], 'string'];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

@@ -23,6 +23,8 @@ class ServiceWithInvalidUrlParameterRestrictedValue extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::BOOL];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

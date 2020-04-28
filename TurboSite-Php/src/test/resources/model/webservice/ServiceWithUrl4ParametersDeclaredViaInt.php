@@ -23,6 +23,8 @@ class ServiceWithUrl4ParametersDeclaredViaInt extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams = 4;
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

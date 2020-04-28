@@ -24,6 +24,8 @@ class ServiceWithoutParams extends WebServiceManager{
 
         // Nothing is changed here
         // No GET nor POST parameters are accepted
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

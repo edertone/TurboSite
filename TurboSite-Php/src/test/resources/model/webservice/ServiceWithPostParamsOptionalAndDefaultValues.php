@@ -25,6 +25,8 @@ class ServiceWithPostParamsOptionalAndDefaultValues extends WebServiceManager{
         $this->enabledPostParams[] = ['a'];
         $this->enabledPostParams[] = ['b', WebServiceManager::NOT_TYPED, WebServiceManager::NOT_REQUIRED];
         $this->enabledPostParams[] = ['c', WebServiceManager::NOT_TYPED, WebServiceManager::NOT_REQUIRED, WebServiceManager::NOT_RESTRICTED, 'default'];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

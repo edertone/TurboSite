@@ -23,6 +23,8 @@ class ServiceWithPostParameterNotTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', WebServiceManager::NOT_TYPED];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

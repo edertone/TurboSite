@@ -25,6 +25,8 @@ class ServiceWithUrlParams3Mandatory extends WebServiceManager{
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [WebServiceManager::ARRAY];
         $this->enabledUrlParams[] = [WebServiceManager::STRING];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

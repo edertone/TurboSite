@@ -23,6 +23,8 @@ class ServiceWithUrlParameterIntTyped extends WebServiceManager{
     protected function setup(){
 
         $this->enabledUrlParams[] = [WebServiceManager::INT];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

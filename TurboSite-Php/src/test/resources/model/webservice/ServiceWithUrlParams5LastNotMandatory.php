@@ -27,6 +27,8 @@ class ServiceWithUrlParams5LastNotMandatory extends WebServiceManager{
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default3'];
         $this->enabledUrlParams[] = [WebServiceManager::BOOL, WebServiceManager::NOT_RESTRICTED, true];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

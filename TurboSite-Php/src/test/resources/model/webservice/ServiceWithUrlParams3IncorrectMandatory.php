@@ -25,6 +25,8 @@ class ServiceWithUrlParams3IncorrectMandatory extends WebServiceManager{
         $this->enabledUrlParams[] = [];
         $this->enabledUrlParams[] = [WebServiceManager::NOT_TYPED, WebServiceManager::NOT_RESTRICTED, 'default'];
         $this->enabledUrlParams[] = [];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

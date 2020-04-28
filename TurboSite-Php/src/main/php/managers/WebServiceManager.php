@@ -114,6 +114,17 @@ abstract class WebServiceManager extends UrlParamsBase{
 
 
     /**
+     * We must define here a method that will be used to authorize the webservice when necessary:
+     *
+     * If the web service does not require user authorization, the method must simply return true.
+     * If authorization is required, the method must return true when authorization is successful and false when it fails.
+     *
+     * @var callable
+     */
+    protected $authorizeMethod = null;
+
+
+    /**
      * Stores the actual values of the POST parameters that have been passed to this service via POST or via service constructor
      */
     private $_receivedPostParams = [];
@@ -286,6 +297,11 @@ abstract class WebServiceManager extends UrlParamsBase{
 
                 throw new UnexpectedValueException('Unexpected POST parameter received: '.$receivedPostParamName);
             }
+        }
+
+        if($this->authorizeMethod === null || call_user_func($this->authorizeMethod) !== true){
+
+            throw new UnexpectedValueException('authorization failed');
         }
     }
 

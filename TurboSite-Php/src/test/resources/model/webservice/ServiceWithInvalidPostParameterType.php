@@ -23,6 +23,8 @@ class ServiceWithInvalidPostParameterType extends WebServiceManager{
     protected function setup(){
 
         $this->enabledPostParams[] = ['a', 'invalid-type-here'];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 

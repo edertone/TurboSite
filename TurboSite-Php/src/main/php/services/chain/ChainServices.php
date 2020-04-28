@@ -93,6 +93,8 @@ class ChainServices extends WebServiceManager{
 
         $this->enabledPostParams[] = ['services', WebServiceManager::ARRAY];
         $this->enabledPostParams[] = ['isAnyErrorStoppingExecution', WebServiceManager::BOOL, WebServiceManager::NOT_REQUIRED, WebServiceManager::NOT_RESTRICTED, true];
+
+        $this->authorizeMethod = function () { return true; };
     }
 
 
