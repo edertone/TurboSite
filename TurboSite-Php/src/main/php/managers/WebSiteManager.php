@@ -981,7 +981,7 @@ class WebSiteManager extends UrlParamsBase{
 
                             header('Content-Type: application/json');
 
-                            // We set 500 error code cause the exception is not hanbled by the webservice, and therefore we don't know what happened
+                            // We set 500 error code cause the exception is not handled by the webservice, and therefore we don't know what happened
                             return $this->webServiceResultToString(WebServiceError::createInstance(
                                 500, 'Unhandled exception', $e->getMessage(), $e->getTraceAsString()));
                         }
