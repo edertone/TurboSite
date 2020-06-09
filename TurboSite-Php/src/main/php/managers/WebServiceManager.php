@@ -101,7 +101,7 @@ abstract class WebServiceManager extends UrlParamsBase{
      *
      * 1 - A string that represents the name for the POST parameter, which will be non typed, mandatory and with no default value<br>
      *
-     * 2 - An array between 1 and 5 elements:<br>
+     * 2 - An array between 1 and 5 elements (in the same order as provided here):<br>
      *     0 - NAME: A string with the name for a POST parameter that will be accepted by the service.<br>
      *     1 - TYPE: (optional) Specifies the POST parameter data type restriction: WebServiceManager::NOT_TYPED (default), WebServiceManager::BOOL, WebServiceManager::NUMBER, WebServiceManager::STRING, WebServiceManager::ARRAY, WebServiceManager::OBJECT<br>
      *     2 - REQUIRED: (optional) Specifies if the POST parameter is mandatory and must be specified to the service or not: WebServiceManager::REQUIRED (default) or WebServiceManager::NOT_REQUIRED.<br>
