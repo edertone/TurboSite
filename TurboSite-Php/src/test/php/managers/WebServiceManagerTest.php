@@ -13,6 +13,7 @@ namespace org\turbosite\src\test\php\model;
 
 use Throwable;
 use PHPUnit\Framework\TestCase;
+use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithUrlAndPostParams;
 use org\turbosite\src\test\resources\model\webservice\ServiceWithPostParams;
@@ -1016,7 +1017,7 @@ class WebServiceManagerTest extends TestCase {
         $this->assertSame(400, $error->code);
         $this->assertSame('title', $error->title);
         $this->assertSame('', $error->message);
-        $this->assertSame('', $error->trace);
+        $this->assertFalse(StringUtils::isEmpty($error->trace));
 
         $error = $sut->generateError(400, 'title', 'message', 'trace');
         $this->assertSame(400, $error->code);

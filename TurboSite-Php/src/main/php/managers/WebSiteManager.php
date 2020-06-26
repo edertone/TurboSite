@@ -1014,6 +1014,14 @@ class WebSiteManager extends UrlParamsBase{
 
             http_response_code($result->code);
 
+            // If exceptions to log are enabled, we will send the error information to the defined log
+            if(GlobalErrorManager::getInstance()->exceptionsToLog !== ''){
+
+                $this->_depotManager->getLogsManager()->write(
+                    $result->title.'(code '.$result->code.")\n".$this->_browserManager->getCurrentUrl()."\n".$result->message."\n".$result->trace,
+                    GlobalErrorManager::getInstance()->exceptionsToLog);
+            }
+
             // Error information will only be output if exceptions to browser are enabled.
             return GlobalErrorManager::getInstance()->exceptionsToBrowser ? json_encode($result) : '';
         }

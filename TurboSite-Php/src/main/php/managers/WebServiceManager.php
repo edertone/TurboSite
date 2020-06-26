@@ -11,6 +11,7 @@
 
 namespace org\turbosite\src\main\php\managers;
 
+use Exception;
 use UnexpectedValueException;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\model\WebServiceError;
@@ -357,6 +358,11 @@ abstract class WebServiceManager extends UrlParamsBase{
      * @return WebServiceError A newly created error instance, filled with the specified data, so we can return it on the webservice run() method
      */
     public function generateError(int $code, string $title, string $message = '', string $trace = ''){
+
+        if($trace === ''){
+
+            $trace = (new Exception)->getTraceAsString();
+        }
 
         return WebServiceError::createInstance($code, $title, $message, $trace);
     }
