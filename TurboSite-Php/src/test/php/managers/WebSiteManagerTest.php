@@ -11,10 +11,13 @@
 
 namespace org\turbosite\src\test\php\managers;
 
+use stdClass;
+use ReflectionObject;
 use PHPUnit\Framework\TestCase;
 use org\turbodepot\src\main\php\managers\FilesManager;
 use org\turbosite\src\main\php\managers\GlobalErrorManager;
 use org\turbosite\src\main\php\managers\WebSiteManager;
+use org\turbodepot\src\main\php\managers\DepotManager;
 
 
 /**
@@ -26,17 +29,6 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
-     * @see TestCase::setUpBeforeClass()
-     *
-     * @return void
-     */
-    public static function setUpBeforeClass(){
-
-        // Nothing necessary here
-    }
-
-
-    /**
      * @see TestCase::setUp()
      *
      * @return void
@@ -45,7 +37,9 @@ class WebSiteManagerTest extends TestCase {
 
         $this->filesManager = new FilesManager();
         $this->tempFolder = $this->filesManager->createTempDirectory('TurboSitePhp-WebSiteManagerTest');
-        $this->sut = WebSiteManager::getInstance();
+
+        // Note that we create it as an instance instead of a singleton cause we want to use a new one for each test
+        $this->sut = new WebSiteManager();
 
         // Disable error manager warnings to prevent test errors
         GlobalErrorManager::getInstance()->tooMuchMemoryWarning = 0;
@@ -71,18 +65,24 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
-     * @see TestCase::tearDownAfterClass()
-     *
-     * @return void
+     * Auxiliary method to mock the depot manager class inside the websitemanager class
      */
-    public static function tearDownAfterClass(){
+    private function mockDepotManager(WebSiteManager $webSiteManager){
 
-        // Nothing necessary here
+        // Mock all the values that are required to call the tested method
+        $depotSetup = new stdClass();
+        $depotSetup->{'$schema'} = 'mockschema';
+        $depotSetup->depots = ['mockname'];
+
+        $reflectionObject = new ReflectionObject($webSiteManager);
+        $reflectionProperty = $reflectionObject->getProperty('_depotManager');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($webSiteManager, new DepotManager($depotSetup));
     }
 
 
     /**
-     * testGetInstance
+     * test
      *
      * @return void
      */
@@ -93,21 +93,24 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
-     * testGetDepotManager
+     * test
      *
      * @return void
      */
     public function testGetDepotManager(){
 
         $this->assertSame(null, $this->sut->getDepotManager());
+        $this->assertFalse($this->sut->getDepotManager() instanceof DepotManager);
 
-        // TODO - implement all necessary steps to obtain a valid DepotManager instance when calling this method
-        // TODO - $this->assertTrue($this->sut->getDepotManager() instanceof DepotManager);
+        $this->mockDepotManager($this->sut);
+
+        $this->assertTrue($this->sut->getDepotManager() instanceof DepotManager);
+        $this->assertTrue($this->sut->getDepotManager()->getFilesManager() instanceof FilesManager);
     }
 
 
     /**
-     * testGetPrimaryLanguage
+     * test
      *
      * @return void
      */
@@ -116,6 +119,24 @@ class WebSiteManagerTest extends TestCase {
         $this->assertSame('', $this->sut->getPrimaryLanguage());
 
         // TODO - Test more complex scenarios where an url with a valid language exists
+    }
+
+
+    /**
+     * test
+     *
+     * @return void
+     */
+    public function testEchoHtmlFromMarkDownFile(){
+
+        $this->mockDepotManager($this->sut);
+
+        // Capture the echo output from the method and test it is correct
+        ob_start();
+
+        $this->sut->echoHtmlFromMarkDownFile(__DIR__.'/../../resources/managers/webSiteManager/only-title.md');
+
+        $this->assertSame('<h1>this is a title</h1>', ob_get_clean());
     }
 
     // TODO - add all pending tests
