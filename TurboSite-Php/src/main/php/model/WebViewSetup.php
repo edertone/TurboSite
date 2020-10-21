@@ -49,7 +49,7 @@ class WebViewSetup{
 
 
     /**
-     * If we want to fix some of the URL parameters to a fixed value, we can use this method.
+     * If we want to force some of the URL parameters to a fixed value, we can use this method.
      * When the url is loaded, if any of the URL parameters that have been fixed has a different value, a redirect will be
      * performed to replace them with the fixed value.
      *
@@ -62,11 +62,18 @@ class WebViewSetup{
 
 
     /**
-     * Defines the amount of seconds that the whole view will remain on cache.
-     * If set to -1 the view will remain on cache for an infinite amount of time or until the cache is cleared
+     * Specifies if full page cache for the view is enabled or not, and the amount of seconds that the whole view will remain on cache.
      *
-     * @example 1 minute = 60 seconds
-     * @example 1 hour = 3600 seconds
+     * If set to -1 the cache will be disabled and all the view code will be executed each time it is loaded
+     * If set to 0 the view will remain on cache for an infinite amount of time, till the cache data is deleted or the project is published again
+     * If set to N the view will remain on cache for the specified number of N seconds
+     *
+     * This property affects the view full html document caching. If enabled, the first time the view is loaded its whole html output will be
+     * stored inside the site/___views_cache___ folder with a unique hash representing the active url. All the next times the same url
+     * is called again, the stored html will be used to render the whole html document instead of executing the view code again.
+     *
+     * Everytime the project is published, all the cache gets removed cause it is stored inside the published site/ folder. Make sure
+     * that the application has writting permissions to the ___views_cache___ folder.
      */
     public $cacheLifeTime = -1;
 }

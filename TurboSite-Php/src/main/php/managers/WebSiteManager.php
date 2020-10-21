@@ -22,6 +22,7 @@ use org\turbosite\src\main\php\model\UrlParamsBase;
 use org\turbosite\src\main\php\model\WebServiceError;
 use org\turbosite\src\main\php\model\WebViewSetup;
 use org\turbodepot\src\main\php\managers\MarkDownManager;
+use org\turbodepot\src\main\php\managers\MarkDownBlogManager;
 
 
 /**
@@ -56,6 +57,12 @@ class WebSiteManager extends UrlParamsBase{
      * to be used when loading other files or resources
      */
     private $_mainPath = '';
+
+
+    /**
+     * Stores the filesystem location for the views cache
+     */
+    private $_viewsCachePath = '';
 
 
     /**
@@ -245,6 +252,7 @@ class WebSiteManager extends UrlParamsBase{
     public function generateContent(string $indexFilePath, array $setupFilesData = []){
 
         $this->_mainPath = StringUtils::formatPath(StringUtils::getPath($indexFilePath));
+        $this->_viewsCachePath = $this->_mainPath.DIRECTORY_SEPARATOR.'___views_cache___';
 
         // Validate the setup files data and load any missing ones
         foreach ($setupFilesData as $key => $value) {
@@ -454,7 +462,7 @@ class WebSiteManager extends UrlParamsBase{
 
 
     /**
-     * Gives the filesystem location to the src/main/resources floder
+     * Gives the filesystem location to the src/main/resources folder
      *
      * @see WebSiteManager::getPath()
      *
@@ -478,6 +486,8 @@ class WebSiteManager extends UrlParamsBase{
      *
      * Note that any extra parameters on the url which are not enabled will be discarted and removed with a 301 redirect. Also
      * GET url parameters like ?param1=v1&param2=v2.. will be ignored and removed from the url.
+     *
+     * @see WebViewSetup
      *
      * @param WebViewSetup $setup The setup parameters that must be aplied to the view. If not specified, all the defaults will be used
      *
@@ -554,6 +564,22 @@ class WebSiteManager extends UrlParamsBase{
                 $this->redirect301($this->getUrl(implode('/', $this->_URIElements), true));
             }
         }
+
+        if($setup->cacheLifeTime >= 0){
+
+            // TODO - implement cache life time non infinite values. Currently only the 0 value (infinite lifetime) is working. Any other positive values
+            // are treated the same as 0, infinite lifetime.
+
+            ob_start();
+
+            register_shutdown_function(function() {
+
+                $this->_depotManager->getFilesManager()->saveFile(
+                    $this->_viewsCachePath.DIRECTORY_SEPARATOR.hash('md5', $_SERVER[REQUEST_URI]), ob_get_contents(), false, true);
+
+                ob_end_flush();
+            });
+        }
     }
 
 
@@ -606,6 +632,102 @@ class WebSiteManager extends UrlParamsBase{
 
         $this->_primaryLanguage = $language;
         $this->_localizationManager->setPrimaryLanguage($this->_primaryLanguage);
+    }
+
+
+    /**
+     * Declares the current document as a view that shows the contents of a markdown blog post.
+     *
+     * Under the hood, this method simply performs all the necessary steps to initialize the current document as a standard view, but also load
+     * the blog data, setup the url parameters and any other operation that may be necessary.
+     *
+     * @see WebSiteManager::initializeAsView
+     * @see WebViewSetup::$cacheLifeTime
+     *
+     * @param array $options An associative array that will define how the blog post view is initialized. Following array key values are accepted:<br>
+     *              - blogRootPath (mandatory): The filesystem path to the root folder where the markdown blog structure of files is stored.<br>
+     *              - latestPosts (optional, default 0): The number of latest posts to load. If we need to show data or links regarding other recent blog posts, we can obtain it by requesting how many of them we want to load<br>
+     *              - cacheLifeTime (optional, default -1): Exactly the same behaviour as WebViewSetup::$cacheLifeTime
+     *
+     * @return \stdClass An object with the following properties that we can use:<br>
+     *         - currentPost: A fully initialized MarkDownBlogPostObject instance with the data for the blog post that is loaded by this view<br>
+     *         - latestPosts: An array of fully initialized MarkDownBlogPostObject instances for the N newest blog posts. Only available if latestPosts is specified<br>
+     *         - markDownBlogManager: A fully initialized MarkDownBlogManager instance that can be used to operate with the stored blog data
+     */
+    public function initializeAsViewMarkDownBlogPost(array $options){
+
+        $blogManager = new MarkDownBlogManager($options['blogRootPath']);
+
+        $latestPosts = $blogManager->getLatestPosts($this->getPrimaryLanguage(),
+            (isset($options['latestPosts']) && $options['latestPosts'] > 0) ? $options['latestPosts'] : 1);
+
+        $webViewSetup = new WebViewSetup();
+
+        if(isset($options['cacheLifeTime']) && $options['cacheLifeTime'] >= 0){
+
+            $webViewSetup->cacheLifeTime = $options['cacheLifeTime'];
+        }
+
+        $webViewSetup->enabledUrlParams = [
+            [WebSiteManager::NOT_TYPED, WebSiteManager::NOT_RESTRICTED, $latestPosts[0]->date],
+            [WebSiteManager::NOT_TYPED, WebSiteManager::NOT_RESTRICTED, $latestPosts[0]->keywords]
+        ];
+
+        $currentPost = null;
+
+        $webViewSetup->forcedParametersCallback = function () use ($blogManager, &$currentPost) {
+
+            try {
+
+                $currentPost = $blogManager->getPost($this->getUrlParam(0), $this->getPrimaryLanguage(), $this->getUrlParam(1), 0);
+
+                return [$currentPost->date, $currentPost->keywords];
+
+            } catch (Throwable $e) {
+
+                $this->show404Error();
+            }
+        };
+
+        $this->initializeAsView($webViewSetup);
+
+        $this->metaTitle = $currentPost->metaTitle;
+        $this->metaDescription = $currentPost->metaDescription;
+
+        $result = new stdClass();
+
+        $result->currentPost = $currentPost;
+
+        $result->latestPosts = [];
+
+        if(isset($options['latestPosts']) && $options['latestPosts'] > 0){
+
+            $result->latestPosts = $latestPosts;
+        }
+
+        $result->markDownBlogManager = $blogManager;
+
+        return $result;
+    }
+
+
+    /**
+     * TODO - Implement a partial cache feature
+     */
+    public function cacheSectionBegin($tag, $timeToLive = 0){
+
+        // TODO - Won't be compatible with full page cache when is set with cacheLifeTime (an exception must happen)
+
+    }
+
+
+    /**
+     * TODO - Implement a partial cache feature
+     */
+    public function cacheSectionEnd($tag){
+
+        // TODO - Won't be compatible with full page cache when is set with cacheLifeTime (an exception must happen)
+
     }
 
 
@@ -784,7 +906,8 @@ class WebSiteManager extends UrlParamsBase{
      * Gives the url that points to the specified view, using the current site locale and the specified parameters
      *
      * @param string $view The name of the view. For example: Home
-     * @param mixed $parameters The list of parameters to pass to the PHP call. If a single parameter is sent, it can be a string. If more than one will be passed, it must be an array.
+     * @param string|array $parameters The list of parameters to pass to the view url that will be generated. If a single parameter is sent, it can be a string.
+     *        If more than one are sent, it must be an array.
      * @param boolean $fullUrl True to get the full absolute url (http://...) or false to get it relative to the current domain
      *
      * @return void
@@ -928,7 +1051,7 @@ class WebSiteManager extends UrlParamsBase{
         // Generate the code to load CDN libs
         foreach ($this->_globalCDNS as $cdn) {
 
-            echo '<script src="'.$cdn->url.'" crossorigin="anonymous"></script>'."\n";
+            echo '<script src="'.$cdn->url.'" crossorigin="anonymous" defer></script>'."\n";
 
             if(!StringUtils::isEmpty($cdn->fallbackResource)){
 
