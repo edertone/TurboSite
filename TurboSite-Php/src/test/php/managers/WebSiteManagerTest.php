@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use org\turbodepot\src\main\php\managers\FilesManager;
 use org\turbosite\src\main\php\managers\GlobalErrorManager;
 use org\turbosite\src\main\php\managers\WebSiteManager;
+use org\turbotesting\src\main\php\utils\AssertUtils;
 use org\turbodepot\src\main\php\managers\DepotManager;
 
 
@@ -145,6 +146,10 @@ class WebSiteManagerTest extends TestCase {
         $this->sut->echoHtmlFromMarkDownFile(__DIR__.'/../../resources/managers/webSiteManager/only-title.md');
 
         $this->assertSame('<h1>this is a title</h1>', ob_get_clean());
+
+        // Invalid path
+        AssertUtils::throwsException(function() { $this->sut->echoHtmlFromMarkDownFile(__DIR__.'/../../resources/managers/nonexistant.md'); }, '/File does not exist.*nonexistant.md/');
+
     }
 
     // TODO - add all pending tests
