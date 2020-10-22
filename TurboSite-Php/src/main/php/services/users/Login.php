@@ -11,6 +11,7 @@
 
 namespace org\turbosite\src\main\php\services\users;
 
+use Throwable;
 use org\turbosite\src\main\php\managers\WebServiceManager;
 use org\turbosite\src\main\php\managers\WebSiteManager;
 
@@ -23,6 +24,8 @@ class Login extends WebServiceManager{
 
     protected function setup(){
 
+        // The data POST parameter expects to receive a valid encoded credentials string.
+        // The string must be encoded using UsersManager::encodeUserAndPassword()
         $this->enabledPostParams = ['data'];
 
         $this->authorizeMethod = function () { return true; };
@@ -31,19 +34,21 @@ class Login extends WebServiceManager{
 
     public function run(){
 
-        $logInResult = WebSiteManager::getInstance()->getDepotManager()->getUsersManager()
-            ->loginFromEncodedCredentials($this->getPostParam('data'));
+        try {
 
-        if($logInResult === []){
+            $logInResult = WebSiteManager::getInstance()->getDepotManager()->getUsersManager()
+                ->loginFromEncodedCredentials($this->getPostParam('data'));
+
+        } catch (Throwable $e) {
 
             return '';
         }
 
-        $result = [];
-        $result['token'] = $logInResult[0];
-        $result['user'] = $logInResult[1];
-
-        return $result;
+        return [
+            'token' => $logInResult->token,
+            'user' => $logInResult->user,
+            'operations' => $logInResult->operations
+        ];
     }
 }
 

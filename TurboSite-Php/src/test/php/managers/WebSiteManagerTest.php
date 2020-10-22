@@ -29,6 +29,31 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
+     * Auxiliary method to mock the depot manager class inside the websitemanager class
+     *
+     * @param WebSiteManager $webSiteManager
+     */
+    public static function mockDepotManager(WebSiteManager $webSiteManager){
+
+        // Mock all the values that are required to call the tested method
+        $depotSetup = new stdClass();
+        $depotSetup->{'$schema'} = 'mockschema';
+        $depotSetup->depots = [new stdClass()];
+
+        $depotSetup->depots[0]->users = new stdClass();
+        $depotSetup->depots[0]->users->prefix = 'usr_';
+        $depotSetup->depots[0]->users->source = 'db';
+
+        $reflectionObject = new ReflectionObject($webSiteManager);
+        $reflectionProperty = $reflectionObject->getProperty('_depotManager');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($webSiteManager, new DepotManager($depotSetup));
+
+        return $webSiteManager;
+    }
+
+
+    /**
      * @see TestCase::setUp()
      *
      * @return void
@@ -65,23 +90,6 @@ class WebSiteManagerTest extends TestCase {
 
 
     /**
-     * Auxiliary method to mock the depot manager class inside the websitemanager class
-     */
-    private function mockDepotManager(WebSiteManager $webSiteManager){
-
-        // Mock all the values that are required to call the tested method
-        $depotSetup = new stdClass();
-        $depotSetup->{'$schema'} = 'mockschema';
-        $depotSetup->depots = ['mockname'];
-
-        $reflectionObject = new ReflectionObject($webSiteManager);
-        $reflectionProperty = $reflectionObject->getProperty('_depotManager');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($webSiteManager, new DepotManager($depotSetup));
-    }
-
-
-    /**
      * test
      *
      * @return void
@@ -102,7 +110,7 @@ class WebSiteManagerTest extends TestCase {
         $this->assertSame(null, $this->sut->getDepotManager());
         $this->assertFalse($this->sut->getDepotManager() instanceof DepotManager);
 
-        $this->mockDepotManager($this->sut);
+        self::mockDepotManager($this->sut);
 
         $this->assertTrue($this->sut->getDepotManager() instanceof DepotManager);
         $this->assertTrue($this->sut->getDepotManager()->getFilesManager() instanceof FilesManager);
@@ -129,7 +137,7 @@ class WebSiteManagerTest extends TestCase {
      */
     public function testEchoHtmlFromMarkDownFile(){
 
-        $this->mockDepotManager($this->sut);
+        self::mockDepotManager($this->sut);
 
         // Capture the echo output from the method and test it is correct
         ob_start();

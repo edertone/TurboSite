@@ -218,8 +218,8 @@ class ChainServicesTest extends TestCase {
         $service->class = 'org\turbosite\src\test\resources\model\webservice\ServiceWithoutParams';
         $service->uri = 'api/site/example/example-service-without-params';
 
-        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
-            '/Services can only be defined by class or uri, not both/');
+        $this->assertNull(AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/Services can only be defined by class or uri, not both/'));
     }
 
 
@@ -245,8 +245,8 @@ class ChainServicesTest extends TestCase {
         $service = new stdClass();
         $service->uri = 'api/site/example/example-service-without-params';
 
-        AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
-            '/ChainServices uri can only be defined when called via http request/');
+        $this->assertNull(AssertUtils::throwsException(function() use ($service) { (new ChainServices([], ['services' => [$service]]))->run(); },
+            '/ChainServices uri can only be defined when called via http request/'));
     }
 }
 
