@@ -149,7 +149,16 @@ class GlobalErrorManager extends BaseSingletonClass{
      */
     public function getBackTrace(){
 
-        return (new Exception)->getTraceAsString();
+        $trace = (new Exception)->getTraceAsString();
+
+        // Exception->getTraceAsString() is not enough to print the full stacktrace, so we will also add
+        // the debug_print_backtrace for extra detailed info. Normally important when exception happens inside a phar file
+        ob_start();
+        debug_print_backtrace();
+        $debugTrace = ob_get_contents();
+        ob_end_clean();
+
+        return $trace."\n\n".$debugTrace;
     }
 
 
@@ -279,20 +288,19 @@ class GlobalErrorManager extends BaseSingletonClass{
                 if(($this->exceptionsToBrowser && $problem->type === 'FATAL EXCEPTION') ||
                     ($this->warningsToBrowser && $problem->type !== 'FATAL EXCEPTION')){
 
-                        $problemsHtmlCode .= '<p style="all: initial; color: #fff; margin-bottom: 15px; float: left"><b>PHP Problem: ';
+                    $problemsHtmlCode .= '<p style="all: initial; color: #fff8a3; margin-bottom: 15px; font-size: 14px; line-height: 14px; float: left"><b>PHP Problem: ';
 
-                        $problemsHtmlCode .= $problem->type.'<br>'.str_replace("\n", '<br>', htmlspecialchars($problem->message)).'</b><br>';
+                    $problemsHtmlCode .= $problem->type.'<br>'.str_replace("\n", '<br>', htmlspecialchars($problem->message)).'</b><br>';
 
-                        $problemsHtmlCode .= $problem->fileName;
+                    $problemsHtmlCode .= $problem->fileName;
 
-                        if(isset($problem->line) && $problem->line !== ''){
+                    if(isset($problem->line) && $problem->line !== ''){
 
-                            $problemsHtmlCode .= ' line '.$problem->line;
-                        }
+                        $problemsHtmlCode .= ' line '.$problem->line;
+                    }
 
-                        $problemsHtmlCode .= '<br>'.str_replace("\n", '<br>', $problem->trace);
-
-                        $problemsHtmlCode .= '</p>';
+                    $problemsHtmlCode .= '<br><span style="font-size:12px; color: #fff;">';
+                    $problemsHtmlCode .= str_replace("\n", '<br>', htmlentities($problem->trace)).'</span></p>';
                 }
 
                 // Generate the log text for this problem so it can be output to log file later (if enabled)
