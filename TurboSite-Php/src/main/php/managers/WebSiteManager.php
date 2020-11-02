@@ -204,6 +204,8 @@ class WebSiteManager extends UrlParamsBase{
 
     /**
      * If the current document is a view, this method will give it's view name
+     *
+     * The view name equivalent to the name of the folder which contains all the view files
      */
     public function getCurrentViewName(){
 
@@ -661,6 +663,11 @@ class WebSiteManager extends UrlParamsBase{
         $latestPosts = $blogManager->getLatestPosts($this->getPrimaryLanguage(),
             (isset($options['latestPosts']) && $options['latestPosts'] > 0) ? $options['latestPosts'] : 1);
 
+        if(empty($latestPosts)){
+
+            throw new UnexpectedValueException('At least one blog post must exist to initialize a ViewMarkDownBlogPost');
+        }
+
         $webViewSetup = new WebViewSetup();
 
         if(isset($options['cacheLifeTime']) && $options['cacheLifeTime'] >= 0){
@@ -732,7 +739,15 @@ class WebSiteManager extends UrlParamsBase{
 
 
     /**
-     * Adds extra bundles to the currently loaded translation data
+     * Adds extra bundles to the currently loaded translation data.
+     *
+     * Note that no bundles are loaded by default other than the ones that may be specified at the translationLocations section
+     * on the turbosite.json file
+     *
+     * @param array $bundles List of bundles to load from the specified location
+     * @param string $location The label for an already defined location. The extra bundles translation data will be added to the already loaded ones. If not defined, the current active location will be used.
+     *
+     * @return void
      */
     public function loadBundles(array $bundles, string $location = ''){
 
@@ -955,38 +970,6 @@ class WebSiteManager extends UrlParamsBase{
     public function echoUrlToChangeLocale($locale, $fullUrl = false){
 
         echo $this->getUrlToChangeLocale($locale, $fullUrl);
-    }
-
-
-    /**
-     * Output an html H1 element with a localized text for the provided key and options with the currently defined locale
-     *
-     * @param string $key See WebSiteManager::getText
-     * @param array|string $options See WebSiteManager::getText
-     *
-     * @see WebSiteManager::getText
-     *
-     * @return void
-     */
-    public function echoHtmlH1(string $key, $options = ''){
-
-        echo '<h1>'.$this->getText($key, $options).'</h1>';
-    }
-
-
-    /**
-     * Output an html H2 element with a localized text for the provided key and options with the currently defined locale
-     *
-     * @param string $key See WebSiteManager::getText
-     * @param array|string $options See WebSiteManager::getText
-     *
-     * @see WebSiteManager::getText
-     *
-     * @return void
-     */
-    public function echoHtmlH2(string $key, $options = ''){
-
-        echo '<h2>'.$this->getText($key, $options).'</h2>';
     }
 
 
