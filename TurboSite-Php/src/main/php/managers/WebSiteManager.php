@@ -205,7 +205,7 @@ class WebSiteManager extends UrlParamsBase{
     /**
      * If the current document is a view, this method will give it's view name
      *
-     * The view name equivalent to the name of the folder which contains all the view files
+     * The view is  equivalent to the name of the folder which contains all the view files
      */
     public function getCurrentViewName(){
 
