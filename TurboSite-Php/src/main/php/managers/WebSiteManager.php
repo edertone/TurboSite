@@ -759,6 +759,7 @@ class WebSiteManager extends UrlParamsBase{
     public function includeComponent(string $componentPath){
 
         // If the component is global, skip css and js cause they will be already loaded
+        // JS and css of the components must be added inline instead of globally at the view js or css files!!
 
         require $this->_mainPath.DIRECTORY_SEPARATOR.$componentPath.'.php';
     }
