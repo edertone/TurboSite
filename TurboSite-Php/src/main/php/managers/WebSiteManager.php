@@ -375,7 +375,7 @@ class WebSiteManager extends UrlParamsBase{
         // Move from http to https if necessary
         if(strpos(strtolower($redirectTo), 'http:') === 0){
 
-            $redirectTo = substr_replace($redirectTo, 'https:', 0, 6);
+            $redirectTo = substr_replace($redirectTo, 'https:', 0, 5);
         }
 
         // Redirect the www version to NO www
