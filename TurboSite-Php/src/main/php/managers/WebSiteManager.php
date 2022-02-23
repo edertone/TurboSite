@@ -643,6 +643,8 @@ class WebSiteManager extends UrlParamsBase{
      * Under the hood, this method simply performs all the necessary steps to initialize the current document as a standard view, but also load
      * the blog data, setup the url parameters and any other operation that may be necessary.
      *
+     * The blogs language will be automatically retrieved from the primary site language
+     *
      * @see WebSiteManager::initializeAsView
      * @see WebViewSetup::$cacheLifeTime
      *
@@ -772,8 +774,6 @@ class WebSiteManager extends UrlParamsBase{
      * They are encoded this way: http://.../locale/viewname/parameter0/parameter1/parameter2/parameter3/...
      *
      * @param int $index The numeric index for the requested parameter. Invalid index value will throw an exception
-     * @param bool $removeHtmlTags To prevent HTML injection attacks, all html and php tags are removed from the parameter values.
-     *        If we specifically need this tags to be preserved, we can set this flag to false. Normally not necessary
      *
      * @return string The requested parameter value
      */
@@ -921,7 +921,7 @@ class WebSiteManager extends UrlParamsBase{
     /**
      * Gives the url that points to the specified view, using the current site locale and the specified parameters
      *
-     * @param string $view The name of the view. For example: Home
+     * @param string $view The name of the view. For example: home
      * @param string|array $parameters The list of parameters to pass to the view url that will be generated. If a single parameter is sent, it can be a string.
      *        If more than one are sent, it must be an array.
      * @param boolean $fullUrl True to get the full absolute url (http://...) or false to get it relative to the current domain
