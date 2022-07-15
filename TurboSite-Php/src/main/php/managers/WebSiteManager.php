@@ -175,7 +175,7 @@ class WebSiteManager extends UrlParamsBase{
 
 
     /**
-     * Get the first language of the list of translation priorities, which effectively is the
+     * Get the first language (two digits) of the list of translation priorities, which effectively is the
      * language that is currently using the website
      */
     public function getPrimaryLanguage(){
