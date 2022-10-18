@@ -120,6 +120,13 @@ class WebSiteManager extends UrlParamsBase{
 
 
     /**
+     * Stores the list of defined global constants that can be shared between the site php scripts and javascript,
+     * so values that are defined at the php layer can be read at the JS layer
+     */
+    private $_globalConstants = [];
+
+
+    /**
      * Stores the webservices setup (check turbosite.json docs for more info)
      */
     private $_webServicesSetup = null;
@@ -239,6 +246,70 @@ class WebSiteManager extends UrlParamsBase{
         }
 
         return $this->_setupFilesData[$setupFileName];
+    }
+
+
+    /**
+     * Get the value from a previosuly defined internal global constant
+     *
+     * @param string $name The name of the global constant we want to read
+     *
+     * @return mixed The value of the requested constant
+     */
+    public function getGlobalConst($name){
+
+        if(!isset($this->_globalConstants[$name])){
+
+            throw new UnexpectedValueException('global constant does not exist: '.$name);
+        }
+
+        if($this->_globalConstants[$name]['availability'] === 'js'){
+
+            throw new UnexpectedValueException("global constant '".$name."' can only be accessed by JS cause availability is set to 'js'");
+        }
+
+        return $this->_globalConstants[$name]['value'];
+    }
+
+
+    /**
+     * Define the name, value and availability for an internal global constant.
+     *
+     * This is an easy way to share data between different php files without having to define dirty global php variables directly on the
+     * code.
+     *
+     * The constant value can also be sent to the JS layer, so it will be available for javascript code.
+     *
+     * @param string $name The name of the constant we want to create
+     * @param mixed $value The value for the constant
+     * @param string $availability If set to 'php', the constant will be available only on php. If set to 'js', it will be available only
+     *        on javascript. If set to 'both', it will be available on both php and javascript layers.
+     *
+     * @return mixed The constant value
+     */
+    public function setGlobalConst($name, $value, $availability = 'php'){
+
+        if($name === null || strlen($name) < 1 || !is_string($name)){
+
+            throw new UnexpectedValueException('Constant name is not valid');
+        }
+
+        if(isset($this->_globalConstants[$name])){
+
+            throw new UnexpectedValueException('Constant name "'.$name.'" is already defined');
+        }
+
+        if($availability !== 'php' && $availability !== 'js' && $availability !== 'both'){
+
+            throw new UnexpectedValueException('availability invalid value: "'.$availability.'" ');
+        }
+
+        // Store the var value to the class
+        $this->_globalConstants[$name] = [];
+        $this->_globalConstants[$name]['value'] = $value;
+        $this->_globalConstants[$name]['availability'] = $availability;
+
+        return $value;
     }
 
 
@@ -1043,6 +1114,25 @@ class WebSiteManager extends UrlParamsBase{
 
                 echo "<script>".$cdn->fallbackVerify." || document.write('<script src=\"".$url."\"><\/script>')</script>\n";
             }
+        }
+
+        // Generate all the defined global JS constants
+        if(count($this->_globalConstants) > 0){
+
+            echo "<script>\n";
+
+            foreach($this->_globalConstants as $name => $var){
+
+                if($var['availability'] === 'js' || $var['availability'] === 'both'){
+
+                    // Correctly format the var so it can be generated in js
+                    $varFormatted = is_string($var['value']) ? '"'.str_replace(['"', "\r\n", "\n", "\r"], ['\"', '\r\n', '\n', '\r'], $var['value']).'"' : $var['value'];
+
+                    echo 'const '.$name.' = '.$varFormatted.";\n";
+                }
+            }
+
+            echo "</script>\n";
         }
 
         // Generate the global js script

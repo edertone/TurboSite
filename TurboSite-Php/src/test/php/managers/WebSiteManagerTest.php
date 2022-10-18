@@ -136,6 +136,58 @@ class WebSiteManagerTest extends TestCase {
      *
      * @return void
      */
+    public function testGetGlobalConst(){
+
+        $this->assertSame(123, $this->sut->setGlobalConst('somenumconst', 123));
+        $this->assertSame('somevalue', $this->sut->setGlobalConst('someconst', 'somevalue'));
+
+        $this->assertSame(123, $this->sut->getGlobalConst('somenumconst'));
+        $this->assertSame('somevalue', $this->sut->getGlobalConst('someconst'));
+
+        AssertUtils::throwsException(function() { $this->sut->getGlobalConst('111'); },
+            '/global constant does not exist: 111/');
+
+        $this->assertSame(456, $this->sut->setGlobalConst('onlyjs', 456, 'js'));
+
+        AssertUtils::throwsException(function() { $this->sut->getGlobalConst('onlyjs'); },
+            '/global constant .onlyjs. can only be accessed by JS cause availability is set to .js./');
+    }
+
+
+    /**
+     * test
+     *
+     * @return void
+     */
+    public function testSetGlobalConst(){
+
+        $this->assertSame(123, $this->sut->setGlobalConst('somenumconst', 123));
+        $this->assertSame('somevalue', $this->sut->setGlobalConst('someconst', 'somevalue', 'both'));
+        $this->assertSame("aaa\"aaa''\"aa", $this->sut->setGlobalConst('scapedstring1', "aaa\"aaa''\"aa"));
+        $this->assertSame('aaa"aa\'a"aa', $this->sut->setGlobalConst('scapedstring2', 'aaa"aa\'a"aa'));
+
+        AssertUtils::throwsException(function() { $this->sut->setGlobalConst('', 'somevalue', ''); },
+            '/Constant name is not valid/');
+
+        AssertUtils::throwsException(function() { $this->sut->setGlobalConst(null, 'somevalue', ''); },
+            '/Constant name is not valid/');
+
+        AssertUtils::throwsException(function() { $this->sut->setGlobalConst(123, 'somevalue', ''); },
+            '/Constant name is not valid/');
+
+        AssertUtils::throwsException(function() { $this->sut->setGlobalConst('someconst2', 'somevalue', ''); },
+            '/availability invalid value: ""/');
+
+        AssertUtils::throwsException(function() { $this->sut->setGlobalConst('someconst', 'somevalue', 'js'); },
+            '/Constant name .someconst. is already defined/');
+    }
+
+
+    /**
+     * test
+     *
+     * @return void
+     */
     public function testEchoHtmlFromMarkDownFile(){
 
         self::mockDepotManager($this->sut);
@@ -148,8 +200,8 @@ class WebSiteManagerTest extends TestCase {
         $this->assertSame('<h1>this is a title</h1>', ob_get_clean());
 
         // Invalid path
-        AssertUtils::throwsException(function() { $this->sut->echoHtmlFromMarkDownFile(__DIR__.'/../../resources/managers/nonexistant.md'); }, '/File does not exist.*nonexistant.md/');
-
+        AssertUtils::throwsException(function() { $this->sut->echoHtmlFromMarkDownFile(__DIR__.'/../../resources/managers/nonexistant.md'); },
+            '/File does not exist.*nonexistant.md/');
     }
 
     // TODO - add all pending tests
