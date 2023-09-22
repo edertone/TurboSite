@@ -366,6 +366,11 @@ class WebSiteManager extends UrlParamsBase{
         GlobalErrorManager::getInstance()->tooMuchTimeWarning = $turboSiteSetup->errorSetup->tooMuchTimeWarning;
         GlobalErrorManager::getInstance()->tooMuchMemoryWarning = $turboSiteSetup->errorSetup->tooMuchMemoryWarning;
 
+        if(GlobalErrorManager::getInstance()->exceptionsToLog !== ''){
+
+            $this->_depotManager->getLogsManager()->blankLinesBetweenLogs = 2;
+        }
+
         $this->_cacheHash = $turboSiteSetup->cacheHash;
         $this->_homeView = $turboSiteSetup->homeView;
         $this->_singleParameterView = $turboSiteSetup->singleParameterView;
