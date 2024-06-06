@@ -17,14 +17,15 @@ use org\turbotesting\src\main\php\utils\AssertUtils;
 use org\turbosite\src\main\php\services\users\Login;
 use org\turbosite\src\main\php\managers\WebSiteManager;
 use org\turbosite\src\test\php\managers\WebSiteManagerTest;
+use org\turbosite\src\main\php\services\users\LoginService;
 
 
 /**
- * LoginTest
+ * LoginServiceTest
  *
  * @return void
  */
-class LoginTest extends TestCase {
+class LoginServiceTest extends TestCase {
 
 
     /**
@@ -52,19 +53,19 @@ class LoginTest extends TestCase {
     public function testConstruct(){
 
         // Test empty values
-        AssertUtils::throwsException(function() { new Login(); }, '/Missing mandatory POST parameter: data/');
-        AssertUtils::throwsException(function() { new Login(null, null); }, '/Missing mandatory POST parameter: data/');
-        AssertUtils::throwsException(function() { new Login('', ''); }, '/must be of the type array or null, string given/');
-        AssertUtils::throwsException(function() { new Login([], []); }, '/Missing mandatory POST parameter: data/');
+        AssertUtils::throwsException(function() { new LoginService(); }, '/Missing mandatory POST parameter: data/');
+        AssertUtils::throwsException(function() { new LoginService(null, null); }, '/Missing mandatory POST parameter: data/');
+        AssertUtils::throwsException(function() { new LoginService('', ''); }, '/must be of the type array or null, string given/');
+        AssertUtils::throwsException(function() { new LoginService([], []); }, '/Missing mandatory POST parameter: data/');
 
         // Test ok values
-        $this->assertSame('application/json', (new Login([], ['data' => '']))->contentType);
-        $this->assertSame('application/json', (new Login([], ['data' => 'somestring']))->contentType);
+        $this->assertSame('application/json', (new LoginService([], ['data' => '']))->contentType);
+        $this->assertSame('application/json', (new LoginService([], ['data' => 'somestring']))->contentType);
 
         // Test wrong values
         // Test exceptions
-        AssertUtils::throwsException(function() { new Login([''], ['data' => '']); }, '/Unexpected URL parameter received at 0/');
-        AssertUtils::throwsException(function() { new Login([], 'string'); }, '/Argument 2.*must be of the type array or null.*string given/');
+        AssertUtils::throwsException(function() { new LoginService([''], ['data' => '']); }, '/Unexpected URL parameter received at 0/');
+        AssertUtils::throwsException(function() { new LoginService([], 'string'); }, '/Argument 2.*must be of the type array or null.*string given/');
     }
 
 
@@ -76,7 +77,7 @@ class LoginTest extends TestCase {
 
         WebSiteManagerTest::mockDepotManager(WebSiteManager::getInstance());
 
-        $this->assertSame('', (new Login([], ['data' => '']))->run());
+        $this->assertSame('', (new LoginService([], ['data' => '']))->run());
     }
 }
 

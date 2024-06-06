@@ -21,7 +21,7 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 /**
  * ChainServices
  */
-class ChainServices extends WebServiceManager{
+class ChainServicesService extends WebServiceManager{
 
 
     /**
@@ -83,7 +83,7 @@ class ChainServices extends WebServiceManager{
             // Uri execution will only work when called via http, so $_POST 'services' variable must exist
             if(isset($service->uri) && !isset($_POST['services'])){
 
-                throw new UnexpectedValueException('ChainServices uri can only be defined when called via http request');
+                throw new UnexpectedValueException('ChainServicesService uri can only be defined when called via http request');
             }
         }
     }
@@ -121,7 +121,7 @@ class ChainServices extends WebServiceManager{
                     if (strpos($service->uri, $apiUri) !== false) {
 
                         $nameSpace = StringUtils::getPath($apiDefinition->namespace."\\".(explode($apiUri, $service->uri, 2)[1]), 1, "\\")."\\";
-                        $serviceClass = $nameSpace.StringUtils::formatCase(StringUtils::getPathElement($service->uri), StringUtils::FORMAT_UPPER_CAMEL_CASE);
+                        $serviceClass = $nameSpace.StringUtils::formatCase(StringUtils::getPathElement($service->uri), StringUtils::FORMAT_UPPER_CAMEL_CASE).'Service';
 
                         $resultsList [] = (new $serviceClass($urlParameters, $postParameters))->run();
 

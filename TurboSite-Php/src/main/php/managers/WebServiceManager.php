@@ -155,7 +155,13 @@ abstract class WebServiceManager extends UrlParamsBase{
 
     /**
      * Defines the base class manager for all the project web services.
+     *
      * Any web service that is accessible via API calls must extend this class and override the setup() and run() methods.
+     *
+     * The extended service class must follow this naming convention: "UrlStringService", where UrlString will contain the
+     * text that will be used to call the service via the http url. For example, to create a service that will be called like
+     * http://...../create-new-user we will extend WebServiceManager as "CreateNewUserService". Notice that the last part "Service"
+     * will be ignored for the url, but is mandatory.
      *
      * @param array $urlParameters If we create this service via code we can pass the URL data here and it will be loaded
      *        by the service as if it was passed via HTTP. It must be an array containing each one of the parameter values that
@@ -182,11 +188,13 @@ abstract class WebServiceManager extends UrlParamsBase{
 
         }else{
 
-            $serviceName = StringUtils::getPathElement(get_class($this));
+            // Notice that we will remove the last 'Service' string from the service class name, cause it is not present at the url
+            // Service is mandatory at the end of the service class name, so we will basically remove the last 7 characters
+            $serviceClassName = substr(StringUtils::getPathElement(get_class($this)), 0, -7);
 
             for ($i = 0, $l = count($this->_URIElements); $i < $l; $i++) {
 
-                if(StringUtils::formatCase($this->_URIElements[$i], StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceName){
+                if(StringUtils::formatCase($this->_URIElements[$i], StringUtils::FORMAT_UPPER_CAMEL_CASE) === $serviceClassName){
 
                     $this->_setReceivedParamsFromUrl($i + 1);
 
@@ -347,6 +355,7 @@ abstract class WebServiceManager extends UrlParamsBase{
     /**
      * Creates a WebServiceError instance with the specified data.
      * This instance is normally used as the result for webservices that need to show an error to the user.
+     * Notice that the error trace and message will not be visible if GlobalErrorManager::getInstance()->exceptionsToBrowser is false
      *
      *  @see WebServiceError::createInstance
      *
@@ -367,5 +376,3 @@ abstract class WebServiceManager extends UrlParamsBase{
         return WebServiceError::createInstance($code, $title, $message, $trace);
     }
 }
-
-?>

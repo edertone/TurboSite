@@ -482,7 +482,7 @@ class WebSiteManager extends UrlParamsBase{
         // Php files execution is not allowed
         if(mb_strtolower(StringUtils::getPathExtension($this->_URI)) !== 'php'){
 
-            // Check if the URI represents a service (all webservice uris must start with api/)
+            // Check if the URI represents a service, output its result and end. (all webservice uris must start with api/)
             if($this->_URIElements[0] === 'api'){
 
                 echo $this->runCurrentURLWebService();
@@ -1207,7 +1207,7 @@ class WebSiteManager extends UrlParamsBase{
 
                 foreach ($explodedUrlParts as $explodedUrlPart) {
 
-                    $serviceClass = $nameSpace.StringUtils::formatCase($explodedUrlPart, StringUtils::FORMAT_UPPER_CAMEL_CASE);
+                    $serviceClass = $nameSpace.StringUtils::formatCase($explodedUrlPart, StringUtils::FORMAT_UPPER_CAMEL_CASE).'Service';
 
                     if(class_exists($serviceClass)){
 
@@ -1238,7 +1238,7 @@ class WebSiteManager extends UrlParamsBase{
 
                             // We set 500 error code cause the exception is not handled by the webservice, and therefore we don't know what happened
                             return $this->webServiceResultToString(WebServiceError::createInstance(
-                                500, 'Unhandled exception', $e->getMessage(), $e->getTraceAsString()));
+                                500, 'Unhandled exception', $e->getMessage(), $e->getTraceAsString()), false);
                         }
                     }
 
@@ -1255,10 +1255,11 @@ class WebSiteManager extends UrlParamsBase{
      * Convert the result of a web service into a string that can be output to the browser
      *
      * @param mixed $result The result of a web service
+     * @param boolean $handled Set it to false if the result is an exception that was not controlled by the service itself
      *
      * return string The textual value for the passed result
      */
-    private function webServiceResultToString($result){
+    private function webServiceResultToString($result, $handled = true){
 
         if(is_string($result)){
 
@@ -1277,8 +1278,15 @@ class WebSiteManager extends UrlParamsBase{
                     GlobalErrorManager::getInstance()->exceptionsToLog);
             }
 
-            // Error information will only be output if exceptions to browser are enabled.
-            return GlobalErrorManager::getInstance()->exceptionsToBrowser ? json_encode($result) : '';
+            // Error trace and message will only be output if exceptions to browser are enabled
+            if(!GlobalErrorManager::getInstance()->exceptionsToBrowser){
+
+                unset($result->message);
+                unset($result->trace);
+            }
+
+            // Error information will only be output if exceptionsToBrowser are enabled or is a handled service error
+            return (GlobalErrorManager::getInstance()->exceptionsToBrowser || $handled) ? json_encode($result) : '';
         }
 
         if(is_bool($result) || is_array($result) || $result instanceof stdClass){

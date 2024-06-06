@@ -260,7 +260,7 @@ abstract class UrlParamsBase extends BaseStrictClass{
 
                 $optionalUrlParamFound = $i;
 
-            }else if ($optionalUrlParamFound > 0){
+            }elseif ($optionalUrlParamFound > 0){
 
                 throw new UnexpectedValueException('All URL parameters must have a default value after the non mandatory defined at '.$optionalUrlParamFound);
             }

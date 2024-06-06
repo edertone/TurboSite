@@ -51,6 +51,7 @@
     "test": {
         "enabledTests": [
             {
+                "enabled": true,
                 "type": "phpUnit",
                 "testsRoot": "src/test",
                 "coverageReport": true,

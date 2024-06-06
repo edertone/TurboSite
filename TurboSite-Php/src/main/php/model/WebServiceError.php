@@ -27,6 +27,7 @@ class WebServiceError{
      *        - 500 (Internal Server Error): is the generic REST API error response which means that something went wrong at the server side. Normally an uncontrolled exception
      * @param string $title The title for the error that we want to create
      * @param string $message The description for the error message that we want to create
+     * @param string $trace The code trace for the error message that we want to create
      *
      * @return WebServiceError A newly created error instance, filled with the specified data, so we can return it on the webservice run() method
      */
