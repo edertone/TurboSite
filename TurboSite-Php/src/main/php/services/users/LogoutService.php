@@ -16,6 +16,8 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 
 /**
  * Service that is used to perform the logout of a user by invalidating his token.
+ * We must extend this class in our application and perform any necessary extra step depending on our needs.
+ *
  * (Uses the turbodepot users framework)
  */
 class LogoutService extends WebServiceManager{
@@ -35,5 +37,3 @@ class LogoutService extends WebServiceManager{
             ->logout($this->getPostParam('token'));
     }
 }
-
-?>

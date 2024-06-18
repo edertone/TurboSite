@@ -120,6 +120,8 @@ abstract class WebServiceManager extends UrlParamsBase{
      * If the web service does not require user authorization, the method must simply return true.
      * If authorization is required, the method must return true when authorization is successful and false when it fails.
      *
+     * The service will throw an exception at constructor time if the authorization fails
+     *
      * @var callable
      */
     protected $authorizeMethod = null;
@@ -143,7 +145,11 @@ abstract class WebServiceManager extends UrlParamsBase{
 
 
     /**
-     * This method is executed to perform the service operations and return a result. It must be declared by all WebServiceManager instances.
+     * This method is executed to perform the service operations and return a result.
+     *
+     * It must be declared by all WebServiceManager instances.
+     *
+     * It is called after the setup() and constructor() service methods.
      *
      * Add to this method all the actual service logic
      *
@@ -320,6 +326,8 @@ abstract class WebServiceManager extends UrlParamsBase{
      *
      * If the POST parameter has some specific type defined, this method will return the value converted to that type, otherwise the raw string
      * will be given.
+     *
+     * NOTICE: Trying to obtain these values before the service constructor is called will throw an error.
      *
      * @see WebServiceManager::$enabledPostParams
      *

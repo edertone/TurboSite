@@ -17,6 +17,8 @@ use org\turbosite\src\main\php\managers\WebSiteManager;
 
 /**
  * Service that performs a user login and returns the user instance and the generated token.
+ * We must extend this class in our application and perform any necessary extra step depending on our needs.
+ *
  * (Uses the turbodepot users framework)
  */
 class LoginService extends WebServiceManager{
@@ -51,5 +53,3 @@ class LoginService extends WebServiceManager{
         ];
     }
 }
-
-?>
