@@ -1220,6 +1220,11 @@ class WebSiteManager extends UrlParamsBase{
                                 header('Access-Control-Allow-Methods: GET, POST');
                             }
 
+                            // Disable any cache on the browser
+                            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+                            header("Cache-Control: post-check=0, pre-check=0", false);
+                            header("Pragma: no-cache");
+
                             $serviceClassInstance = new $serviceClass;
 
                             $serviceResult = $serviceClassInstance->run();
@@ -1302,5 +1307,3 @@ class WebSiteManager extends UrlParamsBase{
         throw new UnexpectedValueException('The overriden WebService run() method must return a valid PHP basic type');
     }
 }
-
-?>

@@ -120,7 +120,7 @@ abstract class WebServiceManager extends UrlParamsBase{
      * If the web service does not require user authorization, the method must simply return true.
      * If authorization is required, the method must return true when authorization is successful and false when it fails.
      *
-     * The service will throw an exception at constructor time if the authorization fails
+     * The service will throw an exception at constructor time if this method is not defined or the authorization fails
      *
      * @var callable
      */
