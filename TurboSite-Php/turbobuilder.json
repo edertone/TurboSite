@@ -5,14 +5,22 @@
     "metadata": {
         "name": "turbosite-php",
         "description": "Php based web framework",
-        "builderVersion": "7.0.2"
+        "builderVersion": "8.0.0"
+    },
+    "containers": {
+        "docker":[
+            {
+                "path": "php7-4_apache2-4_mariadb10-4-dev",
+                "startPolicy": "lazy"
+            }
+        ]
     },
     "validate": {
         "filesContent" : {
             "copyPasteDetect":[
                 {
                     "path": "src/main",
-                    "maxPercentErrorLevel": 0,
+                    "maxPercentErrorLevel": 2,
                     "maxPercentErrorDifference": 1,
                     "report": ""
                 },

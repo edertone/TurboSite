@@ -1,9 +1,9 @@
 <?php
 
 
-require_once __DIR__.'/../libs/turbocommons-php-3.8.0.phar';
-require_once __DIR__.'/../libs/turbodepot-php-7.0.3.phar';
-require_once __DIR__.'/../libs/turbotesting-php-7.5.0.phar';
+require_once __DIR__.'/../libs/turbocommons-php-3.11.0.phar';
+require_once __DIR__.'/../libs/turbodepot-php-8.0.0.phar';
+require_once __DIR__.'/../libs/turbotesting-php-10.1.1.phar';
 require_once __DIR__.'/../../main/php/autoloader.php';
 
 
@@ -22,5 +22,3 @@ spl_autoload_register(function($className){
         require_once __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.$classPath;
     }
 });
-
-?>
