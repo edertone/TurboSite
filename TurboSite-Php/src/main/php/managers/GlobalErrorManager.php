@@ -433,12 +433,12 @@ class GlobalErrorManager extends BaseSingletonClass{
             $errorMessage .= 'Context: '.substr($problemData->context, 0, 20000).'...'."\n\n";
         }
 
-        $mailManager = new MailManager();
+        $mailPhpManager = new MailPhpManager();
 
         // If mail can't be queued, or we are in a localhost enviroment without email cappabilities,
         // we will launch a warning with the error information, so it does not get lost and goes to the php error logs.
         // @codingStandardsIgnoreStart
-        if(!$mailManager->sendMail('TODO', $this->exceptionsToMail, $subject, $errorMessage)){
+        if(!$mailPhpManager->sendMail('TODO', $this->exceptionsToMail, $subject, $errorMessage)){
 
             trigger_error($problemData->message.(isset($problemData->trace) ? $problemData->trace : ''), E_USER_WARNING);
         }*/
