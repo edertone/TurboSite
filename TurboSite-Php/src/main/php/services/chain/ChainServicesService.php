@@ -134,5 +134,3 @@ class ChainServicesService extends WebServiceManager{
         return $resultsList;
     }
 }
-
-?>
