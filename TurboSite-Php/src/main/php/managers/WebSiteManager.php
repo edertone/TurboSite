@@ -1213,11 +1213,16 @@ class WebSiteManager extends UrlParamsBase{
 
                         try {
 
-                            // Totally disable cache
-                            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-                            header("Cache-Control: post-check=0, pre-check=0", false);
-                            header("Pragma: no-cache");
-                            header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+                            $serviceClassInstance = new $serviceClass;
+
+                            // Totally disable cache if configured
+                            if($serviceClassInstance->isBrowserCacheDisabled){
+
+                                header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+                                header("Cache-Control: post-check=0, pre-check=0", false);
+                                header("Pragma: no-cache");
+                                header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+                            }
 
                             if($this->_webServicesSetup->crossOriginCORS === 'allow'){
 
@@ -1225,8 +1230,6 @@ class WebSiteManager extends UrlParamsBase{
                                 header("Access-Control-Allow-Credentials: true");
                                 header('Access-Control-Allow-Methods: GET, POST');
                             }
-
-                            $serviceClassInstance = new $serviceClass;
 
                             $serviceResult = $serviceClassInstance->run();
 

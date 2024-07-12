@@ -61,6 +61,15 @@ abstract class WebServiceManager extends UrlParamsBase{
 
 
     /**
+     * True by default. If false, the browser cache http headers will not be explicitly disabled for the service output.
+     *
+     * This is usually set to true, except when serving images or static content via GET parameters.
+     * @var boolean
+     */
+    public $isBrowserCacheDisabled = true;
+
+
+    /**
      * Specifies how many URL parameters are accepted by this service and allows to setup type and value restrictions. URL parameters on
      * http services are passed in the following form: ../api/..../service-name/param0/param1/param2/... (parameters that are passed
      * via GET to the service url (?param1=v1&param2=v2...) are not accepted and will be ignored). Also any parameter on the URL which
