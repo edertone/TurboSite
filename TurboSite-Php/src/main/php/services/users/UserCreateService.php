@@ -149,6 +149,12 @@ class UserCreateService extends WebServiceManager{
 
             $usersManager->transactionRollback();
 
+            // Make sure user is destroyed if it still exists
+            if($usersManager->isUser($this->userObject->userName)){
+
+                $usersManager->deleteUser($this->userObject->userName);
+            }
+
             return $this->generateError(500, 'Unknown error', $e->getMessage());
         }
     }
