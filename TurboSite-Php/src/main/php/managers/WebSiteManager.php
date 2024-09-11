@@ -1251,7 +1251,7 @@ class WebSiteManager extends UrlParamsBase{
                         }
                     }
 
-                    $nameSpace .= $explodedUrlPart."\\";
+                    $nameSpace .= StringUtils::formatCase($explodedUrlPart, StringUtils::FORMAT_LOWER_CAMEL_CASE)."\\";
                 }
             }
         }
