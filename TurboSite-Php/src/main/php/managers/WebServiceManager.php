@@ -13,6 +13,7 @@ namespace org\turbosite\src\main\php\managers;
 
 use Exception;
 use UnexpectedValueException;
+use org\turbocommons\src\main\php\managers\SerializationManager;
 use org\turbocommons\src\main\php\utils\StringUtils;
 use org\turbosite\src\main\php\model\WebServiceError;
 use org\turbosite\src\main\php\model\UrlParamsBase;
@@ -140,6 +141,14 @@ abstract class WebServiceManager extends UrlParamsBase{
      * Stores the actual values of the POST parameters that have been passed to this service via POST or via service constructor
      */
     private $_receivedPostParams = [];
+
+
+    /**
+     * Contains a serialization manager instance to be used by this class
+     *
+     * @var SerializationManager
+     */
+    private $serializationManager = null;
 
 
     /**
@@ -366,6 +375,32 @@ abstract class WebServiceManager extends UrlParamsBase{
         }
 
         throw new UnexpectedValueException('POST parameter is not enabled by the service: '.$paramName);
+    }
+
+
+    /**
+     * Get the value for a POST parameter which has been passed to this service, serialized to the provided class instance
+     *
+     * NOTICE: Trying to obtain these values before the service constructor is called will throw an error.
+     *
+     * @see WebServiceManager::$enabledPostParams
+     *
+     * @param string $paramName The name for the POST parameter we want to read
+     * @param mixed $classInstance A class instance that will be automatically filled with the data on the post parameter
+     *
+     * @throws UnexpectedValueException If serialization failed
+     *
+     * @return mixed The provided class instance filled with all the data from the post parameter
+     */
+    public function getPostParamSerialized(string $paramName, $classInstance){
+
+        // Create the serialization manager instance if it does not exist
+        if($this->serializationManager === null){
+
+            $this->serializationManager = new SerializationManager();
+        }
+
+        return $this->serializationManager->jsonToClass($this->getPostParam($paramName), $classInstance);
     }
 
 

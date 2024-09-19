@@ -252,6 +252,38 @@ class WebServiceManagerTest extends TestCase {
 
 
     /**
+     * testGetPostParamSerialized
+     *
+     * @return void
+     */
+    public function testGetPostParamSerialized(){
+
+        $service = new ServiceWithPostParameterNotTyped([], ['a' => '{"a": 1, "b": 2}']);
+
+        $this->assertNotNull($service);
+
+        $someClass = (new class {
+            public $a = 0;
+            public $b = 0;
+        });
+
+        // Test empty values
+        AssertUtils::throwsException(function() use ($service, $someClass) {$service->getPostParamSerialized(null, $someClass);}, '/must be of the type string, null given/');
+        AssertUtils::throwsException(function() use ($service, $someClass) {$service->getPostParamSerialized('', $someClass);}, '/POST parameter is not enabled by the service: /');
+
+        // Test ok values
+        $serialized = $service->getPostParamSerialized('a', $someClass);
+
+        $this->assertSame(1, $serialized->a);
+        $this->assertSame(2, $serialized->b);
+
+        // Test wrong values
+        // Test exceptions
+        // Already tested on testGetPostParam
+    }
+
+
+    /**
      * testSetup
      *
      * @return void
