@@ -1216,7 +1216,7 @@ class WebSiteManager extends UrlParamsBase{
                             $serviceClassInstance = new $serviceClass;
 
                             // Totally disable cache if configured
-                            if($serviceClassInstance->isBrowserCacheDisabled){
+                            if(!$serviceClassInstance->isBrowserCacheEnabled){
 
                                 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
                                 header("Cache-Control: post-check=0, pre-check=0", false);

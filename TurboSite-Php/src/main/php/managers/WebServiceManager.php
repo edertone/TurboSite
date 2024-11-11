@@ -62,12 +62,15 @@ abstract class WebServiceManager extends UrlParamsBase{
 
 
     /**
-     * True by default. If false, the browser cache http headers will not be explicitly disabled for the service output.
+     * False by default. If true, the cache http headers will not be explicitly disabled for the service output and browsers
+     * will store in their cache the results of this service output. We usually set this to false on dynamic services, and enable
+     * it when serving static content, images or requests that use url parameters.
      *
-     * This is usually set to true, except when serving images or static content via GET parameters.
+     * NOTICE that browsers will not cache responses for urls that work with POST parameters, even if this is set to true.
+     *
      * @var boolean
      */
-    public $isBrowserCacheDisabled = true;
+    public $isBrowserCacheEnabled = false;
 
 
     /**

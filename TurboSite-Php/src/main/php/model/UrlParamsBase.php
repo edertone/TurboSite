@@ -56,6 +56,7 @@ abstract class UrlParamsBase extends BaseStrictClass{
      * Specifies that a parameter is of string type
      * It must be received by the service as a json encoded string containing a string value or an exception will be thrown
      * NOTE: Json encoded strings are expected to be surrounded by double quotes like "hello", "goodbye my friend", etc..
+     * If you want to pass a raw string, you can use NOT_TYPED
      */
     public const STRING = 'STRING';
 
